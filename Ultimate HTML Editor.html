@@ -1,0 +1,44 @@
+<script type="text/javascript" src="https://www.quackit.com/html/online-html-editor/ckeditor/ckeditor_4.4.1_full/ckeditor.js"></script>
+<script type="text/javascript">
+	if ( CKEDITOR.env.isCompatible )
+	else
+		document.write('<p><strong>Can\'t see the rich text editor?</strong> Switch to the <a href="https://www.quackit.com/html/online-html-editor/full/?version=Classic">Classic version</a>.</p>');
+</script>
+<div style="width:100%;">
+<textarea class="ckeditor" id="editor1" name="editor1" cols="35" rows="10"><!doctype html>
+<html>
+<head>
+	<title>HTML Editor - Full Version</title>
+</head>
+<body>
+<h1>HTML Editor - Full Version</h1>
+<p>This HTML editor has a larger toolbar than the <a href="https://www.quackit.com/html/online-html-editor/">standard one</a>. And you know what that means? Exactly... more buttons!</p>
+<p>Here is some <strong>important text</strong>. And here is text that has been <em>emphasized</em>.</p>
+<p>Below is an unordered (bullet) list, and an ordered/numbered list:</p>
+<p>Grocery list:</p>
+<ul>
+	<li>Apples</li>
+	<li>Oranges</li>
+	<li>Bananas</li>
+</ul>
+<p>Things to do:</p>
+<ol>
+	<li>Buy groceries</li>
+	<li>Get haircut</li>
+	<li>Write some HTML!</li>
+</ol>
+<p>View the source code by clicking on the &quot;Source&quot; button above.</p>
+</body>
+</html>
+</textarea>
+<script type="text/javascript"> 
+//<![CDATA[
+
+	CKEDITOR.replace( 'editor1',
+		{
+			fullPage : true,
+			uiColor : '#efe8ce'
+		});
+//]]>
+</script>
+</div>
