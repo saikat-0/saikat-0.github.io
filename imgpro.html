@@ -1,198 +1,197 @@
-<html>
-<head>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #F0FFF0;
-    margin: 0;
-    padding: 0;
-    color: #333;
-  }
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f0fff0;
+        margin: 0;
+        padding: 0;
+        color: #333
+      }
 
-  .container {
-    max-width: 1160px;
-    margin: auto;
-    padding: 30px;
-    text-align: center;
-  }
+      .container {
+        max-width: 1160px;
+        margin: auto;
+        padding: 30px;
+        text-align: center
+      }
 
-  h1 {
-    font-size: 3rem;
-    margin-bottom: 20px;
-    color: #000080;
-  }
+      h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: navy
+      }
 
-  form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px
+      }
 
-  input[type=text] {
-    border: 2px dashed #000080;
-    border-radius: 8px;
-    padding: 12px;
-    width: 100%;
-    max-width: auto;
-    font-size: 1.4rem;
-    text-align: center;
-  }
+      input[type=text] {
+        border: 2px dashed navy;
+        border-radius: 8px;
+        padding: 12px;
+        width: 100%;
+        max-width: auto;
+        font-size: 1.4rem;
+        text-align: center
+      }
 
-  button {
-    background: indigo;
-    color: white;
-    border: none;
-    border-radius: 50px;
-    padding: 12px;
-    font-size: 1.4rem;
-    cursor: pointer;
-    transition: background 0.3s;
-    width: 200px;
-    max-width: 400px;
-  }
+      button {
+        background: indigo;
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        padding: 12px;
+        font-size: 1.4rem;
+        cursor: pointer;
+        transition: background .3s;
+        width: 200px;
+        max-width: 400px
+      }
 
-  button:hover {
-    background: #000000;
-  }
+      button:hover {
+        background: #000
+      }
 
-  .drag-drop-area {
-    border: 2px dashed #000080;
-    border-radius: 12px;
-    padding: 50px;
-    min-height: 30vh;
-    background: #ffffff;
-    cursor: pointer;
-    position: relative;
-    margin: 20px 0;
-    transition: border-color 0.3s, background 0.3s;
-  }
+      .drag-drop-area {
+        border: 2px dashed navy;
+        border-radius: 12px;
+        padding: 50px;
+        min-height: 30vh;
+        background: #fff;
+        cursor: pointer;
+        position: relative;
+        margin: 20px 0;
+        transition: border-color .3s, background .3s
+      }
 
-  .drag-drop-area.dragover {
-    border-color: #004d40;
-    background: #b2dfdb;
-  }
+      .drag-drop-area.dragover {
+        border-color: #004d40;
+        background: #b2dfdb
+      }
 
-  .drag-drop-area::after {
-    content: 'Drag & Drop Images Here';
-    color: #000080;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2rem;
-  }
+      .drag-drop-area::after {
+        content: 'Drag & Drop Images Here';
+        color: navy;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem
+      }
 
-  .image-preview-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 15px;
-}
+      .image-preview-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 15px
+      }
 
-.image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 0;
-  padding-top: 52%; /* Maintain aspect ratio of 1200x628 */
-}
+      .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-top: 52%
+      }
 
-.image-wrapper img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+      .image-wrapper img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover
+      }
 
+      .remove-image-button {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        background: rgba(0, 0, 0, .7);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.6rem;
+        z-index: 1
+      }
 
-  .remove-image-button {
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 1.6rem;
-    z-index: 1;
-  }
+      .remove-image-button:hover {
+        background: rgba(0, 0, 0, .9)
+      }
 
-  .remove-image-button:hover {
-    background: rgba(0, 0, 0, 0.9);
-  }
+      .caption {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, .7);
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        text-align: center;
+        width: calc(100% - 20px)
+      }
 
-  .caption {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 14px;
-    text-align: center;
-    width: calc(100% - 20px);
-  }
+      .watermark {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, .5);
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 14px;
+        text-align: center;
+        z-index: 1
+      }
 
-  .watermark {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 14px;
-    text-align: center;
-    z-index: 1;
-  }
+      .loading-spinner {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #00796b;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto
+      }
 
-  .loading-spinner {
-    border: 16px solid #f3f3f3;
-    border-top: 16px solid #00796b;
-    border-radius: 50%;
-    width: 80px;
-    height: 80px;
-    animation: spin 1s linear infinite;
-    margin: 20px auto;
-  }
+      .notification {
+        background: #00796b;
+        color: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px auto;
+        width: 90%;
+        max-width: 400px
+      }
 
-  .notification {
-    background: #00796b;
-    color: white;
-    padding: 15px;
-    border-radius: 8px;
-    margin: 20px auto;
-    width: 90%;
-    max-width: 400px;
-  }
+      @keyframes spin {
+        0% {
+          transform: rotate(0)
+        }
 
-  @keyframes spin {
-    0% {
-      transform: rotate(0);
-    }
-
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-</style>
-<head>
-    <body>
+        100% {
+          transform: rotate(360deg)
+        }
+      }
+    </style>
+  </head>
+  <body>
     <div id="root"></div>
-
-    <!-- React and ReactDOM CDN -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
-
     <script type="text/babel">
         const { useState, useRef, useCallback } = React;
 
@@ -271,10 +270,8 @@ const App = () => {
         const ctx = canvas.getContext('2d');
         const imgCount = imageUrls.length;
 
-        let imageWidth = 1200;
-        let imageHeight = 628;
-        canvas.width = imageWidth;
-        canvas.height = imageHeight;
+        canvas.width = 1200;
+        canvas.height = 628;
 
         const imageElements = imageUrls.map((src) => {
             const img = new Image();
@@ -286,129 +283,80 @@ const App = () => {
 
         const images = await Promise.all(imageElements);
 
-        // Drawing images based on layout
-        if (imgCount === 1) {
-            ctx.drawImage(images[0], 0, 0, imageWidth, imageHeight);
-        } else if (imgCount === 2) {
-            ctx.drawImage(images[0], 0, 0, imageWidth / 2, imageHeight);
-            ctx.drawImage(images[1], imageWidth / 2, 0, imageWidth / 2, imageHeight);
-        } else if (imgCount === 3) {
-            ctx.drawImage(images[0], 0, 0, imageWidth / 2, imageHeight / 2);
-            ctx.drawImage(images[1], imageWidth / 2, 0, imageWidth / 2, imageHeight / 2);
-            ctx.drawImage(images[2], 0, imageHeight / 2, imageWidth, imageHeight / 2);
-        } else if (imgCount === 4) {
-            ctx.drawImage(images[0], 0, 0, imageWidth / 2, imageHeight / 2);
-            ctx.drawImage(images[1], imageWidth / 2, 0, imageWidth / 2, imageHeight / 2);
-            ctx.drawImage(images[2], 0, imageHeight / 2, imageWidth / 2, imageHeight / 2);
-            ctx.drawImage(images[3], imageWidth / 2, imageHeight / 2, imageWidth / 2, imageHeight / 2);
-        } else if (imgCount === 5) {
-            ctx.drawImage(images[0], 0, 0, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[1], imageWidth / 3, 0, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[2], (2 * imageWidth) / 3, 0, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[3], 0, imageHeight / 2, imageWidth / 2, imageHeight / 2);
-            ctx.drawImage(images[4], imageWidth / 2, imageHeight / 2, imageWidth / 2, imageHeight / 2);
-        } else if (imgCount === 6) {
-            ctx.drawImage(images[0], 0, 0, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[1], imageWidth / 3, 0, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[2], (2 * imageWidth) / 3, 0, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[3], 0, imageHeight / 2, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[4], imageWidth / 3, imageHeight / 2, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[5], (2 * imageWidth) / 3, imageHeight / 2, imageWidth / 3, imageHeight / 2);
-        } else if (imgCount === 7) {
-            ctx.drawImage(images[0], 0, 0, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[1], imageWidth / 4, 0, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[2], (2 * imageWidth) / 4, 0, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[3], (3 * imageWidth) / 4, 0, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[4], 0, imageHeight / 2, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[5], imageWidth / 3, imageHeight / 2, imageWidth / 3, imageHeight / 2);
-            ctx.drawImage(images[6], (2 * imageWidth) / 3, imageHeight / 2, imageWidth / 3, imageHeight / 2);
-        } else if (imgCount === 8) {
-            ctx.drawImage(images[0], 0, 0, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[1], imageWidth / 4, 0, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[2], (2 * imageWidth) / 4, 0, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[3], (3 * imageWidth) / 4, 0, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[4], 0, imageHeight / 2, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[5], imageWidth / 4, imageHeight / 2, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[6], (2 * imageWidth) / 4, imageHeight / 2, imageWidth / 4, imageHeight / 2);
-            ctx.drawImage(images[7], (3 * imageWidth) / 4, imageHeight / 2, imageWidth / 4, imageHeight / 2);
-        } else if (imgCount === 9) {
-            ctx.drawImage(images[0], 0, 0, imageWidth / 3, imageHeight / 3);
-            ctx.drawImage(images[1], imageWidth / 3, 0, imageWidth / 3, imageHeight / 3);
-            ctx.drawImage(images[2], (2 * imageWidth) / 3, 0, imageWidth / 3, imageHeight / 3);
-            ctx.drawImage(images[3], 0, imageHeight / 3, imageWidth / 3, imageHeight / 3);
-            ctx.drawImage(images[4], imageWidth / 3, imageHeight / 3, imageWidth / 3, imageHeight / 3);
-            ctx.drawImage(images[5], (2 * imageWidth) / 3, imageHeight / 3, imageWidth / 3, imageHeight / 3);
-            ctx.drawImage(images[6], 0, (2 * imageHeight) / 3, imageWidth / 3, imageHeight / 3);
-            ctx.drawImage(images[7], imageWidth / 3, (2 * imageHeight) / 3, imageWidth / 3, imageHeight / 3);
-            ctx.drawImage(images[8], (2 * imageWidth) / 3, (2 * imageHeight) / 3, imageWidth / 3, imageHeight / 3);
-        } else if (imgCount === 10) {
-            ctx.drawImage(images[0], 0, 0, imageWidth / 5, imageHeight / 2);
-            ctx.drawImage(images[1], imageWidth / 5, 0, imageWidth / 5, imageHeight / 2);
-            ctx.drawImage(images[2], 2 * imageWidth / 5, 0, imageWidth / 5, imageHeight / 2);
-            ctx.drawImage(images[3], 3 * imageWidth / 5, 0, imageWidth / 5, imageHeight / 2);
-            ctx.drawImage(images[4], 4 * imageWidth / 5, 0, imageWidth / 5, imageHeight / 2);
-            ctx.drawImage(images[5], 0, imageHeight / 2, imageWidth / 5, imageHeight / 2);
-            ctx.drawImage(images[6], imageWidth / 5, imageHeight / 2, imageWidth / 5, imageHeight / 2);
-            ctx.drawImage(images[7], 2 * imageWidth / 5, imageHeight / 2, imageWidth / 5, imageHeight / 2);
-            ctx.drawImage(images[8], 3 * imageWidth / 5, imageHeight / 2, imageWidth / 5, imageHeight / 2);
-            ctx.drawImage(images[9], 4 * imageWidth / 5, imageHeight / 2, imageWidth / 5, imageHeight / 2);
+        const layoutMap = [
+          (ctx, images) => {
+            ctx.drawImage(images[0], 0, 0, canvas.width, canvas.height);
+          },
+          (ctx, images) => {
+            ctx.drawImage(images[0], 0, 0, canvas.width / 2, canvas.height);
+            ctx.drawImage(images[1], canvas.width / 2, 0, canvas.width / 2, canvas.height);
+          },
+          (ctx, images) => {
+            ctx.drawImage(images[0], 0, 0, canvas.width / 2, canvas.height / 2);
+            ctx.drawImage(images[1], canvas.width / 2, 0, canvas.width / 2, canvas.height / 2);
+            ctx.drawImage(images[2], 0, canvas.height / 2, canvas.width, canvas.height / 2);
+          },
+          (ctx, images) => {
+            ctx.drawImage(images[0], 0, 0, canvas.width / 2, canvas.height / 2);
+            ctx.drawImage(images[1], canvas.width / 2, 0, canvas.width / 2, canvas.height / 2);
+            ctx.drawImage(images[2], 0, canvas.height / 2, canvas.width / 2, canvas.height / 2);
+            ctx.drawImage(images[3], canvas.width / 2, canvas.height / 2, canvas.width / 2, canvas.height / 2);
+          }
+          // Add more layouts if needed
+        ];
+
+        if (imgCount <= 10) {
+          layoutMap[imgCount - 1](ctx, images);
+        } else {
+          showNotification('Too many images.', 'error');
+          return;
         }
 
-    // Add watermark
-    ctx.font = '700 24px Arial';
-    ctx.fillStyle = '#010642';
-    ctx.globalAlpha = 0.77;
-    const watermarkWidth = 148;
-    const watermarkHeight = 36;
-    const watermarkX = canvas.width - watermarkWidth - 10;
-    const watermarkY = 10 + watermarkHeight / 2;
+        // Add watermark
+        ctx.font = '700 24px Arial';
+        ctx.fillStyle = '#010642';
+        ctx.globalAlpha = 0.77;
+        ctx.beginPath();
+        ctx.roundRect(canvas.width - 158, 10, 148, 36, 50);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Vvip Times', canvas.width - 79, 28);
 
-    ctx.beginPath();
-    ctx.roundRect(watermarkX, 10, watermarkWidth, watermarkHeight, 50);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Vvip Times', canvas.width - watermarkWidth / 2 - 10, watermarkY);
+        // Add caption
+        if (caption) {
+          ctx.font = '500 20px Arial';
+          ctx.fillStyle = 'black';
+          ctx.globalAlpha = 0.5;
+          const textMetrics = ctx.measureText(caption);
+          const captionHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent + 10;
+          ctx.beginPath();
+          ctx.roundRect(0, canvas.height - captionHeight - 10, canvas.width, captionHeight, 15);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = 'white';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(caption, canvas.width / 2, canvas.height - captionHeight / 2);
+        }
 
-    // Add caption
-    if (caption) {
-      ctx.font = '500 20px Arial';
-      ctx.fillStyle = 'black';
-      ctx.globalAlpha = 0.5;
-
-      const textMetrics = ctx.measureText(caption);
-      const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
-      const captionHeight = textHeight + 10;
-
-      ctx.beginPath();
-      ctx.roundRect(0, canvas.height - captionHeight - 0, canvas.width, captionHeight, 15);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = 'white';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const textY = canvas.height - (captionHeight / 2) - 0;
-      ctx.fillText(caption, canvas.width / 2, textY);
+        const dataUrl = await compressImage(canvas);
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = 'VvipTimes.webp';
+        link.click();
+    } catch (error) {
+        showNotification('Error processing image.', 'error');
+    } finally {
+        setLoading(false);
     }
+  }, [imageUrls, caption]);
 
-    const dataUrl = await compressImage(canvas);
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = 'VvipTimes.webp';
-    link.click();
-  } catch (error) {
-    showNotification('Error processing image.', 'error');
-  } finally {
-    setLoading(false);
-  }
-}, [imageUrls, caption]);
-
-  
   const removeImage = useCallback((index) => {
-          setImageUrls(prev => prev.filter((_, i) => i !== index));
-        }, []);
+    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  }, []);
 
   return (
     <div className="container">
@@ -428,8 +376,8 @@ const App = () => {
         />
         <button type="button" onClick={downloadImage}>Download Image</button>
       </form><br />
-        {loading && <div className="loading-spinner"></div>}
-        {notification && <div className={`notification ${notification.type}`}>{notification.message}</div>}
+      {loading && <div className="loading-spinner"></div>}
+      {notification && <div className={`notification ${notification.type}`}>{notification.message}</div>}
       <div className="image-preview-container">
         {imageUrls.map((url, index) => (
           <div key={index} className="image-wrapper">
@@ -447,8 +395,8 @@ const App = () => {
 };
 
 ReactDOM.render(<App />, document.getElementById('root'));
-  
-</script>
 
-    </body>
+
+		</script>
+  </body>
 </html>
