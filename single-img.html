@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vvip Single Image Converter Ultimate</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f0fff0;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1160px;
+        margin: auto;
+        padding: 30px;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: navy;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      input[type="text"] {
+        border: 2px dashed navy;
+        border-radius: 8px;
+        padding: 12px;
+        width: 100%;
+        max-width: auto;
+        font-size: 1.4rem;
+        text-align: center;
+      }
+
+      button {
+        background: #4a0026f2;
+        color: #fff;
+        border: 10px solid #ff69b4;
+        border-radius: 50px;
+        padding: 9px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: background 0.3s;
+        width: 250px;
+        max-width: 400px;
+      }
+
+      button:hover {
+        background: #08005df5;
+        border: 10px solid #0071f9f0;
+        color: #fff;
+      }
+
+      .drag-drop-area {
+        border: 2px dashed navy;
+        border-radius: 12px;
+        padding: 50px;
+        min-height: 30vh;
+        background: #fff;
+        cursor: pointer;
+        position: relative;
+        margin: 20px 0;
+        transition: border-color 0.3s, background 0.3s;
+      }
+
+      .drag-drop-area.dragover {
+        border-color: #004d40;
+        background: #b2dfdb;
+      }
+
+      .drag-drop-area::after {
+        content: "Drag & Drop Images Here";
+        color: navy;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+      }
+
+      .image-preview-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 10px 6px;
+        background: #ff69b4;
+        padding: 10px;
+        border-radius: 12px;
+      }
+
+      .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-top: 52%;
+        overflow: hidden;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .image-wrapper img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: auto;
+        height: 100%;
+        transform: translate(-50%, -50%);
+      }
+
+      .rotate-button,
+      .remove-image-button {
+        position: absolute;
+        top: 2px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.6rem;
+        z-index: 1;
+      }
+
+      .rotate-button {
+        left: 8px;
+      }
+
+      .remove-image-button {
+        right: 8px;
+      }
+
+      .rotate-button:hover,
+      .remove-image-button:hover {
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #ff69b4;
+      }
+
+      .image-wrapper .caption,
+      .image-wrapper .watermark {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 15px;
+        font-size: 15px;
+        text-align: center;
+      }
+
+      .image-wrapper .caption {
+        bottom: 2px;
+        left: 2px;
+        right: 2px;
+      }
+
+      .image-wrapper .watermark {
+        top: 5px;
+        right: 45px;
+      }
+
+      .loading-spinner {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #007bff;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        animation: spin 2s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .notification {
+        background: #007bff;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 20px auto;
+        width: 80%;
+        max-width: 400px;
+      }
+
+      .notification.error {
+        background: #dc3545;
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vvip Single Image Converter Ultimate ++</h1>
+        <form>
+            <input type="text" placeholder="Enter caption here" id="captionInput">
+            <button type="button" id="downloadButton">Download Image</button>
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;"></div>
+            <div id="notification" class="notification" style="display: none;"></div>
+        </form>
+        <div id="dragDropArea" class="drag-drop-area"></div>
+        <div class="image-preview-container" id="imagePreviewContainer"></div>
+    </div>
+    <script src="https://unpkg.com/pica/dist/pica.min.js"></script>
+
+    <script>
+        
+        document.addEventListener("DOMContentLoaded", () => {
+    const dragDropArea = document.getElementById("dragDropArea");
+    const imagePreviewContainer = document.getElementById("imagePreviewContainer");
+    const captionInput = document.getElementById("captionInput");
+    const downloadButton = document.getElementById("downloadButton");
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const notification = document.getElementById("notification");
+    let imageUrl = null;
+    let flipHorizontal = false;
+
+    dragDropArea.addEventListener("dragover", e => {
+        e.preventDefault();
+        dragDropArea.classList.add("dragover");
+    });
+
+    dragDropArea.addEventListener("dragleave", e => {
+        e.preventDefault();
+        dragDropArea.classList.remove("dragover");
+    });
+
+    dragDropArea.addEventListener("drop", e => {
+        e.preventDefault();
+        dragDropArea.classList.remove("dragover");
+        handleFiles(Array.from(e.dataTransfer.files));
+    });
+
+    function handleFiles(files) {
+        files.forEach(file => {
+            if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    imageUrl = e.target.result;
+                    updateImagePreview();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showNotification("Only image files are supported.", "error");
+            }
+        });
+    }
+
+    function updateImagePreview() {
+        imagePreviewContainer.innerHTML = "";
+        if (imageUrl) {
+            const imageWrapper = document.createElement("div");
+            imageWrapper.className = "image-wrapper";
+            const img = document.createElement("img");
+            img.src = imageUrl;
+            img.alt = "Image";
+            const rotateButton = document.createElement("button");
+            rotateButton.className = "rotate-button";
+            rotateButton.innerHTML = "⥃";
+            rotateButton.addEventListener("click", () => flipImage());
+            const removeButton = document.createElement("button");
+            removeButton.className = "remove-image-button";
+            removeButton.innerHTML = "×";
+            removeButton.addEventListener("click", () => {
+                imageUrl = null;
+                flipHorizontal = false;
+                updateImagePreview();
+            });
+            const captionDiv = document.createElement("div");
+            captionDiv.className = "caption";
+            captionDiv.textContent = captionInput.value;
+            const watermarkDiv = document.createElement("div");
+            watermarkDiv.className = "watermark";
+            watermarkDiv.textContent = "Vvip Times";
+            imageWrapper.append(img, rotateButton, removeButton, captionDiv, watermarkDiv);
+            imagePreviewContainer.appendChild(imageWrapper);
+        }
+    }
+
+    function flipImage() {
+        flipHorizontal = !flipHorizontal;
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const img = new Image();
+        img.src = imageUrl;
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(img, 0, 0);
+            ctx.restore();
+            imageUrl = canvas.toDataURL("image/webp");
+            updateImagePreview();
+        };
+    }
+
+    downloadButton.addEventListener("click", () => {
+        if (imageUrl) {
+            loadingSpinner.style.display = "block";
+            setTimeout(() => {
+                createAndDownloadImage();
+                loadingSpinner.style.display = "none";
+            }, 2000); // Simulate delay for processing
+        } else {
+            showNotification("Please add an image first.", "error");
+        }
+    });
+
+    async function createAndDownloadImage() {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const img = new Image();
+        img.src = imageUrl;
+        img.onload = async () => {
+            const targetWidth = 1200;
+            const targetHeight = 628;
+            const tempCanvas = document.createElement("canvas");
+            const tempCtx = tempCanvas.getContext("2d");
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+
+            // Resize using pica with advanced options
+            await pica().resize(img, tempCanvas, {
+                quality: 3, // High quality
+                alpha: true,
+                unsharpAmount: 105, // Increase sharpness
+                unsharpThreshold: 0.2 // Fine detail sharpening
+            });
+
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            await cropAndDrawImage(ctx, tempCanvas, 0, 0, targetWidth, targetHeight);
+            addWatermark(ctx, canvas);
+            addCaption(ctx, canvas, captionInput.value);
+            await compressAndDownloadImage(canvas);
+        };
+    }
+
+    async function cropAndDrawImage(ctx, img, x, y, width, height) {
+        const imgRatio = img.width / img.height;
+        const canvasRatio = width / height;
+        let drawWidth, drawHeight, drawX, drawY;
+        if (imgRatio > canvasRatio) {
+            drawWidth = img.height * canvasRatio;
+            drawHeight = img.height;
+            drawX = (img.width - drawWidth) / 2;
+            drawY = 0;
+        } else {
+            drawWidth = img.width;
+            drawHeight = img.width / canvasRatio;
+            drawX = 0;
+            drawY = (img.height - drawHeight) / 2;
+        }
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight, x, y, width, height);
+    }
+
+    function addWatermark(ctx, canvas) {
+        const padding = 5;
+        const width = 150;
+        const height = 36;
+        ctx.font = "700 24px Arial";
+        ctx.fillStyle = "#010642";
+        ctx.globalAlpha = 0.77;
+        ctx.beginPath();
+        ctx.roundRect(canvas.width - width - padding, padding, width, height, 50);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("VvipTimes", canvas.width - width / 2 - padding, padding + height / 2);
+    }
+
+    function addCaption(ctx, canvas, caption) {
+        if (!caption) return;
+        ctx.font = "500 22px Arial";
+        ctx.fillStyle = "black";
+        ctx.globalAlpha = 0.7;
+        const textMetrics = ctx.measureText(caption);
+        const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+        const captionHeight = textHeight + 10;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.roundRect(0, canvas.height - captionHeight, canvas.width, captionHeight, 15);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(caption, canvas.width / 2, canvas.height - captionHeight / 2);
+    }
+
+    async function compressAndDownloadImage(canvas) {
+        const maxFileSize = 50 * 1024; // 50 KB
+        let quality = 0.9; // Start with high quality
+        const minQuality = 0.1;
+        const maxQuality = 0.9;
+
+        function getFileSize(blob) {
+            return new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.byteLength);
+                reader.readAsArrayBuffer(blob);
+            });
+        }
+
+        async function adjustQuality(low, high) {
+            if (high - low < 0.001) {
+                return low;
+            }
+            const mid = (low + high) / 2;
+            const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob), "image/webp", mid));
+            const size = await getFileSize(blob);
+            if (size <= maxFileSize) {
+                return adjustQuality(mid, high);
+            } else {
+                return adjustQuality(low, mid);
+            }
+        }
+
+        const finalQuality = await adjustQuality(minQuality, maxQuality);
+
+        canvas.toBlob(async blob => {
+            if (blob) {
+                const size = await getFileSize(blob);
+                console.log(`Final image size: ${size} bytes, quality: ${finalQuality}`);
+                const fileName = `VvipTimes_${captionInput.value.replace(/\s+/g, '_')}.webp`;
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                link.click();
+            } else {
+                showNotification("Failed to compress image.", "error");
+            }
+        }, "image/webp", finalQuality);
+    }
+
+    function showNotification(message, type = "info") {
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = "block";
+        setTimeout(() => {
+            notification.style.display = "none";
+        }, 3000);
+    }
+});
+
+
+    </script>
+</body>
+</html>
