@@ -1,40 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vvip Times Multi Image Creator Pro ++ (Enhanced)</title>
-    <style>
-      body { font-family: 'Segoe UI', sans-serif; background: #F0FFF0; margin: 0; padding: 0; color: #333; }
-      .container { max-width: 1200px; margin: auto; padding: 30px; text-align: center; }
-      h1 { font-size: 3rem; margin-bottom: 20px; color: #000080; }
-      form { display: flex; flex-direction: column; align-items: center; gap: 15px; }
-      input[type=text] { border: 2px dashed #000080; border-radius: 8px; padding: 12px; width: 100%; font-size: 1.4rem; text-align: center; }
-      button { background: #4A0026F2; color: white; border: 10px solid hotpink; border-radius: 50px; padding: 9px; font-size: 1.5rem; cursor: pointer; transition: background 0.3s; width: 250px; max-width: 400px; }
-      button:hover { background: #08005DF5; border: 10px solid #0071F9F0; color: #fff; }
-      .drag-drop-area { border: 2px dashed #000080; border-radius: 12px; padding: 60px 250px; min-height: 30vh; min-width: 30vw; background: #ffffff; cursor: pointer; position: relative; margin: 20px 0; transition: border-color 0.3s, background 0.3s; }
-      .drag-drop-area.dragover { border-color: #004d40; background: #b2dfdb; }
-      .drag-drop-area input[type="file"] { display: none; }
-      .drag-drop-area::after { content: 'Drag & Drop or Click to Upload Images'; color: #000080; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; font-weight: 600; }
-      .image-preview-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 10px; background: hotpink; padding: 10px; border-radius: 12px; }
-      .image-wrapper { position: relative; width: 100%; height: 0; padding-top: 52%; }
-      .image-wrapper img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-      .remove-image-button { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.6rem; z-index: 1; }
-      .remove-image-button:hover { background: rgba(0,0,0,0.9); border: 3px solid hotpink; }
-      .loading-spinner { border: 60px solid #000000da; border-top: 60px solid #09004f; border-radius: 50%; width: 300px; height: 300px; animation: spin 1s linear infinite; margin: 20px auto; }
-      .notification { background: #00796b; color: white; padding: 15px; border-radius: 8px; margin: 20px auto; width: 90%; max-width: 400px; }
-      @keyframes spin { 0% { transform: rotate(0); } 100% { transform: rotate(360deg); } }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.1.1/dist/compressor.min.js"></script>
-    <script type="text/babel">
-      const { useState, useReducer, useRef, useCallback, useEffect } = React;
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vvip Times Multi Image Creator Pro ++ (Enhanced)</title><style>body{font-family:'Segoe UI',sans-serif;background:#f0fff0;margin:0;padding:0;color:#333}.container{max-width:1200px;margin:auto;padding:30px;text-align:center}h1{font-size:3rem;margin-bottom:20px;color:navy}form{display:flex;flex-direction:column;align-items:center;gap:15px}input[type=text]{border:2px dashed navy;border-radius:8px;padding:12px;width:100%;font-size:1.4rem;text-align:center}button{background:#4a0026F2;color:#fff;border:10px solid #ff69b4;border-radius:50px;padding:9px;font-size:1.5rem;cursor:pointer;transition:background .3s;width:250px;max-width:400px}button:hover{background:#08005DF5;border:10px solid #0071F9F0;color:#fff}.drag-drop-area{border:2px dashed navy;border-radius:12px;padding:60px 250px;min-height:30vh;min-width:30vw;background:#fff;cursor:pointer;position:relative;margin:20px 0;transition:border-color .3s,background .3s}.drag-drop-area.dragover{border-color:#004d40;background:#b2dfdb}.drag-drop-area input[type=file]{display:none}.drag-drop-area::after{content:'Drag & Drop or Click to Upload Images';color:navy;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;font-weight:600}.image-preview-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:10px;background:#ff69b4;padding:10px;border-radius:12px}.image-wrapper{position:relative;width:100%;height:0;padding-top:52%}.image-wrapper img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}.remove-image-button{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.6rem;z-index:1}.remove-image-button:hover{background:rgba(0,0,0,.9);border:3px solid #ff69b4}.flip-image-button{position:absolute;top:3px;left:3px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.6rem;z-index:1}.flip-image-button:hover{background:rgba(0,0,0,.9);border:3px solid #ff69b4}.loading-spinner{border:60px solid #000000da;border-top:60px solid #09004f;border-radius:50%;width:300px;height:300px;animation:spin 1s linear infinite;margin:20px auto}.notification{background:#00796b;color:#fff;padding:15px;border-radius:8px;margin:20px auto;width:90%;max-width:400px}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}</style></head><body><div id="root"></div><script src="https://unpkg.com/react@18/umd/react.development.js"></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script><script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/compressorjs@1.1.1/dist/compressor.min.js"></script><script type="text/babel">const { useState, useReducer, useRef, useCallback, useEffect } = React;
 
       const initialState = {
         imageUrls: [],
@@ -140,24 +104,50 @@
 
     const images = await Promise.all(imageElements);
     images.forEach((img, index) => {
-      ctx.drawImage(img, 0, index * 628, imageWidth, 628);
-    });
+  const x = 0;
+  const y = index * 628;
+  const sourceWidth = img.width;
+  const sourceHeight = img.height;
+  const destWidth = imageWidth;
+  const destHeight = 628;
+  const sourceRatio = sourceWidth / sourceHeight;
+  const destRatio = destWidth / destHeight;
 
-    ctx.font = '700 24px Arial';
-    ctx.fillStyle = '#010642';
-    ctx.globalAlpha = 0.77;
-    const watermarkWidth = 150;
-    const watermarkHeight = 36;
-    const watermarkX = canvas.width - watermarkWidth - 10;
-    const watermarkY = 10 + watermarkHeight / 2;
-    ctx.beginPath();
-    ctx.roundRect(watermarkX, 10, watermarkWidth, watermarkHeight, 50);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Vvip Times', watermarkX + watermarkWidth / 2, watermarkY);
+  let sx, sy, sWidth, sHeight;
+
+  if (sourceRatio > destRatio) {
+    sWidth = sourceHeight * destRatio;
+    sHeight = sourceHeight;
+    sx = (sourceWidth - sWidth) / 2;
+    sy = 0;
+  } else {
+    sWidth = sourceWidth;
+    sHeight = sourceWidth / destRatio;
+    sx = 0;
+    sy = (sourceHeight - sHeight) / 2;
+  }
+
+  ctx.drawImage(img, sx, sy, sWidth, sHeight, x, y, destWidth, destHeight);
+});
+
+
+    // Add watermark
+const watermarkPadding = 5;
+const watermarkWidth = 150;
+const watermarkHeight = 36;
+ctx.font = '700 24px Arial';
+ctx.fillStyle = '#010642';
+ctx.globalAlpha = 0.77;
+const watermarkX = canvas.width - watermarkWidth - watermarkPadding;
+const watermarkY = watermarkPadding + watermarkHeight / 2;
+ctx.beginPath();
+ctx.roundRect(watermarkX, watermarkPadding, watermarkWidth, watermarkHeight, 50);
+ctx.fill();
+ctx.globalAlpha = 1;
+ctx.fillStyle = 'white';
+ctx.textAlign = 'center';
+ctx.textBaseline = 'middle';
+ctx.fillText('Vvip Times', canvas.width - (watermarkWidth / 2) - watermarkPadding, watermarkY);
 
     // Add caption
     if (state.caption) {
@@ -182,7 +172,7 @@
 
     const link = document.createElement('a');
     link.href = canvas.toDataURL('image/webp');
-    link.download = `combined_images_${Date.now()}.webp`;
+    link.download = `VvipTimes_.webp`;
     link.click();
   } catch (error) {
     showNotification('Error generating image.', 'error');
@@ -194,6 +184,23 @@
         const removeImage = (index) => {
           const updatedUrls = state.imageUrls.filter((_, i) => i !== index);
           dispatch({ type: 'SET_IMAGE_URLS', payload: updatedUrls });
+        };
+        
+        const flipImage = (index) => {
+          const newImageUrls = [...state.imageUrls];
+          const image = new Image();
+          image.src = newImageUrls[index];
+          image.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(image, 0, 0);
+            newImageUrls[index] = canvas.toDataURL();
+            dispatch({ type: 'SET_IMAGE_URLS', payload: newImageUrls });
+          };
         };
 
         return (
@@ -240,6 +247,12 @@
                 <div className="image-preview-container">
                   {state.imageUrls.map((url, index) => (
                     <div key={index} className="image-wrapper">
+                    <button
+                    className="flip-image-button"
+                    onClick={() => flipImage(index)}
+                  >
+                    ↻
+                  </button>
                       <button
                         type="button"
                         className="remove-image-button"
@@ -256,7 +269,4 @@
         );
       };
 
-      ReactDOM.render(<App />, document.getElementById('root'));
-    </script>
-  </body>
-</html>
+      ReactDOM.render(<App />, document.getElementById('root'));</script></body></html>
