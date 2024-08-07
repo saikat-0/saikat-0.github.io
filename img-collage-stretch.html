@@ -1,0 +1,456 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vvip Times Multi Image Creator Pro ++ (Enhanced)</title><style>body{font-family:'Segoe UI',sans-serif;background:#f0fff0;margin:0;padding:0;color:#333}.container{max-width:1200px;margin:auto;padding:30px;text-align:center}h1{font-size:3rem;margin-bottom:20px;color:navy}form{display:flex;flex-direction:column;align-items:center;gap:15px}input[type=text]{border:2px dashed navy;border-radius:8px;padding:12px;width:100%;font-size:1.4rem;text-align:center}button{background:#4a0026F2;color:#fff;border:10px solid #ff69b4;border-radius:50px;padding:9px;font-size:1.5rem;cursor:pointer;transition:background .3s;width:250px;max-width:400px}button:hover{background:#08005DF5;border:10px solid #0071F9F0;color:#fff}.drag-drop-area{border:2px dashed navy;border-radius:12px;padding:60px 250px;min-height:30vh;min-width:30vw;background:#fff;cursor:pointer;position:relative;margin:20px 0;transition:border-color .3s,background .3s}.drag-drop-area.dragover{border-color:#004d40;background:#b2dfdb}.drag-drop-area input[type=file]{display:none}.drag-drop-area::after{content:'Drag & Drop or Click to Upload Images';color:navy;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;font-weight:600}.image-preview-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:10px;background:#ff69b4;padding:10px;border-radius:12px}.image-wrapper{position:relative;width:100%;height:0;padding-top:52%}.image-wrapper img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}.remove-image-button{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.6rem;z-index:1}.remove-image-button:hover{background:rgba(0,0,0,.9);border:3px solid #ff69b4}.flip-image-button{position:absolute;top:3px;left:3px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.6rem;z-index:1}.flip-image-button:hover{background:rgba(0,0,0,.9);border:3px solid #ff69b4}.loading-spinner{border:60px solid #000000da;border-top:60px solid #09004f;border-radius:50%;width:300px;height:300px;animation:spin 1s linear infinite;margin:20px auto}.notification{background:#00796b;color:#fff;padding:15px;border-radius:8px;margin:20px auto;width:90%;max-width:400px}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}</style></head><body><div id="root"></div><script src="https://unpkg.com/react@18/umd/react.development.js"></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script><script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/compressorjs@1.1.1/dist/compressor.min.js"></script><script type="text/babel">const { useState, useReducer, useRef, useCallback, useEffect } = React;
+
+      const initialState = {
+        imageUrls: [],
+        caption: '',
+        loading: false,
+        notification: '',
+      };
+
+      const reducer = (state, action) => {
+        switch (action.type) {
+          case 'SET_IMAGE_URLS':
+            return { ...state, imageUrls: action.payload };
+          case 'SET_CAPTION':
+            return { ...state, caption: action.payload };
+          case 'SET_LOADING':
+            return { ...state, loading: action.payload };
+          case 'SET_NOTIFICATION':
+            return { ...state, notification: action.payload };
+          default:
+            return state;
+        }
+      };
+
+      const App = () => {
+        const [state, dispatch] = useReducer(reducer, initialState);
+        const dragDropRef = useRef(null);
+
+        const handleFileUpload = useCallback((files) => {
+          const newImageUrls = [];
+          Array.from(files).forEach(file => {
+            if (file.type.startsWith('image/')) {
+              const reader = new FileReader();
+              reader.onload = async (e) => {
+                try {
+                  const imageBitmap = await createImageBitmap(file);
+                  const canvas = document.createElement('canvas');
+                  canvas.width = imageBitmap.width;
+                  canvas.height = imageBitmap.height;
+                  const ctx = canvas.getContext('2d');
+                  ctx.drawImage(imageBitmap, 0, 0);
+                  newImageUrls.push(canvas.toDataURL());
+                  if (newImageUrls.length === files.length) {
+                    dispatch({ type: 'SET_IMAGE_URLS', payload: [...state.imageUrls, ...newImageUrls] });
+                  }
+                } catch (error) {
+                  showNotification('Error processing image.', 'error');
+                }
+              };
+              reader.readAsDataURL(file);
+            } else {
+              showNotification('Only image files are supported.', 'error');
+            }
+          });
+        }, [state.imageUrls]);
+
+        const handleDrop = useCallback((e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const files = e.dataTransfer.files;
+          handleFileUpload(files);
+          dragDropRef.current.classList.remove('dragover');
+        }, [handleFileUpload]);
+
+        const handleDragOver = useCallback((e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dragDropRef.current.classList.add('dragover');
+        }, []);
+
+        const handleDragLeave = useCallback((e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dragDropRef.current.classList.remove('dragover');
+        }, []);
+
+        const showNotification = (message, type = 'success') => {
+          dispatch({ type: 'SET_NOTIFICATION', payload: { message, type } });
+          setTimeout(() => dispatch({ type: 'SET_NOTIFICATION', payload: '' }), 5000);
+        };
+
+        const downloadImage = useCallback(async () => {
+  if (state.imageUrls.length === 0) {
+    showNotification('No images to process.', 'error');
+    return;
+  }
+  dispatch({ type: 'SET_LOADING', payload: true });
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const imgCount = state.imageUrls.length;
+
+    // Define canvas dimensions based on image count
+    let canvasWidth = 1200;
+    let canvasHeight = 628;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    const imageElements = state.imageUrls.map((src) => {
+      const img = new Image();
+      img.src = src;
+      return new Promise((resolve) => {
+        img.onload = () => resolve(img);
+      });
+    });
+
+    const images = await Promise.all(imageElements);
+    
+
+    // Drawing logic based on number of images
+    const drawImages = (ctx, imgs, width, height) => {
+      ctx.clearRect(0, 0, width, height);
+      
+      const drawImage = (img, x, y, maxWidth, maxHeight) => {
+    const imgRatio = img.width / img.height;
+    const canvasRatio = maxWidth / maxHeight;
+
+    let drawWidth, drawHeight;
+
+    if (imgRatio > canvasRatio) {
+        // Image is wider relative to the canvas
+        drawWidth = img.width * (maxHeight / img.height);
+        drawHeight = maxHeight;
+    } else {
+        // Image is taller relative to the canvas
+        drawWidth = maxWidth;
+        drawHeight = img.height * (maxWidth / img.width);
+    }
+
+    const offsetX = (drawWidth - maxWidth) / 2;
+    const offsetY = (drawHeight - maxHeight) / 2;
+
+    ctx.drawImage(img, -offsetX, -offsetY, drawWidth, drawHeight, x, y, maxWidth, maxHeight);
+};
+
+      
+      switch (imgs.length) {
+        case 1:
+          ctx.drawImage(imgs[0], 0, 0, width, height);
+          break;
+        case 2:
+          ctx.drawImage(imgs[0], 0, 0, width / 2, height);
+          ctx.drawImage(imgs[1], width / 2, 0, width / 2, height);
+          break;
+        case 3:
+          ctx.drawImage(imgs[0], 0, 0, width / 3, height);
+          ctx.drawImage(imgs[1], width / 3, 0, width / 3, height);
+          ctx.drawImage(imgs[2], width * 2 / 3, 0, width / 3, height);
+          break;
+        case 4:
+          ctx.drawImage(imgs[0], 0, 0, width / 2, height / 2);
+          ctx.drawImage(imgs[1], width / 2, 0, width / 2, height / 2);
+          ctx.drawImage(imgs[2], 0, height / 2, width / 2, height / 2);
+          ctx.drawImage(imgs[3], width / 2, height / 2, width / 2, height / 2);
+          break;
+        case 5:
+          const rowHeight = height / 2;
+          const colWidth = width / 3;
+          ctx.drawImage(imgs[0], 0, 0, colWidth, rowHeight);
+          ctx.drawImage(imgs[1], colWidth, 0, colWidth, rowHeight);
+          ctx.drawImage(imgs[2], colWidth * 2, 0, colWidth, rowHeight);
+          ctx.drawImage(imgs[3], 0, rowHeight, width / 2, rowHeight);
+          ctx.drawImage(imgs[4], width / 2, rowHeight, width / 2, rowHeight);
+          break;
+          case 6:
+      const rowHeight6 = height / 2;
+      ctx.drawImage(imgs[0], 0, 0, width / 3, rowHeight6);
+      ctx.drawImage(imgs[1], width / 3, 0, width / 3, rowHeight6);
+      ctx.drawImage(imgs[2], width * 2 / 3, 0, width / 3, rowHeight6);
+      ctx.drawImage(imgs[3], 0, rowHeight6, width / 3, rowHeight6);
+      ctx.drawImage(imgs[4], width / 3, rowHeight6, width / 3, rowHeight6);
+      ctx.drawImage(imgs[5], width * 2 / 3, rowHeight6, width / 3, rowHeight6);
+      break;
+
+    case 7:
+      const rowHeight7 = height / 2;
+      ctx.drawImage(imgs[0], 0, 0, width / 4, rowHeight7);
+      ctx.drawImage(imgs[1], width / 4, 0, width / 4, rowHeight7);
+      ctx.drawImage(imgs[2], width / 2, 0, width / 4, rowHeight7);
+      ctx.drawImage(imgs[3], width * 3 / 4, 0, width / 4, rowHeight7);
+      ctx.drawImage(imgs[4], 0, rowHeight7, width / 3, rowHeight7);
+      ctx.drawImage(imgs[5], width / 3, rowHeight7, width / 3, rowHeight7);
+      ctx.drawImage(imgs[6], width * 2 / 3, rowHeight7, width / 3, rowHeight7);
+      break;
+
+    case 8:
+      const rowHeight8 = height / 2;
+      ctx.drawImage(imgs[0], 0, 0, width / 4, rowHeight8);
+      ctx.drawImage(imgs[1], width / 4, 0, width / 4, rowHeight8);
+      ctx.drawImage(imgs[2], width / 2, 0, width / 4, rowHeight8);
+      ctx.drawImage(imgs[3], width * 3 / 4, 0, width / 4, rowHeight8);
+      ctx.drawImage(imgs[4], 0, rowHeight8, width / 4, rowHeight8);
+      ctx.drawImage(imgs[5], width / 4, rowHeight8, width / 4, rowHeight8);
+      ctx.drawImage(imgs[6], width / 2, rowHeight8, width / 4, rowHeight8);
+      ctx.drawImage(imgs[7], width * 3 / 4, rowHeight8, width / 4, rowHeight8);
+      break;
+
+    case 9:
+      const rowHeight9 = height / 3;
+      ctx.drawImage(imgs[0], 0, 0, width / 3, rowHeight9);
+      ctx.drawImage(imgs[1], width / 3, 0, width / 3, rowHeight9);
+      ctx.drawImage(imgs[2], width * 2 / 3, 0, width / 3, rowHeight9);
+      ctx.drawImage(imgs[3], 0, rowHeight9, width / 3, rowHeight9);
+      ctx.drawImage(imgs[4], width / 3, rowHeight9, width / 3, rowHeight9);
+      ctx.drawImage(imgs[5], width * 2 / 3, rowHeight9, width / 3, rowHeight9);
+      ctx.drawImage(imgs[6], 0, rowHeight9 * 2, width / 3, rowHeight9);
+      ctx.drawImage(imgs[7], width / 3, rowHeight9 * 2, width / 3, rowHeight9);
+      ctx.drawImage(imgs[8], width * 2 / 3, rowHeight9 * 2, width / 3, rowHeight9);
+      break;
+
+    case 10:
+      const rowHeight10 = height / 2;
+      ctx.drawImage(imgs[0], 0, 0, width / 5, rowHeight10);
+      ctx.drawImage(imgs[1], width / 5, 0, width / 5, rowHeight10);
+      ctx.drawImage(imgs[2], width * 2 / 5, 0, width / 5, rowHeight10);
+      ctx.drawImage(imgs[3], width * 3 / 5, 0, width / 5, rowHeight10);
+      ctx.drawImage(imgs[4], width * 4 / 5, 0, width / 5, rowHeight10);
+      ctx.drawImage(imgs[5], 0, rowHeight10, width / 5, rowHeight10);
+      ctx.drawImage(imgs[6], width / 5, rowHeight10, width / 5, rowHeight10);
+      ctx.drawImage(imgs[7], width * 2 / 5, rowHeight10, width / 5, rowHeight10);
+      ctx.drawImage(imgs[8], width * 3 / 5, rowHeight10, width / 5, rowHeight10);
+      ctx.drawImage(imgs[9], width * 4 / 5, rowHeight10, width / 5, rowHeight10);
+      break;
+
+    case 11:
+      const rowHeight11 = height / 3;
+      ctx.drawImage(imgs[0], 0, 0, width / 4, rowHeight11);
+      ctx.drawImage(imgs[1], width / 4, 0, width / 4, rowHeight11);
+      ctx.drawImage(imgs[2], width / 2, 0, width / 4, rowHeight11);
+      ctx.drawImage(imgs[3], width * 3 / 4, 0, width / 4, rowHeight11);
+      ctx.drawImage(imgs[4], 0, rowHeight11, width / 3, rowHeight11);
+      ctx.drawImage(imgs[5], width / 3, rowHeight11, width / 3, rowHeight11);
+      ctx.drawImage(imgs[6], width * 2 / 3, rowHeight11, width / 3, rowHeight11);
+      ctx.drawImage(imgs[7], 0, rowHeight11 * 2, width / 4, rowHeight11);
+      ctx.drawImage(imgs[8], width / 4, rowHeight11 * 2, width / 4, rowHeight11);
+      ctx.drawImage(imgs[9], width / 2, rowHeight11 * 2, width / 4, rowHeight11);
+      ctx.drawImage(imgs[10], width * 3 / 4, rowHeight11 * 2, width / 4, rowHeight11);
+      break;
+
+    case 12:
+      const rowHeight12 = height / 3;
+      ctx.drawImage(imgs[0], 0, 0, width / 4, rowHeight12);
+      ctx.drawImage(imgs[1], width / 4, 0, width / 4, rowHeight12);
+      ctx.drawImage(imgs[2], width / 2, 0, width / 4, rowHeight12);
+      ctx.drawImage(imgs[3], width * 3 / 4, 0, width / 4, rowHeight12);
+      ctx.drawImage(imgs[4], 0, rowHeight12, width / 4, rowHeight12);
+      ctx.drawImage(imgs[5], width / 4, rowHeight12, width / 4, rowHeight12);
+      ctx.drawImage(imgs[6], width / 2, rowHeight12, width / 4, rowHeight12);
+      ctx.drawImage(imgs[7], width * 3 / 4, rowHeight12, width / 4, rowHeight12);
+      ctx.drawImage(imgs[8], 0, rowHeight12 * 2, width / 4, rowHeight12);
+      ctx.drawImage(imgs[9], width / 4, rowHeight12 * 2, width / 4, rowHeight12);
+      ctx.drawImage(imgs[10], width / 2, rowHeight12 * 2, width / 4, rowHeight12);
+      ctx.drawImage(imgs[11], width * 3 / 4, rowHeight12 * 2, width / 4, rowHeight12);
+      break;
+      
+      case 13:
+      const rowHeight13 = height / 3;
+      ctx.drawImage(imgs[0], 0, 0, width / 4, rowHeight13);
+      ctx.drawImage(imgs[1], width / 4, 0, width / 4, rowHeight13);
+      ctx.drawImage(imgs[2], width / 2, 0, width / 4, rowHeight13);
+      ctx.drawImage(imgs[3], width * 3 / 4, 0, width / 4, rowHeight13);
+      ctx.drawImage(imgs[4], 0, rowHeight13, width / 5, rowHeight13);
+      ctx.drawImage(imgs[5], width / 5, rowHeight13, width / 5, rowHeight13);
+      ctx.drawImage(imgs[6], width * 2 / 5, rowHeight13, width / 5, rowHeight13);
+      ctx.drawImage(imgs[7], width * 3 / 5, rowHeight13, width / 5, rowHeight13);
+      ctx.drawImage(imgs[8], width * 4 / 5, rowHeight13, width / 5, rowHeight13);
+      ctx.drawImage(imgs[9], 0, rowHeight13 * 2, width / 4, rowHeight13);
+      ctx.drawImage(imgs[10], width / 4, rowHeight13 * 2, width / 4, rowHeight13);
+      ctx.drawImage(imgs[11], width / 2, rowHeight13 * 2, width / 4, rowHeight13);
+      ctx.drawImage(imgs[12], width * 3 / 4, rowHeight13 * 2, width / 4, rowHeight13);
+      break;
+
+    case 14:
+      const rowHeight14 = height / 3;
+      ctx.drawImage(imgs[0], 0, 0, width / 5, rowHeight14);
+      ctx.drawImage(imgs[1], width / 5, 0, width / 5, rowHeight14);
+      ctx.drawImage(imgs[2], width * 2 / 5, 0, width / 5, rowHeight14);
+      ctx.drawImage(imgs[3], width * 3 / 5, 0, width / 5, rowHeight14);
+      ctx.drawImage(imgs[4], width * 4 / 5, 0, width / 5, rowHeight14);
+      ctx.drawImage(imgs[5], 0, rowHeight14, width / 4, rowHeight14);
+      ctx.drawImage(imgs[6], width / 4, rowHeight14, width / 4, rowHeight14);
+      ctx.drawImage(imgs[7], width / 2, rowHeight14, width / 4, rowHeight14);
+      ctx.drawImage(imgs[8], width * 3 / 4, rowHeight14, width / 4, rowHeight14);
+      ctx.drawImage(imgs[9], 0, rowHeight14 * 2, width / 5, rowHeight14);
+      ctx.drawImage(imgs[10], width / 5, rowHeight14 * 2, width / 5, rowHeight14);
+      ctx.drawImage(imgs[11], width * 2 / 5, rowHeight14 * 2, width / 5, rowHeight14);
+      ctx.drawImage(imgs[12], width * 3 / 5, rowHeight14 * 2, width / 5, rowHeight14);
+      ctx.drawImage(imgs[13], width * 4 / 5, rowHeight14 * 2, width / 5, rowHeight14);
+      break;
+
+    case 15:
+      const rowHeight15 = height / 3;
+      ctx.drawImage(imgs[0], 0, 0, width / 5, rowHeight15);
+      ctx.drawImage(imgs[1], width / 5, 0, width / 5, rowHeight15);
+      ctx.drawImage(imgs[2], width * 2 / 5, 0, width / 5, rowHeight15);
+      ctx.drawImage(imgs[3], width * 3 / 5, 0, width / 5, rowHeight15);
+      ctx.drawImage(imgs[4], width * 4 / 5, 0, width / 5, rowHeight15);
+      ctx.drawImage(imgs[5], 0, rowHeight15, width / 5, rowHeight15);
+      ctx.drawImage(imgs[6], width / 5, rowHeight15, width / 5, rowHeight15);
+      ctx.drawImage(imgs[7], width * 2 / 5, rowHeight15, width / 5, rowHeight15);
+      ctx.drawImage(imgs[8], width * 3 / 5, rowHeight15, width / 5, rowHeight15);
+      ctx.drawImage(imgs[9], width * 4 / 5, rowHeight15, width / 5, rowHeight15);
+      ctx.drawImage(imgs[10], 0, rowHeight15 * 2, width / 5, rowHeight15);
+      ctx.drawImage(imgs[11], width / 5, rowHeight15 * 2, width / 5, rowHeight15);
+      ctx.drawImage(imgs[12], width * 2 / 5, rowHeight15 * 2, width / 5, rowHeight15);
+      ctx.drawImage(imgs[13], width * 3 / 5, rowHeight15 * 2, width / 5, rowHeight15);
+      ctx.drawImage(imgs[14], width * 4 / 5, rowHeight15 * 2, width / 5, rowHeight15);
+      break;
+      
+        default:
+          throw new Error('Unsupported image count.');
+      }
+    };
+
+    drawImages(ctx, images, canvasWidth, canvasHeight);
+
+    // Add watermark
+    const watermarkPadding = 5;
+    const watermarkWidth = 150;
+    const watermarkHeight = 36;
+    ctx.font = '700 24px Arial';
+    ctx.fillStyle = '#010642';
+    ctx.globalAlpha = 0.77;
+    const watermarkX = canvas.width - watermarkWidth - watermarkPadding;
+    const watermarkY = watermarkPadding + watermarkHeight / 2;
+    ctx.beginPath();
+    ctx.roundRect(watermarkX, watermarkPadding, watermarkWidth, watermarkHeight, 50);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Vvip Times', canvas.width - (watermarkWidth / 2) - watermarkPadding, watermarkY);
+
+    // Add caption
+    if (state.caption) {
+      ctx.font = '500 22px Arial';
+      ctx.fillStyle = 'black';
+      ctx.globalAlpha = 0.7;
+
+      const textMetrics = ctx.measureText(state.caption);
+      const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+      const captionHeight = textHeight + 10;
+
+      ctx.beginPath();
+      ctx.roundRect(0, canvas.height - captionHeight - 0, canvas.width, captionHeight, 15);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const textY = canvas.height - (captionHeight / 2) - 0;
+      ctx.fillText(state.caption, canvas.width / 2, textY);
+    }
+
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/webp');
+    link.download = `VvipTimes_.webp`;
+    link.click();
+  } catch (error) {
+    showNotification('Error generating image.', 'error');
+  } finally {
+    dispatch({ type: 'SET_LOADING', payload: false });
+  }
+}, [state.imageUrls]);
+
+
+        const removeImage = (index) => {
+          const updatedUrls = state.imageUrls.filter((_, i) => i !== index);
+          dispatch({ type: 'SET_IMAGE_URLS', payload: updatedUrls });
+        };
+        
+        const flipImage = (index) => {
+          const newImageUrls = [...state.imageUrls];
+          const image = new Image();
+          image.src = newImageUrls[index];
+          image.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(image, 0, 0);
+            newImageUrls[index] = canvas.toDataURL();
+            dispatch({ type: 'SET_IMAGE_URLS', payload: newImageUrls });
+          };
+        };
+
+        return (
+          <div className="container">
+            <h1>Vvip Times Multi Image Creator Pro ++</h1>
+            <form onSubmit={(e) => e.preventDefault()}>
+            <div
+                className="drag-drop-area"
+                ref={dragDropRef}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={() => document.getElementById('fileInput').click()}
+              >
+                <input
+                  type="file"
+                  id="fileInput"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                />
+              </div>
+              <input
+                type="text"
+                placeholder="Enter caption..."
+                value={state.caption}
+                onChange={(e) => dispatch({ type: 'SET_CAPTION', payload: e.target.value })}
+              />
+              
+              {state.loading && <div className="loading-spinner"></div>}
+              
+              {!state.loading && state.imageUrls.length > 0 && (
+                <button type="button" onClick={downloadImage}>
+                  Download Image
+                </button>
+              )}
+              {state.notification && (
+                <div className={`notification ${state.notification.type}`}>
+                  {state.notification.message}
+                </div>
+              )}
+            </form><br />
+            {!state.loading && state.imageUrls.length > 0 && (
+                <div className="image-preview-container">
+                  {state.imageUrls.map((url, index) => (
+                    <div key={index} className="image-wrapper">
+                    <button
+                    className="flip-image-button"
+                    onClick={() => flipImage(index)}
+                  >
+                    ↻
+                  </button>
+                      <button
+                        type="button"
+                        className="remove-image-button"
+                        onClick={() => removeImage(index)}
+                      >
+                        &times;
+                      </button>
+                      <img src={url} alt={`Preview ${index + 1}`} />
+                    </div>
+                  ))}
+                </div>
+              )}
+          </div>
+        );
+      };
+
+      ReactDOM.render(<App />, document.getElementById('root'));</script></body></html>
