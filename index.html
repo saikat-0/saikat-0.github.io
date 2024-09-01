@@ -1,393 +1,854 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vvip Times Multi Image Creator Pro ++ (stack)</title>
-<style>
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #F0FFF0;
-    margin: 0;
-    padding: 0;
-    color: #333;
-  }
+    <title>Image Creator Pro (crop)</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f0fff0;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
 
-  .container {
-    max-width: 1160px;
-    margin: auto;
-    padding: 30px;
-    text-align: center;
-  }
+      .container {
+        max-width: 1160px;
+        margin: auto;
+        padding: 30px;
+        text-align: center;
+      }
 
-  h1 {
-    font-size: 3rem;
-    margin-bottom: 20px;
-    color: #000080;
-  }
+      h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: navy;
+      }
 
-  form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
+      form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
 
-  input[type=text] {
-    border: 2px dashed #000080;
-    border-radius: 8px;
-    padding: 12px;
-    width: 100%;
-    max-width: auto;
-    font-size: 1.4rem;
-    text-align: center;
-  }
+      input[type="text"] {
+        border: 2px dashed navy;
+        border-radius: 8px;
+        padding: 12px;
+        width: 100%;
+        max-width: auto;
+        font-size: 1.4rem;
+        text-align: center;
+      }
 
-  button {
-    background: indigo;
-    color: white;
-    border: none;
-    border-radius: 50px;
-    padding: 12px;
-    font-size: 1.4rem;
-    cursor: pointer;
-    transition: background 0.3s;
-    width: 200px;
-    max-width: 400px;
-  }
+      button {
+        background: #4a0026f2;
+        color: #fff;
+        border: 10px solid #ff69b4;
+        border-radius: 50px;
+        padding: 9px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: background 0.3s;
+        width: 250px;
+        max-width: 400px;
+      }
 
-  button:hover {
-    background: #000000;
-  }
+      button:hover {
+        background: #08005df5;
+        border: 10px solid #0071f9f0;
+        color: #fff;
+      }
 
-  .drag-drop-area {
-    border: 2px dashed #000080;
-    border-radius: 12px;
-    padding: 50px;
-    min-height: 30vh;
-    background: #ffffff;
-    cursor: pointer;
-    position: relative;
-    margin: 20px 0;
-    transition: border-color 0.3s, background 0.3s;
-  }
+      .drag-drop-area {
+        border: 2px dashed navy;
+        border-radius: 12px;
+        padding: 50px;
+        min-height: 30vh;
+        background: #fff;
+        cursor: pointer;
+        position: relative;
+        margin: 20px 0;
+        transition: border-color 0.3s, background 0.3s;
+      }
 
-  .drag-drop-area.dragover {
-    border-color: #004d40;
-    background: #b2dfdb;
-  }
+      .drag-drop-area.dragover {
+        border-color: #004d40;
+        background: #b2dfdb;
+      }
 
-  .drag-drop-area::after {
-    content: 'Drag & Drop Images Here';
-    color: #000080;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2rem;
-  }
+      .drag-drop-area::after {
+        content: "Drag & Drop Images Here";
+        color: navy;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+      }
 
-  .image-preview-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 15px;
-  }
+      .image-preview-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 10px 6px;
+        background: #ff69b4;
+        padding: 10px;
+        border-radius: 12px;
+      }
 
-  .image-wrapper {
-    position: relative;
-    width: 100%;
-    height: 0;
-    padding-top: 52%; /* Maintain aspect ratio of 1200x628 */
-  }
+      .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-top: 52%;
+        overflow: hidden;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
 
-  .image-wrapper img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+      .image-wrapper img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: auto;
+        height: 100%;
+        transform: translate(-50%, -50%);
+      }
 
-  .remove-image-button {
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 1.6rem;
-    z-index: 1;
-  }
+      .rotate-button,
+      .remove-image-button {
+        position: absolute;
+        top: 2px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.6rem;
+        z-index: 1;
+      }
 
-  .remove-image-button:hover {
-    background: rgba(0, 0, 0, 0.9);
-  }
+      .rotate-button {
+        left: 8px;
+      }
 
-  
+      .remove-image-button {
+        right: 8px;
+      }
 
-  .loading-spinner {
-    border: 16px solid #f3f3f3;
-    border-top: 16px solid #00796b;
-    border-radius: 50%;
-    width: 80px;
-    height: 80px;
-    animation: spin 1s linear infinite;
-    margin: 20px auto;
-  }
+      .rotate-button:hover,
+      .remove-image-button:hover {
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #ff69b4;
+      }
 
-  .notification {
-    background: #00796b;
-    color: white;
-    padding: 15px;
-    border-radius: 8px;
-    margin: 20px auto;
-    width: 90%;
-    max-width: 400px;
-  }
+      .image-wrapper .caption,
+      .image-wrapper .watermark {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 15px;
+        font-size: 15px;
+        text-align: center;
+      }
 
-  @keyframes spin {
-    0% {
-      transform: rotate(0);
-    }
+      .image-wrapper .caption {
+        bottom: 2px;
+        left: 2px;
+        right: 2px;
+      }
 
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-</style>
+      .image-wrapper .watermark {
+        top: 5px;
+        right: 45px;
+      }
 
+      .loading-spinner {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #007bff;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        animation: spin 2s linear infinite;
+        margin: 20px auto;
+      }
 
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .notification {
+        background: #007bff;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 20px auto;
+        width: 80%;
+        max-width: 400px;
+      }
+
+      .notification.error {
+        background: #dc3545;
+      }
+    </style>
   </head>
   <body>
-  <div id="root"></div>
-    <!-- React and ReactDOM CDN -->
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
-
-<script type="text/babel">
-  const { useState, useRef, useCallback } = React;
-
-  const App = () => {
-    const [imageUrls, setImageUrls] = useState([]);
-    const [caption, setCaption] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [notification, setNotification] = useState('');
-    const dragDropRef = useRef(null);
-
-    const handleFileUpload = useCallback((files) => {
-      const newImageUrls = [];
-      Array.from(files).forEach(file => {
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            newImageUrls.push(e.target.result);
-            setImageUrls(prev => [...prev, ...newImageUrls]);
-          };
-          reader.readAsDataURL(file);
-        } else {
-          showNotification('Only image files are supported.', 'error');
-        }
-      });
-    }, []);
-
-    const handleDrop = useCallback((e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      handleFileUpload(e.dataTransfer.files);
-      dragDropRef.current.classList.remove('dragover');
-    }, [handleFileUpload]);
-
-    const handleDragOver = useCallback((e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragDropRef.current.classList.add('dragover');
-    }, []);
-
-    const handleDragLeave = useCallback((e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragDropRef.current.classList.remove('dragover');
-    }, []);
-
-    const showNotification = (message, type = 'success') => {
-      setNotification({ message, type });
-      setTimeout(() => setNotification(''), 5000);
-    };
-
-    const compressImage = async (canvas) => {
-      const dataUrl = canvas.toDataURL('image/webp', 1.0);
-      return dataUrl;
-    };
-
-    const downloadImage = useCallback(async () => {
-  if (imageUrls.length === 0) {
-    showNotification('No images to process.', 'error');
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const imgCount = imageUrls.length;
-
-    // Set canvas size based on image count
-    let imageWidth = 1200;
-    let imageHeight = 628 * imgCount; // Adjust height based on image count
-    canvas.width = imageWidth;
-    canvas.height = imageHeight;
-
-    const imageElements = imageUrls.map((src) => {
-      const img = new Image();
-      img.src = src;
-      return new Promise((resolve) => {
-        img.onload = () => resolve(img);
-      });
-    });
-
-    const images = await Promise.all(imageElements);
-
-    // Drawing images based on layout
-    images.forEach((img, index) => {
-      ctx.drawImage(img, 0, index * 628, imageWidth, 628); // Stack images vertically
-    });
-
-    // Add watermark
-    ctx.font = '700 24px Arial';
-    ctx.fillStyle = '#010642';
-    ctx.globalAlpha = 0.77;
-    const watermarkWidth = 148;
-    const watermarkHeight = 36;
-    const watermarkX = canvas.width - watermarkWidth - 10;
-    const watermarkY = 10 + watermarkHeight / 2;
-
-    ctx.beginPath();
-    ctx.roundRect(watermarkX, 10, watermarkWidth, watermarkHeight, 50);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Vvip Times', canvas.width - watermarkWidth / 2 - 10, watermarkY);
-
-    // Add caption
-    if (caption) {
-      ctx.font = '500 22px Arial';
-      ctx.fillStyle = 'black';
-      ctx.globalAlpha = 0.7;
-
-      const textMetrics = ctx.measureText(caption);
-      const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
-      const captionHeight = textHeight + 10;
-
-      ctx.beginPath();
-      ctx.roundRect(0, canvas.height - captionHeight - 0, canvas.width, captionHeight, 15);
-      ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.fillStyle = 'white';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      const textY = canvas.height - (captionHeight / 2) - 0;
-      ctx.fillText(caption, canvas.width / 2, textY);
-    }
-    
-    // Determine maximum file size based on image count
-    const maxFileSize = [
-      50, // 1 image
-      60, // 2 images
-      80, // 3 images
-      100, // 4 images
-      120, // 5 images
-      125, // 6 images
-      130, // 7 images
-      135, // 8 images
-      140, // 9 images
-      150 // 10 images
-    ][imgCount - 1] || 180; // Default to 130KB if more than 10 images
-
-    // Advanced compression logic
-    const compressImage = async (canvas, maxFileSizeKB) => {
-      let quality = 1.0;
-      let dataUrl;
-      do {
-        dataUrl = canvas.toDataURL('image/webp', quality);
-        const byteSize = (dataUrl.length * (3/4)) / 1024; // Convert from base64 length to KB
-        if (byteSize <= maxFileSizeKB) {
-          break;
-        }
-        quality -= 0.009; // Decrease quality
-      } while (quality > 0);
-
-      return dataUrl;
-    };
-
-    const compressedImageUrl = await compressImage(canvas, maxFileSize);
-
-    const a = document.createElement('a');
-    a.href = compressedImageUrl;
-    a.download = 'VvipTimes-.webp';
-    a.click();
-    showNotification('Image downloaded successfully!');
-  } catch (error) {
-    showNotification('Error occurred during image processing.', 'error');
-  } finally {
-    setLoading(false);
-  }
-}, [imageUrls, caption]);
-
-return (
-  <div className="container">
-    <h1>Vvip Times Multi Image Creator Pro ++ (stack)</h1>
-    <div 
-      className="drag-drop-area" 
-      ref={dragDropRef} 
-      onDrop={handleDrop} 
-      onDragOver={handleDragOver} 
-      onDragLeave={handleDragLeave}
-    />
-    <form onSubmit={(e) => e.preventDefault()}>
-      <input 
-        type="text" 
-        placeholder="Enter caption here..." 
-        value={caption} 
-        onChange={(e) => setCaption(e.target.value)}
-      />
-      <button type="button" onClick={downloadImage}>Generate Image</button><br />
-      {loading && <div className="loading-spinner"></div>}
-      {notification && (
-        <div className={`notification ${notification.type}`}>
-          {notification.message}
-        </div>
-      )}
-    </form>
-    <div className="image-preview-container">
-      {imageUrls.map((url, index) => (
-        <div key={index} className="image-wrapper">
-          <img src={url} alt={`Preview ${index}`} />
-          <button
-            className="remove-image-button"
-            onClick={() => setImageUrls(prev => prev.filter((_, i) => i !== index))}
-          >
-            &times;
-          </button>
-        </div>
-      ))}
+    <div class="container">
+      <div id="dragDropArea" class="drag-drop-area"></div>
+      <form>
+        <input type="text" placeholder="Enter caption here" id="captionInput">
+        <button type="button" id="downloadButton">Download Collage</button>
+        <div id="loadingSpinner" class="loading-spinner" style="display: none;"></div>
+        <div id="notification" class="notification" style="display: none;"></div>
+      </form>
+      <br />
+      <div class="image-preview-container" id="imagePreviewContainer"></div>
     </div>
-  </div>
-);
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const dragDropArea = document.getElementById("dragDropArea");
+        const imagePreviewContainer = document.getElementById("imagePreviewContainer");
+        const captionInput = document.getElementById("captionInput");
+        const downloadButton = document.getElementById("downloadButton");
+        const loadingSpinner = document.getElementById("loadingSpinner");
+        const notification = document.getElementById("notification");
+        let imageUrls = [];
+        dragDropArea.addEventListener("dragover", e => {
+          e.preventDefault();
+          dragDropArea.classList.add("dragover");
+        });
+        dragDropArea.addEventListener("dragleave", e => {
+          e.preventDefault();
+          dragDropArea.classList.remove("dragover");
+        });
+        dragDropArea.addEventListener("drop", e => {
+          e.preventDefault();
+          dragDropArea.classList.remove("dragover");
+          handleFiles(Array.from(e.dataTransfer.files));
+        });
+        dragDropArea.addEventListener("click", () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.addEventListener('change', () => {
+                    handleFiles(Array.from(input.files));
+                });
+                input.click();
+            });
+
+        function handleFiles(files) {
+          files.forEach(file => {
+            if (file.type.startsWith("image/")) {
+              const reader = new FileReader();
+              reader.onload = e => {
+                imageUrls.push(e.target.result);
+                updateImagePreview();
+              };
+              reader.readAsDataURL(file);
+            } else {
+              showNotification("Only image files are supported.", "error");
+            }
+          });
+        }
+
+        function updateImagePreview() {
+                imagePreviewContainer.innerHTML = "";
+                imageUrls.forEach((url, index) => {
+                    const imageWrapper = document.createElement("div");
+                    imageWrapper.className = "image-wrapper";
+                    imageWrapper.draggable = true;
+                    imageWrapper.dataset.index = index;
+
+                    const img = document.createElement("img");
+                    img.src = url;
+                    img.alt = `Image ${index + 1}`;
+
+                    const rotateButton = document.createElement("button");
+                    rotateButton.className = "rotate-button";
+                    rotateButton.innerHTML = "⥃";
+                    rotateButton.addEventListener("click", () => flipImage(index));
+
+                    const removeButton = document.createElement("button");
+                    removeButton.className = "remove-image-button";
+                    removeButton.innerHTML = "×";
+                    removeButton.addEventListener("click", () => {
+                        imageUrls.splice(index, 1);
+                        updateImagePreview();
+                    });
+
+                    const captionDiv = document.createElement("div");
+                    captionDiv.className = "caption";
+                    captionDiv.textContent = captionInput.value;
+
+                    const watermarkDiv = document.createElement("div");
+                    watermarkDiv.className = "watermark";
+                    watermarkDiv.textContent = "Vvip Times";
+
+                    imageWrapper.append(img, rotateButton, removeButton, captionDiv, watermarkDiv);
+                    imagePreviewContainer.appendChild(imageWrapper);
+
+                    imageWrapper.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', index);
+                    });
+
+                    imageWrapper.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                    });
+
+                    imageWrapper.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const fromIndex = e.dataTransfer.getData('text/plain');
+                        const toIndex = index;
+                        if (fromIndex !== toIndex) {
+                            const [movedImage] = imageUrls.splice(fromIndex, 1);
+                            imageUrls.splice(toIndex, 0, movedImage);
+                            updateImagePreview();
+                        }
+                    });
+                });
+            }
+
+        function flipImage(index) {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          const img = new Image();
+          img.src = imageUrls[index];
+          img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(img, 0, 0);
+            imageUrls[index] = canvas.toDataURL("image/webp");
+            updateImagePreview();
+          };
+          img.onerror = (err) => console.error('Error loading image for flip:', err);
+        }
+        downloadButton.addEventListener("click", () => {
+          if (imageUrls.length === 0) {
+            showNotification("No images to process.", "error");
+            return;
+          }
+          createCollage();
+        });
+
+        function showNotification(message, type = "success") {
+          notification.textContent = message;
+          notification.className = `notification ${type}`;
+          notification.style.display = "block";
+          setTimeout(() => notification.style.display = "none", 3000);
+        }
+        async function createCollage() {
+          loadingSpinner.style.display = "block";
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          canvas.width = 1200;
+          canvas.height = 628;
+          try {
+            const images = await Promise.all(imageUrls.map(loadImage));
+            console.log('Loaded images:', images);
+            const layoutFunction = getLayoutFunction(images.length);
+            console.log('Selected layout function:', layoutFunction);
+            layoutFunction(ctx, images, canvas.width, canvas.height);
+            addWatermark(ctx, canvas);
+            addCaption(ctx, canvas, captionInput.value);
+            const dataUrl = await compressImage(canvas, 50 * 1024, "image/webp");
+            downloadImage(dataUrl);
+          } catch (error) {
+            console.error("Error creating collage:", error);
+            showNotification("Error creating collage.", "error");
+          } finally {
+            loadingSpinner.style.display = "none";
+          }
+        }
+
+        function loadImage(src) {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => resolve(img);
+            img.onerror = (err) => {
+              console.error('Error loading image:', err);
+              reject(err);
+            };
+          });
+        }
+
+        function getLayoutFunction(count) {
+          switch (count) {
+            case 1:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth, canvasHeight);
+              };
+            case 2:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 2, canvasHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 2, 0, canvasWidth / 2, canvasHeight);
+              };
+            case 3:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 3, canvasHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 3, 0, canvasWidth / 3, canvasHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth * 2 / 3, 0, canvasWidth / 3, canvasHeight);
+              };
+            case 4:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 2, canvasHeight / 2);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 2, 0, canvasWidth / 2, canvasHeight / 2);
+                cropAndDrawImage(ctx, imgs[2], 0, canvasHeight / 2, canvasWidth / 2, canvasHeight / 2);
+                cropAndDrawImage(ctx, imgs[3], canvasWidth / 2, canvasHeight / 2, canvasWidth / 2, canvasHeight / 2);
+              };
+            case 5:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 2;
+                const colWidth = canvasWidth / 3;
+                // Top row
+                cropAndDrawImage(ctx, imgs[0], 0, 0, colWidth, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], colWidth, 0, colWidth, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], colWidth * 2, 0, colWidth, rowHeight);
+                // Bottom row
+                cropAndDrawImage(ctx, imgs[3], 0, rowHeight, canvasWidth / 2, rowHeight);
+                cropAndDrawImage(ctx, imgs[4], canvasWidth / 2, rowHeight, canvasWidth / 2, rowHeight);
+              };
+            case 6:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 2;
+                // Top row (3 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 3, 0, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth * 2 / 3, 0, canvasWidth / 3, rowHeight);
+                // Bottom row (3 images)
+                cropAndDrawImage(ctx, imgs[3], 0, rowHeight, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[4], canvasWidth / 3, rowHeight, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[5], canvasWidth * 2 / 3, rowHeight, canvasWidth / 3, rowHeight);
+              };
+            case 7:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 2;
+                // Top row (4 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 4, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth / 2, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[3], canvasWidth * 3 / 4, 0, canvasWidth / 4, rowHeight);
+                // Bottom row (3 images)
+                cropAndDrawImage(ctx, imgs[4], 0, rowHeight, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[5], canvasWidth / 3, rowHeight, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[6], canvasWidth * 2 / 3, rowHeight, canvasWidth / 3, rowHeight);
+              };
+            case 8:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 2;
+                // Top row (4 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 4, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth / 2, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[3], canvasWidth * 3 / 4, 0, canvasWidth / 4, rowHeight);
+                // Bottom row (4 images)
+                cropAndDrawImage(ctx, imgs[4], 0, rowHeight, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[5], canvasWidth / 4, rowHeight, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[6], canvasWidth / 2, rowHeight, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[7], canvasWidth * 3 / 4, rowHeight, canvasWidth / 4, rowHeight);
+              };
+            case 9:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 3;
+                // First row (3 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 3, 0, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth * 2 / 3, 0, canvasWidth / 3, rowHeight);
+                // Second row (3 images)
+                cropAndDrawImage(ctx, imgs[3], 0, rowHeight, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[4], canvasWidth / 3, rowHeight, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[5], canvasWidth * 2 / 3, rowHeight, canvasWidth / 3, rowHeight);
+                // Third row (3 images)
+                cropAndDrawImage(ctx, imgs[6], 0, rowHeight * 2, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[7], canvasWidth / 3, rowHeight * 2, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[8], canvasWidth * 2 / 3, rowHeight * 2, canvasWidth / 3, rowHeight);
+              };
+            case 10:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 2;
+                // Top row (5 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 5, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth * 2 / 5, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[3], canvasWidth * 3 / 5, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[4], canvasWidth * 4 / 5, 0, canvasWidth / 5, rowHeight);
+                // Bottom row (5 images)
+                cropAndDrawImage(ctx, imgs[5], 0, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[6], canvasWidth / 5, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[7], canvasWidth * 2 / 5, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[8], canvasWidth * 3 / 5, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[9], canvasWidth * 4 / 5, rowHeight, canvasWidth / 5, rowHeight);
+              };
+            case 11:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 3;
+                // First row (4 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 4, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth / 2, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[3], canvasWidth * 3 / 4, 0, canvasWidth / 4, rowHeight);
+                // Second row (3 images)
+                cropAndDrawImage(ctx, imgs[4], 0, rowHeight, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[5], canvasWidth / 3, rowHeight, canvasWidth / 3, rowHeight);
+                cropAndDrawImage(ctx, imgs[6], canvasWidth * 2 / 3, rowHeight, canvasWidth / 3, rowHeight);
+                // Third row (4 images)
+                cropAndDrawImage(ctx, imgs[7], 0, rowHeight * 2, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[8], canvasWidth / 4, rowHeight * 2, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[9], canvasWidth / 2, rowHeight * 2, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[10], canvasWidth * 3 / 4, rowHeight * 2, canvasWidth / 4, rowHeight);
+              };
+            case 12:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 3;
+                // First row (4 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 4, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth / 2, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[3], canvasWidth * 3 / 4, 0, canvasWidth / 4, rowHeight);
+                // Second row (4 images)
+                cropAndDrawImage(ctx, imgs[4], 0, rowHeight, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[5], canvasWidth / 4, rowHeight, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[6], canvasWidth / 2, rowHeight, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[7], canvasWidth * 3 / 4, rowHeight, canvasWidth / 4, rowHeight);
+                // Third row (4 images)
+                cropAndDrawImage(ctx, imgs[8], 0, rowHeight * 2, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[9], canvasWidth / 4, rowHeight * 2, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[10], canvasWidth / 2, rowHeight * 2, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[11], canvasWidth * 3 / 4, rowHeight * 2, canvasWidth / 4, rowHeight);
+              };
+            case 13:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 3;
+                // First row (4 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 4, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth / 2, 0, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[3], canvasWidth * 3 / 4, 0, canvasWidth / 4, rowHeight);
+                // Second row (5 images)
+                cropAndDrawImage(ctx, imgs[4], 0, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[5], canvasWidth / 5, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[6], canvasWidth * 2 / 5, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[7], canvasWidth * 3 / 5, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[8], canvasWidth * 4 / 5, rowHeight, canvasWidth / 5, rowHeight);
+                // Third row (4 images)
+                cropAndDrawImage(ctx, imgs[9], 0, rowHeight * 2, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[10], canvasWidth / 4, rowHeight * 2, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[11], canvasWidth / 2, rowHeight * 2, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[12], canvasWidth * 3 / 4, rowHeight * 2, canvasWidth / 4, rowHeight);
+              };
+            case 14:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 3;
+                // First row (5 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 5, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth * 2 / 5, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[3], canvasWidth * 3 / 5, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[4], canvasWidth * 4 / 5, 0, canvasWidth / 5, rowHeight);
+                // Second row (4 images)
+                cropAndDrawImage(ctx, imgs[5], 0, rowHeight, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[6], canvasWidth / 4, rowHeight, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[7], canvasWidth / 2, rowHeight, canvasWidth / 4, rowHeight);
+                cropAndDrawImage(ctx, imgs[8], canvasWidth * 3 / 4, rowHeight, canvasWidth / 4, rowHeight);
+                // Third row (5 images)
+                cropAndDrawImage(ctx, imgs[9], 0, rowHeight * 2, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[10], canvasWidth / 5, rowHeight * 2, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[11], canvasWidth * 2 / 5, rowHeight * 2, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[12], canvasWidth * 3 / 5, rowHeight * 2, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[13], canvasWidth * 4 / 5, rowHeight * 2, canvasWidth / 5, rowHeight);
+              };
+            case 15:
+              return (ctx, imgs, canvasWidth, canvasHeight) => {
+                ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+                const rowHeight = canvasHeight / 3;
+                // First row (5 images)
+                cropAndDrawImage(ctx, imgs[0], 0, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[1], canvasWidth / 5, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[2], canvasWidth * 2 / 5, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[3], canvasWidth * 3 / 5, 0, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[4], canvasWidth * 4 / 5, 0, canvasWidth / 5, rowHeight);
+                // Second row (5 images)
+                cropAndDrawImage(ctx, imgs[5], 0, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[6], canvasWidth / 5, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[7], canvasWidth * 2 / 5, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[8], canvasWidth * 3 / 5, rowHeight, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[9], canvasWidth * 4 / 5, rowHeight, canvasWidth / 5, rowHeight);
+                // Third row (5 images)
+                cropAndDrawImage(ctx, imgs[10], 0, rowHeight * 2, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[11], canvasWidth / 5, rowHeight * 2, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[12], canvasWidth * 2 / 5, rowHeight * 2, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[13], canvasWidth * 3 / 5, rowHeight * 2, canvasWidth / 5, rowHeight);
+                cropAndDrawImage(ctx, imgs[14], canvasWidth * 4 / 5, rowHeight * 2, canvasWidth / 5, rowHeight);
+              };
+            default:
+              throw new Error("Invalid image count");
+          }
+        }
+
+        function cropAndDrawImage(ctx, img, x, y, width, height) {
+          // Calculate aspect ratio
+          const imgRatio = img.width / img.height;
+          const canvasRatio = width / height;
+          let drawWidth, drawHeight, drawX, drawY;
+          if (imgRatio > canvasRatio) {
+            // Image is wider than the container
+            drawWidth = img.height * canvasRatio;
+            drawHeight = img.height;
+            drawX = (img.width - drawWidth) / 2;
+            drawY = 0;
+          } else {
+            // Image is taller than the container
+            drawWidth = img.width;
+            drawHeight = img.width / canvasRatio;
+            drawX = 0;
+            drawY = (img.height - drawHeight) / 2;
+          }
+          ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight, x, y, width, height);
+        }
+
+        function addWatermark(ctx, canvas) {
+          const padding = 5;
+          const width = 150;
+          const height = 36;
+          ctx.font = "700 24px Arial";
+          ctx.fillStyle = "#010642";
+          ctx.globalAlpha = 0.77;
+          ctx.beginPath();
+          ctx.roundRect(canvas.width - width - padding, padding, width, height, 50);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText("VvipTimes", canvas.width - width / 2 - padding, padding + height / 2);
+        }
+
+        function addCaption(ctx, canvas, caption) {
+          if (!caption) return;
+          ctx.font = "500 22px Arial";
+          ctx.fillStyle = "black";
+          ctx.globalAlpha = 0.7;
+          const textMetrics = ctx.measureText(caption);
+          const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+          const captionHeight = textHeight + 10;
+          ctx.globalAlpha = 0.7;
+          ctx.beginPath();
+          ctx.roundRect(0, canvas.height - captionHeight, canvas.width, captionHeight, 15);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(caption, canvas.width / 2, canvas.height - captionHeight / 2);
+        }
+
+       // Worker script to check image size
+const workerScript = `
+self.onmessage = async function(e) {
+    const { dataUrl } = e.data;
+    try {
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        postMessage({ size: blob.size });
+    } catch (error) {
+        postMessage({ error: error.message });
+    }
+};
+`;
+
+const createWorker = () => {
+    const blob = new Blob([workerScript], { type: "application/javascript" });
+    return new Worker(URL.createObjectURL(blob));
 };
 
-ReactDOM.render(<App />, document.getElementById('root'));
-</script>
+// Advanced quality adjustment with multi-stage feedback
+const adaptiveBinarySearch = async (canvas, maxFileSize, minQuality = 0.1, maxQuality = 1.0) => {
+    let lower = minQuality;
+    let upper = maxQuality;
+    let resultQuality = minQuality;
+    let previousSize = Infinity;
+
+    while (upper - lower > 0.01) {
+        const mid = (lower + upper) / 2;
+        const dataUrl = canvas.toDataURL("image/webp", mid);
+        const size = await new Promise((resolve, reject) => {
+            const worker = createWorker();
+            worker.onmessage = (e) => {
+                if (e.data.error) {
+                    reject(new Error(e.data.error));
+                } else {
+                    resolve(e.data.size);
+                }
+                worker.terminate();
+            };
+            worker.onerror = (error) => {
+                reject(error);
+            };
+            worker.postMessage({ dataUrl });
+        }).catch(error => {
+            console.error("Error during compression:", error);
+            return 0; // Fail gracefully
+        });
+
+        if (size <= maxFileSize) {
+            resultQuality = mid;
+            lower = mid;
+        } else {
+            upper = mid;
+        }
+
+        // Multi-stage feedback loop for fine-tuning
+        if (size === previousSize) {
+            break; // Exit if size hasn't changed
+        }
+        previousSize = size;
+
+        // Fine-tuning towards the end
+        if (upper - lower < 0.01 && size <= maxFileSize) {
+            break;
+        }
+    }
+
+    return resultQuality;
+};
+
+// Function to compress a single image with advanced quality tuning
+const compressImage = async (canvas, maxFileSize = 75 * 1024) => {
+    const initialQuality = await adaptiveBinarySearch(canvas, maxFileSize);
+    const finalQuality = await adaptiveBinarySearch(canvas, maxFileSize, Math.max(initialQuality - 0.005, 0.5), initialQuality);
+    return canvas.toDataURL("image/webp", finalQuality);
+};
+
+// Function to dynamically adjust max file size for multiple images
+const adjustMaxFileSize = (numImages) => {
+    const thresholds = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+    const sizes = [65 * 1024, 85 * 1024, 105 * 1024, 125 * 1024, 145 * 1024, 165 * 1024, 185 * 1024, 205 * 1024, 225 * 1024, 245 * 1024, 265 * 1024, 285 * 1024, 305 * 1024, 325 * 1024, 345 * 1024, 300 * 1024];
+
+    let size = 35 * 1024; // Default value
+    for (let i = 0; i < thresholds.length; i++) {
+        if (numImages <= thresholds[i]) {
+            size = sizes[i];
+            break;
+        }
+    }
+
+    return Math.min(size, 300 * 1024);
+};
+
+// Function to create a pool of workers
+const createWorkerPool = (numWorkers) => {
+    return Array.from({ length: numWorkers }, createWorker);
+};
+
+// Function to process images in batches with dynamic load balancing
+const processImageBatch = async (images, maxFileSize, workerPool) => {
+    const batchSize = Math.min(images.length, workerPool.length * 2);
+    const batches = [];
+
+    for (let i = 0; i < images.length; i += batchSize) {
+        const batch = images.slice(i, i + batchSize);
+        batches.push(batch);
+    }
+
+    const results = [];
+    const processingPromises = [];
+
+    for (const batch of batches) {
+        processingPromises.push((async () => {
+            const tasks = batch.map(async (canvas, index) => {
+                const worker = workerPool[index % workerPool.length];
+                const dataUrl = await compressImage(canvas, maxFileSize);
+                return new Promise((resolve, reject) => {
+                    worker.postMessage({ dataUrl });
+                    worker.onmessage = (e) => {
+                        if (e.data.error) {
+                            reject(new Error(e.data.error));
+                        } else {
+                            results.push(e.data); // Collect compressed image URLs
+                            resolve();
+                        }
+                    };
+                    worker.onerror = (error) => {
+                        reject(error);
+                    };
+                }).catch(error => {
+                    console.error("Error during batch processing:", error);
+                    // Handle error appropriately
+                });
+            });
+
+            await Promise.all(tasks);
+        })());
+    }
+
+    await Promise.all(processingPromises);
+
+    return results;
+};
+
+// Main function to compress multiple images with dynamic file size limits
+const compressImages = async (canvases) => {
+    const numWorkers = Math.min(navigator.hardwareConcurrency || 4, canvases.length);
+    const workerPool = createWorkerPool(numWorkers);
+    const maxFileSize = adjustMaxFileSize(canvases.length);
+
+    const compressedImages = await processImageBatch(canvases, maxFileSize, workerPool);
+    workerPool.forEach((worker) => worker.terminate()); // Clean up worker pool
+
+    return compressedImages;
+};
+
+// Usage example
+const canvases = [
+    /* array of canvas elements */
+];
+compressImages(canvases).then((compressedImages) => {
+    console.log("All images have been compressed.");
+    // Handle the array of compressed image URLs (compressedImages)
+});
+
+
+
+       
+        function downloadImage(dataUrl) {
+          const link = document.createElement("a");
+          link.href = dataUrl;
+          link.download = "collage.webp";
+          link.click();
+        }
+      });
+    </script>
   </body>
 </html>
