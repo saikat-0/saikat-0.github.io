@@ -248,6 +248,17 @@
         dragDropArea.classList.remove("dragover");
         handleFiles(Array.from(e.dataTransfer.files));
     });
+    
+    dragDropArea.addEventListener("click", () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.addEventListener('change', () => {
+                    handleFiles(Array.from(input.files));
+                });
+                input.click();
+            });
 
     function handleFiles(files) {
         files.forEach(file => {
