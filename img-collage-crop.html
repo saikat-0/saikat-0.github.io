@@ -241,6 +241,16 @@
           dragDropArea.classList.remove("dragover");
           handleFiles(Array.from(e.dataTransfer.files));
         });
+        dragDropArea.addEventListener("click", () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.addEventListener('change', () => {
+                    handleFiles(Array.from(input.files));
+                });
+                input.click();
+            });
 
         function handleFiles(files) {
           files.forEach(file => {
@@ -258,34 +268,61 @@
         }
 
         function updateImagePreview() {
-          imagePreviewContainer.innerHTML = "";
-          imageUrls.forEach((url, index) => {
-            const imageWrapper = document.createElement("div");
-            imageWrapper.className = "image-wrapper";
-            const img = document.createElement("img");
-            img.src = url;
-            img.alt = `Image ${index + 1}`;
-            const rotateButton = document.createElement("button");
-            rotateButton.className = "rotate-button";
-            rotateButton.innerHTML = "⥃";
-            rotateButton.addEventListener("click", () => flipImage(index));
-            const removeButton = document.createElement("button");
-            removeButton.className = "remove-image-button";
-            removeButton.innerHTML = "×";
-            removeButton.addEventListener("click", () => {
-              imageUrls.splice(index, 1);
-              updateImagePreview();
-            });
-            const captionDiv = document.createElement("div");
-            captionDiv.className = "caption";
-            captionDiv.textContent = captionInput.value;
-            const watermarkDiv = document.createElement("div");
-            watermarkDiv.className = "watermark";
-            watermarkDiv.textContent = "Vvip Times";
-            imageWrapper.append(img, rotateButton, removeButton, captionDiv, watermarkDiv);
-            imagePreviewContainer.appendChild(imageWrapper);
-          });
-        }
+                imagePreviewContainer.innerHTML = "";
+                imageUrls.forEach((url, index) => {
+                    const imageWrapper = document.createElement("div");
+                    imageWrapper.className = "image-wrapper";
+                    imageWrapper.draggable = true;
+                    imageWrapper.dataset.index = index;
+
+                    const img = document.createElement("img");
+                    img.src = url;
+                    img.alt = `Image ${index + 1}`;
+
+                    const rotateButton = document.createElement("button");
+                    rotateButton.className = "rotate-button";
+                    rotateButton.innerHTML = "⥃";
+                    rotateButton.addEventListener("click", () => flipImage(index));
+
+                    const removeButton = document.createElement("button");
+                    removeButton.className = "remove-image-button";
+                    removeButton.innerHTML = "×";
+                    removeButton.addEventListener("click", () => {
+                        imageUrls.splice(index, 1);
+                        updateImagePreview();
+                    });
+
+                    const captionDiv = document.createElement("div");
+                    captionDiv.className = "caption";
+                    captionDiv.textContent = captionInput.value;
+
+                    const watermarkDiv = document.createElement("div");
+                    watermarkDiv.className = "watermark";
+                    watermarkDiv.textContent = "Vvip Times";
+
+                    imageWrapper.append(img, rotateButton, removeButton, captionDiv, watermarkDiv);
+                    imagePreviewContainer.appendChild(imageWrapper);
+
+                    imageWrapper.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', index);
+                    });
+
+                    imageWrapper.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                    });
+
+                    imageWrapper.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        const fromIndex = e.dataTransfer.getData('text/plain');
+                        const toIndex = index;
+                        if (fromIndex !== toIndex) {
+                            const [movedImage] = imageUrls.splice(fromIndex, 1);
+                            imageUrls.splice(toIndex, 0, movedImage);
+                            updateImagePreview();
+                        }
+                    });
+                });
+            }
 
         function flipImage(index) {
           const canvas = document.createElement("canvas");
@@ -808,7 +845,7 @@ compressImages(canvases).then((compressedImages) => {
         function downloadImage(dataUrl) {
           const link = document.createElement("a");
           link.href = dataUrl;
-          link.download = "collage.webp";
+          link.download = `VvipTimes_${captionInput.value.replace(/\s+/g, '_')}.webp`;
           link.click();
         }
       });
