@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vvip Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #000261;
+            --secondary-color: #75012a;
+            --background-light: #f0f0f5;
+            --background-dark: #181818;
+            --text-light: #222;
+            --text-dark: #ddd;
+            --button-bg: #444;
+            --button-bg-hover: #2196F3;
+            --button-bg-dark: #555;
+            --button-bg-dark-hover: #020017;
+            --transition-duration: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: var(--transition-duration) ease;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--background-light);
+            color: var(--text-light);
+            transition: background-color var(--transition-duration) ease, color var(--transition-duration) ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            animation: fadeInDown 0.8s ease-in-out;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: center;
+            border-radius: 8px;
+            font-size: 1.8rem;
+            animation: fadeInUp 0.5s ease-in-out;
+        }
+
+        .links-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 15px;
+            background: silver;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .links-container button {
+            padding: 15px;
+            background: #00022e;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 550;
+            border-radius: 50px;
+            transition: background-color var(--transition-duration), transform var(--transition-duration);
+        }
+
+        .links-container button:hover {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            transform: scale(1.05);
+        }
+
+        .toggle-theme {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity var(--transition-duration);
+            z-index: 1000;
+        }
+
+        .dark-mode {
+            background-color: var(--background-dark);
+            color: var(--text-dark);
+        }
+
+        .dark-mode .section h2 {
+            background: linear-gradient(270deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .dark-mode .links-container {
+            background: inherit;
+        }
+
+        .dark-mode .links-container button {
+            background: var(--button-bg-dark-hover);
+        }
+        
+        .dark-mode .links-container button:hover {
+            background: white;
+            color: black;
+        }
+
+        .dark-mode .toggle-theme {
+            background: #444;
+        }
+
+        .floating-tab-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+            padding: 10px;
+        }
+
+        .floating-tab-panel h3 {
+            margin: 0;
+            padding: 10px;
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            font-size: 1.2rem;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .popup-tab {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: background-color var(--transition-duration);
+        }
+
+        .popup-tab:hover {
+            background-color: #ececec;
+        }
+
+        .popup-title {
+            flex-grow: 1;
+            padding-right: 10px;
+            word-wrap: break-word;
+        }
+
+        .popup-tab .close-tab {
+            background: #f00;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color var(--transition-duration);
+        }
+
+        .popup-tab .close-tab:hover {
+            background: #d00;
+        }
+
+        .dark-mode .floating-tab-panel {
+            background: #2e2e2e;
+            border-color: #444;
+        }
+
+        .dark-mode .popup-tab {
+            background-color: #3c3c3c;
+            border-color: #555;
+        }
+
+        .dark-mode .popup-tab:hover {
+            background-color: #555;
+        }
+
+        .dark-mode .popup-tab .close-tab {
+            background: #d00;
+        }
+
+        .dark-mode .popup-title {
+            color: #ddd;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .links-container {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .floating-tab-panel {
+                width: calc(100% - 40px);
+                bottom: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vvip Dashboard</h1>
+        <button class="toggle-theme" onclick="toggleDarkMode()" aria-label="Toggle Theme">
+            <i id="theme-icon" class="fas fa-moon" aria-hidden="true"></i>
+        </button>
+        
+        <div class="section">
+            <h2>Tools</h2>
+            <div class="links-container">
+                <button onclick="openPopup('https://chatgpt.com', 'ChatGPT')">ChatGPT</button>
+                <button onclick="openPopup('https://saikat-0.github.io/babla-vvip-tools-4in1.html', 'imageTool')">Vvip Image ++</button>
+                <button onclick="openPopup('https://snapinsta.app/', 'InstaDL')">Instagram pic - DL</button>
+                <button onclick="openPopup('https://images.google.com/', 'googleImgSearch')">Google img Search</button>
+                
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Korean Entertainment</h2>
+            <div class="links-container">
+                <button onclick="openPopup('https://www.allkpop.com', 'AllKpop')">AllKpop</button>
+                <button onclick="openPopup('https://www.koreaboo.com', 'Koreaboo')">Koreaboo</button>
+                <button onclick="openPopup('https://www.soompi.com', 'Soompi')">Soompi</button>
+                <button onclick="openPopup('https://asianwiki.com', 'AsianWiki')">AsianWiki</button>
+                <button onclick="openPopup('https://www.kbizoom.com', 'KBizoom')">KBizoom</button>
+                <button onclick="openPopup('https://www.pinkvilla.com/entertainment/korean', 'Pinkvilla (Korean)')">Pinkvilla (Korean)</button>
+                <button onclick="openPopup('https://www.sportskeeda.com/us/k-pop', 'Sportskeeda (K-Pop)')">Sportskeeda (K-Pop)</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Hollywood Entertainment</h2>
+            <div class="links-container">
+                <button onclick="openPopup('https://variety.com', 'Variety')">Variety</button>
+                <button onclick="openPopup('https://pagesix.com', 'Page Six')">Page Six</button>
+                <button onclick="openPopup('https://deadline.com', 'Deadline')">Deadline</button>
+                <button onclick="openPopup('https://www.rottentomatoes.com', 'Rotten Tomatoes')">Rotten Tomatoes</button>
+                <button onclick="openPopup('https://www.pinkvilla.com/entertainment/hollywood', 'Pinkvilla (Hollywood)')">Pinkvilla (Hollywood)</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Bollywood Entertainment</h2>
+            <div class="links-container">
+                <button onclick="openPopup('https://indianexpress.com/article/entertainment/', 'Indian Express')">Indian Express</button>
+                <button onclick="openPopup('https://www.pinkvilla.com/category/entertainment/news', 'Pinkvilla (Bollywood)')">Pinkvilla (Bollywood)</button>
+                <button onclick="openPopup('https://www.bollywoodlife.com/news-gossip/', 'Bollywood Life')">Bollywood Life</button>
+                <button onclick="openPopup('https://www.indiatoday.in/', 'India Today')">India Today</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>South Indian Entertainment</h2>
+            <div class="links-container">
+                <button onclick="openPopup('https://www.123telugu.com', '123 Telugu')">123 Telugu</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Anime Entertainment</h2>
+            <div class="links-container">
+                <button onclick="openPopup('https://www.sportskeeda.com/anime', 'Sportskeeda (Anime)')">Sportskeeda (Anime)</button>
+                <button onclick="openPopup('https://www.crunchyroll.com', 'Crunchyroll')">Crunchyroll</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Floating Tab Panel -->
+    <div id="floating-tab-panel" class="floating-tab-panel" aria-live="polite">
+        <h3>Open Tabs</h3>
+        <div class="popup-tabs"></div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script>
+    
+    const CHECK_INTERVAL_MS = 1000;
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const RESIZE_DEBOUNCE_MS = 500;
+
+const popupTabs = new Map();
+let checkInterval = null;
+
+const getCurrentTime = () => Date.now();
+
+function sanitizeUrl(url) {
+    try {
+        new URL(url); // Throws an error if the URL is invalid
+        return url;
+    } catch {
+        return 'about:blank';
+    }
+}
+
+function openPopup(url, title) {
+    url = sanitizeUrl(url);
+    if (popupTabs.has(url)) {
+        focusExistingPopup(url);
+        return;
+    }
+
+    const popup = createPopup(url);
+    if (popup) {
+        sessionStorage.setItem(url, 'opened');
+        addPopupToMap(url, title, popup);
+        startPopupCheck();
+        showNotification(`${title} tab opened.`);
+    } else {
+        showNotification('Popup blocked or failed to open.');
+    }
+}
+
+function createPopup(url) {
+    const [popupWidth, popupHeight] = calculatePopupDimensions();
+    const [left, top] = calculatePopupPosition(popupWidth, popupHeight);
+
+    try {
+        const popup = window.open(url, '_blank', `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable,scrollbars`);
+        if (popup) {
+            popup.focus();
+            return popup;
+        } else {
+            throw new Error('Popup blocked');
+        }
+    } catch (error) {
+        console.error('Popup creation failed:', error);
+        return null;
+    }
+}
+
+function calculatePopupDimensions() {
+    return [Math.min(window.innerWidth * 0.8, 1200), Math.min(window.innerHeight * 0.8, 600)];
+}
+
+function calculatePopupPosition(width, height) {
+    return [(window.innerWidth - width) / 2, (window.innerHeight - height) / 2];
+}
+
+function addPopupToMap(url, title, popup) {
+    const tab = { popup, url, title, lastActive: getCurrentTime() };
+    popupTabs.set(url, tab);
+    popup.onbeforeunload = () => handlePopupClose(url);
+    updateFloatingTabPanel();
+    saveOpenTabsState();
+}
+
+function startPopupCheck() {
+    if (!checkInterval) {
+        checkInterval = setInterval(checkPopups, CHECK_INTERVAL_MS);
+    }
+}
+
+function focusExistingPopup(url) {
+    const tab = popupTabs.get(url);
+    if (tab) tab.popup.focus();
+}
+
+function checkPopups() {
+    let hasOpenPopups = false;
+    popupTabs.forEach((tab, url) => {
+        if (tab.popup.closed) {
+            handlePopupClose(url);
+        } else {
+            hasOpenPopups = true;
+        }
+    });
+
+    if (!hasOpenPopups && checkInterval) {
+        clearInterval(checkInterval);
+        checkInterval = null;
+    }
+}
+
+function handlePopupClose(url) {
+    popupTabs.delete(url);
+    sessionStorage.removeItem(url);
+    updateFloatingTabPanel();
+    saveOpenTabsState();
+    showNotification('Tab closed.');
+}
+
+function closePopup(url) {
+    const tab = popupTabs.get(url);
+    if (tab) {
+        tab.popup.close();
+        handlePopupClose(url);
+    }
+}
+
+function updateFloatingTabPanel() {
+    const container = document.getElementById('floating-tab-panel');
+    const tabsContainer = document.querySelector('.popup-tabs');
+    tabsContainer.innerHTML = '';
+
+    popupTabs.forEach((tab) => {
+        tabsContainer.appendChild(createTabElement(tab));
+    });
+
+    container.style.display = popupTabs.size ? 'block' : 'none';
+}
+
+function createTabElement(tab) {
+    const tabElement = document.createElement('div');
+    tabElement.className = 'popup-tab';
+    tabElement.innerHTML = `
+        <span class="popup-title">${tab.title}</span>
+        <button class="close-tab" aria-label="Close Tab" onclick="closePopup('${tab.url}')">x</button>
+    `;
+    tabElement.onclick = () => tab.popup.focus();
+
+    return tabElement;
+}
+
+function toggleDarkMode() {
+    const body = document.body;
+    const icon = document.getElementById('theme-icon');
+    const isDarkMode = body.classList.toggle('dark-mode');
+
+    icon.classList.toggle('fa-sun', isDarkMode);
+    icon.classList.toggle('fa-moon', !isDarkMode);
+    localStorage.setItem('darkMode', isDarkMode ? 'enabled' : 'disabled');
+}
+
+function initializeDarkMode() {
+    const isDarkMode = localStorage.getItem('darkMode') === 'enabled';
+    if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+    }
+}
+
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.innerText = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.remove(), 3000);
+}
+
+function saveOpenTabsState() {
+    const openTabs = Array.from(popupTabs.values()).map(tab => ({ url: tab.url, title: tab.title }));
+    localStorage.setItem('openTabs', JSON.stringify(openTabs));
+}
+
+function restoreOpenTabs() {
+    const openTabs = JSON.parse(localStorage.getItem('openTabs')) || [];
+    openTabs.forEach(tab => openPopup(tab.url, tab.title));
+}
+
+function handleInactivePopups() {
+    const now = getCurrentTime();
+    popupTabs.forEach((tab, url) => {
+        if (now - tab.lastActive > INACTIVITY_TIMEOUT_MS) {
+            closePopup(url);
+        }
+    });
+}
+
+function setupInactivityTimeout() {
+    setInterval(handleInactivePopups, 60 * 1000); // Check every minute
+}
+
+function debounceResize() {
+    clearTimeout(this.resizeTimer);
+    this.resizeTimer = setTimeout(() => {
+        popupTabs.forEach((tab) => {
+            if (!tab.popup.closed) {
+                const [popupWidth, popupHeight] = calculatePopupDimensions();
+                tab.popup.resizeTo(popupWidth, popupHeight);
+            }
+        });
+    }, RESIZE_DEBOUNCE_MS);
+}
+
+window.onload = function () {
+    initializeDarkMode();
+    restoreOpenTabs();
+    setupInactivityTimeout();
+
+    window.addEventListener('resize', debounceResize.bind({ resizeTimer: null }));
+};
+
+    
+    </script>
+</body>
+</html>
+
+
