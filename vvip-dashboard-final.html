@@ -91,13 +91,13 @@
             background: #444;
         }
         .floating-tab-panel {
-            position: fixed; top: 20px; right: 20px; width: 300px; max-height: 80vh;
+            position: fixed; top: 20px; right: 20px; width: 300px; max-height: 80vh; text-align: center;
             overflow-y: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            background-color: #fff; transition: background-color 0.3s, box-shadow 0.3s;
+            background-color: rgba(255, 255, 255, 0.9); transition: background-color 0.3s, box-shadow 0.3s;
             display: none; /* Initially hidden, will be shown when needed */
         }
         body.dark-mode .floating-tab-panel {
-            background-color: #333; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+            background-color: rgba(255, 255, 255, 0.7); color: #000936; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
         }
         .popup-tabs { padding: 10px; }
         .popup-category { margin-bottom: 10px; border-bottom: 1px solid #ddd; }
@@ -110,12 +110,12 @@
         .category-toggle { background: none; border: none; font-size: 18px; cursor: pointer; transition: color 0.3s; }
         .popup-category-content { display: block; padding: 5px; }
         .popup-tab {
-            display: flex; justify-content: space-between; align-items: center; padding: 8px;
-            margin-bottom: 5px; border-radius: 5px; background-color: #f1f1f1; transition: background-color 0.3s;
+            display: flex; justify-content: space-between; align-items: center; padding: 2px;
+            margin-bottom: 5px; border-radius: 50px; background-color: #000936; color: #ffffff; transition: background-color 0.3s; cursor: pointer;
         }
-        .popup-tab:hover { background-color: #e0e0e0; }
+        .popup-tab:hover { background-color: #a10046; }
         .popup-title { flex: 1; }
-        .close-tab { background: none; border: none; font-size: 16px; color: #ff4d4d; cursor: pointer; transition: color 0.3s; }
+        .close-tab { background: white; border: none; border-radius: 50px; font-size: 18px; font-weight: 900; color: #050030; cursor: pointer; transition: color 0.3s; }
         .close-tab:hover { color: #ff1a1a; }
         .theme-toggle {
             position: fixed; bottom: 20px; right: 20px; background-color: #fff; border: 1px solid #ddd;
@@ -216,7 +216,7 @@
     </button>
 
     <div id="floating-tab-panel" class="floating-tab-panel" aria-live="polite">
-        <h3>Open Tabs</h3>
+        <h3>Tabs You're Currently Using</h3>
         <div class="popup-tabs"></div>
     </div>
 
@@ -227,18 +227,19 @@
     
 
     <script>
-const CHECK_INTERVAL_MS = 1000;
+    
+            const CHECK_INTERVAL_MS = 1000;
 const RESIZE_DEBOUNCE_MS = 500;
 const NOTIFICATION_DURATION_MS = 5000;
 
 let popupTabs = new Map();
+let isPanelUpdating = false;
 
 const getCurrentTime = () => Date.now();
 
 function sanitizeUrl(url) {
     try {
-        new URL(url);
-        return url;
+        return new URL(url).href;
     } catch {
         console.error('Invalid URL:', url);
         return 'about:blank';
@@ -248,7 +249,7 @@ function sanitizeUrl(url) {
 function openPopup(url, title) {
     url = sanitizeUrl(url);
     const existingTab = popupTabs.get(url);
-    
+
     if (existingTab) {
         if (existingTab.popup.closed) {
             handlePopupClose(url);
@@ -267,16 +268,15 @@ function openPopup(url, title) {
     }
 
     updateFloatingTabPanel();
-    saveOpenTabsState(); // Save state after opening
+    saveOpenTabsState();
 }
 
 function createPopup(url) {
-    const [popupWidth, popupHeight] = calculatePopupDimensions();
-    const [left, top] = calculatePopupPosition(popupWidth, popupHeight);
-    console.log(`Creating popup: ${url}, width: ${popupWidth}, height: ${popupHeight}, left: ${left}, top: ${top}`);
+    const [width, height] = calculatePopupDimensions();
+    const [left, top] = calculatePopupPosition(width, height);
 
     try {
-        const popup = window.open(url, '_blank', `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable,scrollbars`);
+        const popup = window.open(url, '_blank', `width=${width},height=${height},top=${top},left=${left},resizable,scrollbars`);
         if (popup) {
             popup.focus();
             return popup;
@@ -290,19 +290,21 @@ function createPopup(url) {
 }
 
 function calculatePopupDimensions() {
-    return [Math.min(window.innerWidth * 0.8, 1200), Math.min(window.innerHeight * 0.8, 600)];
+    const width = Math.min(window.innerWidth * 0.8, 1200);
+    const height = Math.min(window.innerHeight * 0.8, 600);
+    return [width, height];
 }
 
 function calculatePopupPosition(width, height) {
-    return [(window.innerWidth - width) / 2, (window.innerHeight - height) / 2];
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+    return [left, top];
 }
 
 function addPopupToMap(url, title, popup) {
-    const tab = { popup, url, title, lastActive: getCurrentTime() };
-    popupTabs.set(url, tab);
-    popup.onbeforeunload = () => handlePopupClose(url);
+    popupTabs.set(url, { popup, url, title, lastActive: getCurrentTime() });
     updateFloatingTabPanel();
-    saveOpenTabsState(); // Save state after adding
+    saveOpenTabsState();
 }
 
 function focusExistingPopup(url) {
@@ -318,15 +320,17 @@ function focusExistingPopup(url) {
 }
 
 function handlePopupClose(url) {
-    popupTabs.delete(url);
-    sessionStorage.removeItem(url);
-    updateFloatingTabPanel();
-    saveOpenTabsState(); // Save state after closing
-    showNotification('Tab closed.', 'info');
+    if (popupTabs.has(url)) {
+        popupTabs.delete(url);
+        sessionStorage.removeItem(url);
+        updateFloatingTabPanel();
+        saveOpenTabsState();
+        showNotification('Tab closed.', 'info');
+    }
 }
 
 function closeAllPopups() {
-    popupTabs.forEach((tab, url) => {
+    popupTabs.forEach(tab => {
         if (tab.popup && !tab.popup.closed) {
             tab.popup.close();
         }
@@ -344,19 +348,25 @@ function closePopup(url) {
 }
 
 function updateFloatingTabPanel() {
+    if (isPanelUpdating) return;
+    isPanelUpdating = true;
+
     const container = document.getElementById('floating-tab-panel');
     const tabsContainer = document.querySelector('.popup-tabs');
     tabsContainer.innerHTML = '';
 
-    if (popupTabs.size) {
+    if (popupTabs.size > 0) {
         container.style.display = 'block';
         popupTabs.forEach(tab => {
-            const tabElement = createTabElement(tab);
-            tabsContainer.appendChild(tabElement);
+            if (tab.popup && !tab.popup.closed) {
+                tabsContainer.appendChild(createTabElement(tab));
+            }
         });
     } else {
         container.style.display = 'none';
     }
+
+    isPanelUpdating = false;
 }
 
 function createTabElement(tab) {
@@ -388,15 +398,10 @@ function initializeDarkMode() {
     }
 }
 
-function showNotification(message, type = 'info', duration = NOTIFICATION_DURATION_MS, link = null) {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerText = message;
-    
+function showNotification(message, type = 'info', duration = NOTIFICATION_DURATION_MS) {
     const container = document.getElementById('notification');
     container.style.display = 'block';
-    container.innerHTML = '';
-    container.appendChild(notification);
+    container.innerHTML = `<div class="notification notification-${type}">${message}</div>`;
 
     setTimeout(() => {
         container.style.display = 'none';
@@ -404,17 +409,15 @@ function showNotification(message, type = 'info', duration = NOTIFICATION_DURATI
 }
 
 function saveOpenTabsState() {
-    const tabsState = [];
-    popupTabs.forEach((tab, url) => {
-        tabsState.push({ url, title: tab.title });
-    });
-    console.log('Saving state:', tabsState); // Debug statement
+    const tabsState = Array.from(popupTabs.values()).map(tab => ({
+        url: tab.url,
+        title: tab.title
+    }));
     sessionStorage.setItem('popupTabs', JSON.stringify(tabsState));
 }
 
 function restoreOpenTabs() {
     const savedTabs = sessionStorage.getItem('popupTabs');
-    console.log('Restoring state:', savedTabs); // Debug statement
     if (savedTabs) {
         const tabsState = JSON.parse(savedTabs);
         tabsState.forEach(tab => openPopup(tab.url, tab.title));
@@ -429,28 +432,39 @@ function debounce(func, wait) {
     };
 }
 
+function checkAndUpdateTabs() {
+    popupTabs.forEach((tab, url) => {
+        if (tab.popup.closed) {
+            handlePopupClose(url);
+        }
+    });
+    updateFloatingTabPanel();
+}
+
 window.addEventListener('resize', debounce(() => {
-    if (popupTabs.size) {
-        popupTabs.forEach(tab => {
-            if (!tab.popup.closed) {
-                const [popupWidth, popupHeight] = calculatePopupDimensions();
-                const [left, top] = calculatePopupPosition(popupWidth, popupHeight);
-                tab.popup.resizeTo(popupWidth, popupHeight);
-                tab.popup.moveTo(left, top);
-            }
-        });
-    }
+    popupTabs.forEach(tab => {
+        if (tab.popup && !tab.popup.closed) {
+            const [width, height] = calculatePopupDimensions();
+            const [left, top] = calculatePopupPosition(width, height);
+            tab.popup.resizeTo(width, height);
+            tab.popup.moveTo(left, top);
+        }
+    });
 }, RESIZE_DEBOUNCE_MS));
 
 window.addEventListener('load', () => {
     restoreOpenTabs();
     initializeDarkMode();
+    setInterval(checkAndUpdateTabs, CHECK_INTERVAL_MS);
 });
 
 window.addEventListener('beforeunload', () => {
     saveOpenTabsState();
     closeAllPopups();
 });
+
+
+    
 </script>
 
 
