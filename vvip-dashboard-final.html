@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vvip Dashboard Final</title>
+    <title>Popup Management System</title>
     <style>
         :root {
             --primary-color: #000261;
@@ -227,15 +227,11 @@
     
 
     <script>
-        const CHECK_INTERVAL_MS = 1000; // Interval for checking open popups
-const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+const CHECK_INTERVAL_MS = 1000;
 const RESIZE_DEBOUNCE_MS = 500;
 const NOTIFICATION_DURATION_MS = 5000;
 
 let popupTabs = new Map();
-let checkInterval = null;
-let inactivityCheckInterval = null;
-let resizeTimer = null;
 
 const getCurrentTime = () => Date.now();
 
@@ -251,28 +247,33 @@ function sanitizeUrl(url) {
 
 function openPopup(url, title) {
     url = sanitizeUrl(url);
-
-    // Check if popup already exists
-    if (popupTabs.has(url)) {
-        focusExistingPopup(url);
-        return;
+    const existingTab = popupTabs.get(url);
+    
+    if (existingTab) {
+        if (existingTab.popup.closed) {
+            handlePopupClose(url);
+        } else {
+            focusExistingPopup(url);
+            return;
+        }
     }
 
     const popup = createPopup(url);
     if (popup) {
-        sessionStorage.setItem(url, 'opened');
         addPopupToMap(url, title, popup);
         showNotification(`${title} tab opened.`, 'success');
     } else {
         showNotification('Popup blocked or failed to open.', 'error');
     }
-    
-    updateFloatingTabPanel(); // Ensure floating tab panel is updated
+
+    updateFloatingTabPanel();
+    saveOpenTabsState(); // Save state after opening
 }
 
 function createPopup(url) {
     const [popupWidth, popupHeight] = calculatePopupDimensions();
     const [left, top] = calculatePopupPosition(popupWidth, popupHeight);
+    console.log(`Creating popup: ${url}, width: ${popupWidth}, height: ${popupHeight}, left: ${left}, top: ${top}`);
 
     try {
         const popup = window.open(url, '_blank', `width=${popupWidth},height=${popupHeight},top=${top},left=${left},resizable,scrollbars`);
@@ -301,27 +302,18 @@ function addPopupToMap(url, title, popup) {
     popupTabs.set(url, tab);
     popup.onbeforeunload = () => handlePopupClose(url);
     updateFloatingTabPanel();
-    saveOpenTabsState();
+    saveOpenTabsState(); // Save state after adding
 }
 
 function focusExistingPopup(url) {
     const tab = popupTabs.get(url);
     if (tab) {
-        tab.popup.focus();
-        tab.lastActive = getCurrentTime();
-    }
-}
-
-function checkPopups() {
-    popupTabs.forEach((tab, url) => {
         if (tab.popup.closed) {
             handlePopupClose(url);
+        } else {
+            tab.popup.focus();
+            tab.lastActive = getCurrentTime();
         }
-    });
-
-    // Restart the interval if not already running
-    if (!checkInterval) {
-        checkInterval = setInterval(checkPopups, CHECK_INTERVAL_MS);
     }
 }
 
@@ -329,8 +321,18 @@ function handlePopupClose(url) {
     popupTabs.delete(url);
     sessionStorage.removeItem(url);
     updateFloatingTabPanel();
-    saveOpenTabsState();
+    saveOpenTabsState(); // Save state after closing
     showNotification('Tab closed.', 'info');
+}
+
+function closeAllPopups() {
+    popupTabs.forEach((tab, url) => {
+        if (tab.popup && !tab.popup.closed) {
+            tab.popup.close();
+        }
+    });
+    popupTabs.clear();
+    updateFloatingTabPanel();
 }
 
 function closePopup(url) {
@@ -391,80 +393,70 @@ function showNotification(message, type = 'info', duration = NOTIFICATION_DURATI
     notification.className = `notification notification-${type}`;
     notification.innerText = message;
     
-    if (link) {
-        const linkElement = document.createElement('a');
-        linkElement.href = link;
-        linkElement.innerText = 'Learn more';
-        notification.appendChild(linkElement);
-    }
+    const container = document.getElementById('notification');
+    container.style.display = 'block';
+    container.innerHTML = '';
+    container.appendChild(notification);
 
-    document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), duration);
+    setTimeout(() => {
+        container.style.display = 'none';
+    }, duration);
 }
 
 function saveOpenTabsState() {
-    const openTabs = Array.from(popupTabs.values()).map(tab => ({
-        url: tab.url,
-        title: tab.title
-    }));
-    localStorage.setItem('openTabs', JSON.stringify(openTabs));
+    const tabsState = [];
+    popupTabs.forEach((tab, url) => {
+        tabsState.push({ url, title: tab.title });
+    });
+    console.log('Saving state:', tabsState); // Debug statement
+    sessionStorage.setItem('popupTabs', JSON.stringify(tabsState));
 }
 
 function restoreOpenTabs() {
-    const openTabs = JSON.parse(localStorage.getItem('openTabs')) || [];
-
-    // Create a set to track URLs for existing popups
-    const existingPopups = new Set(Array.from(popupTabs.keys()));
-
-    openTabs.forEach(tab => {
-        if (existingPopups.has(tab.url)) {
-            // If popup already exists, just focus it
-            focusExistingPopup(tab.url);
-        } else {
-            // Otherwise, open a new popup
-            openPopup(tab.url, tab.title);
-        }
-    });
-
-    updateFloatingTabPanel(); // Ensure the panel is updated after restoring tabs
+    const savedTabs = sessionStorage.getItem('popupTabs');
+    console.log('Restoring state:', savedTabs); // Debug statement
+    if (savedTabs) {
+        const tabsState = JSON.parse(savedTabs);
+        tabsState.forEach(tab => openPopup(tab.url, tab.title));
+    }
 }
 
-function handleInactivePopups() {
-    const now = getCurrentTime();
-    popupTabs.forEach(tab => {
-        if (now - tab.lastActive > INACTIVITY_TIMEOUT_MS) {
-            closePopup(tab.url);
-        }
-    });
+function debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
 }
 
-function setupInactivityTimeout() {
-    inactivityCheckInterval = setInterval(handleInactivePopups, 60 * 1000); // Check every minute
-}
-
-function debounceResize() {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
+window.addEventListener('resize', debounce(() => {
+    if (popupTabs.size) {
         popupTabs.forEach(tab => {
             if (!tab.popup.closed) {
                 const [popupWidth, popupHeight] = calculatePopupDimensions();
+                const [left, top] = calculatePopupPosition(popupWidth, popupHeight);
                 tab.popup.resizeTo(popupWidth, popupHeight);
+                tab.popup.moveTo(left, top);
             }
         });
-    }, RESIZE_DEBOUNCE_MS);
-}
+    }
+}, RESIZE_DEBOUNCE_MS));
 
-// When the page loads, initialize dark mode, restore tabs, and set up intervals
-window.onload = function () {
-    initializeDarkMode();
+window.addEventListener('load', () => {
     restoreOpenTabs();
-    setupInactivityTimeout();
-    checkPopups(); // Start checking popups
+    initializeDarkMode();
+});
 
-    window.addEventListener('resize', debounceResize);
-};
+window.addEventListener('beforeunload', () => {
+    saveOpenTabsState();
+    closeAllPopups();
+});
+</script>
 
-    </script>
+
+
+
+
 
 
 </body>
