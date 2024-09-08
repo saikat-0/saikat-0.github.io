@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pomodoro To-Do List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      overflow: hidden; /* Prevents scrollbars when the popup is active */
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .task-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    .task-item {
+      padding: 15px;
+      margin: 10px 0;
+      background-color: #fff;
+      border-left: 5px solid #3498db;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      transition: background-color 0.3s ease;
+    }
+    .task-item.active {
+      background-color: #dff9fb;
+      border-left-color: #27ae60;
+    }
+    .task-item.past {
+      background-color: #f9f9f9;
+      color: #888;
+    }
+    .date {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .time {
+      font-weight: bold;
+    }
+    .task {
+      margin-top: 5px;
+    }
+    .break {
+      color: #888;
+      margin-top: 5px;
+    }
+    .timer {
+      font-size: 1.5em;
+      color: #e74c3c;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .info {
+      font-size: 1.2em;
+      color: #333;
+    }
+    #popupOverlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      color: #fff;
+      z-index: 1000;
+      text-align: center;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+    #popupOverlay h2 {
+      margin: 0;
+      font-size: 2em;
+    }
+    #popupOverlay p {
+      font-size: 1.5em;
+    }
+    #popupTimer {
+      font-size: 2em;
+      margin-top: 10px;
+    }
+    #popupOverlay .close-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1.2em;
+    }
+    #popupOverlay .close-button:hover {
+      background-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pomodoro To-Do List</h1>
+  <div class="timer" id="timer">00:00</div>
+  <div class="info" id="info"></div>
+  <ul id="taskList" class="task-list"></ul>
+
+  <!-- Popup Overlay -->
+  <div id="popupOverlay">
+    <h2 id="popupTitle">Task Update</h2>
+    <p id="popupDetails">Task details will be here</p>
+    <div id="popupTimer">00:00</div>
+    <button class="close-button" onclick="closePopup()">Close</button>
+  </div>
+
+  <script>
+    const tasks = [
+      // Monday - Friday Schedule
+      { day: 'Monday-Friday', time: '03:26-03:27', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '14:10-15:10', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '15:20-15:30', task: 'Lunch Break', break: '' },
+      { day: 'Monday-Friday', time: '15:30-16:30', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '16:40-17:40', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '17:50-18:50', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '19:00-20:00', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from AllKpop.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '20:10-21:10', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from Soompi.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '21:20-22:10', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '22:20-22:30', task: 'Dinner Break', break: '' },
+      { day: 'Monday-Friday', time: '22:30-23:30', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from AllKpop.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '23:40-23:59', task: 'Write 3 short articles: 1 from PinkVilla Korean and 2 from Soompi.', break: 'End of workday' },
+
+      // Saturday-Sunday Schedule
+      { day: 'Saturday-Sunday', time: '13:00-14:00', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
+      { day: 'Saturday-Sunday', time: '14:10-15:10', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
+      { day: 'Saturday-Sunday', time: '15:20-15:30', task: 'Lunch Break', break: '' },
+      { day: 'Saturday-Sunday', time: '15:30-16:30', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
+      { day: 'Saturday-Sunday', time: '16:40-17:40', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from AllKpop.', break: '10-minute break' },
+      { day: 'Saturday-Sunday', time: '17:50-18:50', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from Soompi.', break: 'Publish and review all articles for edits.' },
+    ];
+
+    let lastTask = null;
+    let popupTimeout = null;
+    let timerInterval = null;
+    let popupEndTime = null;
+    let taskStartTime = null;
+
+    // Format time as MM:SS
+    function formatTime(ms) {
+      const minutes = Math.floor(ms / 60000);
+      const seconds = ((ms % 60000) / 1000).toFixed(0);
+      return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    // Get the current task based on the time and day
+    function getCurrentTask() {
+      const now = new Date();
+      const currentTime = now.toTimeString().substr(0, 5);
+      const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+      const todayTasks = tasks.filter(task => task.day.includes(currentDay));
+
+      let currentTask = null;
+      todayTasks.forEach(task => {
+        const [start, end] = task.time.split('-');
+        if (currentTime >= start && currentTime <= end) {
+          currentTask = task;
+        }
+      });
+      return currentTask;
+    }
+
+    // Display the task list
+    function displayTasks() {
+      const taskList = document.getElementById('taskList');
+      const now = new Date();
+      const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+
+      taskList.innerHTML = ''; // Clear current list
+
+      const todayTasks = tasks.filter(task => task.day.includes(currentDay));
+      if (todayTasks.length) {
+        const dateHeader = document.createElement('div');
+        dateHeader.className = 'date';
+        dateHeader.textContent = `Tasks for ${currentDay}`;
+        taskList.appendChild(dateHeader);
+      }
+
+      const currentTask = getCurrentTask();
+      todayTasks.forEach(task => {
+        const li = document.createElement('li');
+        li.className = 'task-item';
+
+        if (task === currentTask) {
+          li.classList.add('active');
+        } else if (new Date() > new Date(`1970-01-01T${task.time.split('-')[1]}`)) {
+          li.classList.add('past');
+        }
+
+        li.innerHTML = `
+          <div class="time">${task.time}</div>
+          <div class="task">${task.task}</div>
+          <div class="break">${task.break}</div>
+        `;
+        taskList.appendChild(li);
+      });
+    }
+
+    // Update the popup timer
+    function updatePopupTimer() {
+      if (popupEndTime) {
+        const now = new Date();
+        const timeLeft = popupEndTime - now;
+        if (timeLeft <= 0) {
+          closePopup();
+        } else {
+          document.getElementById('popupTimer').textContent = formatTime(timeLeft);
+        }
+      }
+    }
+
+    // Show popup with dynamic content
+    function showPopup(title, details, duration) {
+      const popupOverlay = document.getElementById('popupOverlay');
+      document.getElementById('popupTitle').textContent = title;
+      document.getElementById('popupDetails').textContent = details;
+
+      // Set timer duration
+      popupEndTime = new Date(Date.now() + duration);
+      document.getElementById('popupTimer').textContent = formatTime(duration);
+
+      popupOverlay.style.display = 'flex';
+      window.focus(); // Attempt to focus the tab
+
+      // Clear any existing timers and set a new one
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(updatePopupTimer, 1000);
+    }
+
+    // Close the popup
+    function closePopup() {
+      document.getElementById('popupOverlay').style.display = 'none';
+      clearInterval(timerInterval);
+      timerInterval = null;
+      popupEndTime = null;
+    }
+
+    // Show task update popup
+    function showTaskUpdatePopup(task, type) {
+      const now = new Date();
+      const [start, end] = task.time.split('-');
+      const taskDetails = `Task: ${task.task}\nTime: ${task.time}`;
+      const startTime = new Date(`${now.toDateString()} ${start}`);
+      const endTime = new Date(`${now.toDateString()} ${end}`);
+      let duration = 0;
+
+      if (type === 'start') {
+        duration = endTime - now;
+        showPopup('Task Started', `Task started.\n${taskDetails}`, duration);
+        taskStartTime = now;
+        handleBreakTime(task);
+      } else if (type === 'end') {
+        duration = 0;
+        showPopup('Task Ended', `Task ended.\n${taskDetails}`, duration);
+        taskStartTime = null;
+      } else if (type === 'break') {
+        duration = 10 * 60 * 1000; // 10 minutes in milliseconds
+        showPopup('Break Time', `Break time! You have a ${task.break}.\n${taskDetails}`, duration);
+      }
+    }
+
+    // Handle break time logic
+    function handleBreakTime(task) {
+      if (taskStartTime) {
+        const workTime = 30 * 60 * 1000; // 30 minutes in milliseconds
+        const breakDuration = 10 * 60 * 1000; // 10 minutes in milliseconds
+        const breakStartTime = new Date(taskStartTime.getTime() + workTime);
+
+        if (new Date() >= breakStartTime && new Date() < breakStartTime + breakDuration) {
+          showTaskUpdatePopup(task, 'break');
+        }
+      }
+    }
+
+    // Main update function
+    function update() {
+      const currentTask = getCurrentTask();
+      const timerElement = document.getElementById('timer');
+      const infoElement = document.getElementById('info');
+
+      if (currentTask) {
+        const now = new Date();
+        const [start, end] = currentTask.time.split('-');
+        const startTime = new Date(`${now.toDateString()} ${start}`);
+        const endTime = new Date(`${now.toDateString()} ${end}`);
+        const remainingTime = endTime - now;
+
+        if (remainingTime > 0) {
+          timerElement.textContent = formatTime(remainingTime);
+          infoElement.textContent = `Current Task: ${currentTask.task}. Time remaining: ${formatTime(remainingTime)}.`;
+
+          // Show a start popup if the task just started
+          if (now >= startTime && now < endTime && (!lastTask || lastTask !== currentTask)) {
+            showTaskUpdatePopup(currentTask, 'start');
+            lastTask = currentTask;
+          }
+        } else {
+          if (lastTask === currentTask) {
+            showTaskUpdatePopup(currentTask, 'end');
+            lastTask = null;
+          }
+        }
+      } else {
+        timerElement.textContent = '00:00';
+        infoElement.textContent = 'No Active Task';
+        lastTask = null;
+      }
+
+      displayTasks();
+    }
+
+    setInterval(update, 1000);
+  </script>
+</body>
+</html>
