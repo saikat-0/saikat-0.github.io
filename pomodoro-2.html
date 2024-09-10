@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Pomodoro Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f3f4f7; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 80%; max-width: 1200px; background: #fff; padding: 20px; margin-top: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        .user-selection {
+    margin-bottom: 30px; /* Increased space for better layout */
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 25px; /* Increased gap for better spacing */
+}
+
+.user-selection button {
+    width: 90px; height: 90px; border-radius: 50%; border: 10px solid hotpink;
+    background: linear-gradient(135deg, #0a004d, #004a4d); /* Gradient background for a modern look */
+    color: #fff;
+    font-size: 20px; /* Larger font size for improved readability */
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Subtle shadow for depth */
+}
+
+.user-selection button.active {
+    background: linear-gradient(135deg, red, indigo); /* Reversed gradient for active state */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Deeper shadow for active state */
+    transform: scale(1.05); /* Slight scaling for a pressed effect */
+}
+
+.user-selection button:hover {
+    background: linear-gradient(135deg, #bf0046, #000000); /* Darker gradient for hover state */
+    transform: scale(1.1); /* Slightly larger scale for hover effect */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Enhanced shadow on hover */
+}
+
+        .categories, .pomodoro-controls, .admin-dashboard { margin-top: 20px; }
+        .categories { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .category { width: 18%; text-align: center; padding: 10px; border-radius: 8px; background: #f0f0f0; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .category h3 { margin: 0; color: #555; }
+        .buttons { margin-top: 10px; }
+        .buttons button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid cyan; background: #007bff; color: #fff; font-size: 18px; cursor: pointer; margin: 2px; }
+        .buttons button.remove { background: #dc3545; border-color: #dc3545; border: 2px solid black; }
+        .pomodoro-controls { display: flex; justify-content: center; margin-top: 20px; }
+        .pomodoro-controls button { width: 90px; height: 90px; border-radius: 50%; border: 10px solid hotpink; background: pink; color: #000; font-size: 20px; margin: 5px; cursor: pointer; transition: background 0.3s, border-color 0.3s; }
+        .pomodoro-controls button.stop { border-color: #dc3545; background: #dc3545; }
+        .pomodoro-controls button:hover { color: white; background: #007bff; border-color: deepskyblue; }
+        .pomodoro-controls button.stop:hover { color: white; background: black; border-color: red; }
+        .timer { font-size: 36px; text-align: center; color: #333; margin: 10px 0; }
+        .admin-dashboard { margin-top: 30px; }
+        .admin-dashboard table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .admin-dashboard th, td { padding: 8px; text-align: center; border: 1px solid #ddd; }
+        .admin-dashboard th { background: #007bff; color: #fff; }
+        .admin-dashboard .no-data { text-align: center; font-style: italic; color: #888; }
+        .table-title { background: #007bff; color: #fff; padding: 10px; font-size: 18px; border-radius: 8px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Advanced Pomodoro Tool</h1>
+    
+    <div class="user-selection">
+        <button id="user-saikat" onclick="selectUser('saikat')">Saikat</button>
+        <button id="user-sougata" onclick="selectUser('sougata')">Babla</button>
+    </div>
+
+    <div class="categories">
+        <div class="category">
+            <h3>Korean</h3>
+            <div class="count" id="korean-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('korean', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('korean', -1)">-</button>
+            </div>
+        </div>
+        <div class="category">
+            <h3>Hollywood</h3>
+            <div class="count" id="hollywood-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('hollywood', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('hollywood', -1)">-</button>
+            </div>
+        </div>
+        <div class="category">
+            <h3>Bollywood</h3>
+            <div class="count" id="bollywood-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('bollywood', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('bollywood', -1)">-</button>
+            </div>
+        </div>
+        <div class="category">
+            <h3>Anime</h3>
+            <div class="count" id="anime-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('anime', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('anime', -1)">-</button>
+            </div>
+        </div>
+        <div class="category">
+            <h3>South-Indian</h3>
+            <div class="count" id="southIndian-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('southIndian', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('southIndian', -1)">-</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="pomodoro-controls">
+        <button id="pomodoro-button" onclick="togglePomodoro()">Start</button>
+    </div>
+    
+    <div class="timer" id="timer">25:00</div>
+
+    <div class="admin-dashboard">
+        <div class="table-title">Today's Achievement</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Work Time</th>
+                    <th>Break Time</th>
+                    <th>Total Posts</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="daily-achievements">
+                <tr>
+                    <td id="daily-work-time">00:00</td>
+                    <td id="daily-break-time">00:00</td>
+                    <td id="daily-total-posts">0</td>
+                    <td id="daily-details" class="no-data">No data</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="table-title">Weekly Achievement</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Week</th>
+                    <th>Work Time</th>
+                    <th>Break Time</th>
+                    <th>Total Posts</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="weekly-achievements">
+                <!-- Week data will be inserted here dynamically -->
+            </tbody>
+        </table>
+
+        <div class="table-title">Monthly Achievement</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Work Time</th>
+                    <th>Break Time</th>
+                    <th>Total Posts</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="monthly-achievements">
+                <!-- Month data will be inserted here dynamically -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const users = { saikat: { korean: 0, hollywood: 0, bollywood: 0, anime: 0, southIndian: 0 }, sougata: { korean: 0, hollywood: 0, bollywood: 0, anime: 0, southIndian: 0 } };
+    let currentUser = 'saikat';
+    let pomodoroInterval, breakInterval;
+    let isPomodoroActive = false, isBreakActive = false;
+    let currentSessionWorkTime = 0; 
+    let accumulatedBreakTime = 0; 
+    let breakStartTime = 0; 
+    let remainingTime = 1500; // 25 minutes in seconds
+
+    function selectUser(user) {
+        document.querySelectorAll('.user-selection button').forEach(button => button.classList.remove('active'));
+        document.getElementById(`user-${user}`).classList.add('active');
+        currentUser = user;
+        updateCategoryCounts();
+    }
+
+    function modifyCategory(category, delta) {
+        if (users[currentUser][category] + delta >= 0) {
+            users[currentUser][category] += delta;
+            updateCategoryCounts();
+        }
+    }
+
+    function updateCategoryCounts() {
+        Object.keys(users[currentUser]).forEach(category => {
+            document.getElementById(`${category}-count`).innerText = users[currentUser][category];
+        });
+    }
+
+    function togglePomodoro() {
+        if (isPomodoroActive) {
+            clearInterval(pomodoroInterval);
+            clearInterval(breakInterval);
+            isPomodoroActive = false;
+            document.getElementById('pomodoro-button').innerText = 'Start';
+        } else {
+            startPomodoro();
+            isPomodoroActive = true;
+            document.getElementById('pomodoro-button').innerText = 'Stop';
+        }
+    }
+
+    function startPomodoro() {
+        remainingTime = 1500; // 25 minutes
+        document.getElementById('timer').innerText = formatTime(remainingTime);
+        pomodoroInterval = setInterval(() => {
+            remainingTime--;
+            document.getElementById('timer').innerText = formatTime(remainingTime);
+            if (remainingTime <= 0) {
+                clearInterval(pomodoroInterval);
+                isPomodoroActive = false;
+                document.getElementById('pomodoro-button').innerText = 'Start';
+                // Start Break Timer
+                startBreak();
+            }
+        }, 1000);
+    }
+
+    function startBreak() {
+        accumulatedBreakTime = 0;
+        remainingTime = 300; // 5 minutes
+        breakInterval = setInterval(() => {
+            accumulatedBreakTime++;
+            remainingTime--;
+            document.getElementById('timer').innerText = formatTime(remainingTime);
+            if (remainingTime <= 0) {
+                clearInterval(breakInterval);
+                document.getElementById('timer').innerText = 'Break Over';
+                // Update user stats
+                // Update user stats in the admin dashboard (not implemented)
+            }
+        }, 1000);
+    }
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+</script>
+
+</body>
+</html>
