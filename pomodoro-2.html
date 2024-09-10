@@ -50,22 +50,23 @@
 
         
         .avatar-button {
+            padding: 20px 30px;
     border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, black, indigo);
     color: hotpink;
     font-size: 1rem;
     font-weight: 900;
-    background: none;
     display: flex;
     flex-direction: column;
     align-items: center;
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    padding: 10px;
 }
 
         .avatar-button:hover {
             
-            padding: 15px 20px;
+            padding: 20px 30px;
             color: #fff;
             background: linear-gradient(135deg, red, indigo);
             border-radius: 50%;
@@ -97,6 +98,23 @@
             gap: 25px; /* Increased gap for better spacing */
         }
 
+        .selected-avatar {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .selected-avatar img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid hotpink;
+            object-fit: cover;
+        }
         
         .categories, .pomodoro-controls, .admin-dashboard { margin-top: 20px; }
         .categories { display: flex; justify-content: space-between; margin-bottom: 20px; }
@@ -124,6 +142,10 @@
 <div class="container">
     <h1>Advanced Pomodoro Tool</h1>
     
+    <div id="selected-avatar" class="selected-avatar" style="display:none;">
+        <img id="selected-avatar-img" src="" alt="Selected User">
+    </div>
+    
     <!-- Add Modal for Avatar Selection -->
     <div id="avatar-modal" style="display:none;">
     <div class="modal-content">
@@ -136,9 +158,9 @@
             <img src="https://lh3.googleusercontent.com/a/ACg8ocK5C7jp5ss8PH1Uc7jeDiRQoN6KO1AhULG-ZGatkmOqPplNqnSNNA=s288-c-no" alt="Sougata" class="avatar-img">
             <div>Sougata</div>
         </button>
-        
     </div>
 </div>
+            
 
 
     <div class="categories">
@@ -292,12 +314,19 @@ const selectUser = (user) => {
     populateOtherUserData();
     closeModal();  // Close the modal after selection
 
-    // Update button styles
-    document.querySelectorAll('.avatar-button').forEach(button => {
-        button.classList.remove('active');
-    });
-    document.querySelector(`[onclick="selectUser('${user}')"]`).classList.add('active');
-};
+    // Update avatar display
+        const avatarUrl = user === 'saikat' 
+            ? 'https://lh3.googleusercontent.com/a/ACg8ocJTg6fs8P1tVPRj2T8BFE7ZShmRg2qUQLH8SuydS1Pr92rfBMY_=s288-c-no'
+            : 'https://lh3.googleusercontent.com/a/ACg8ocK5C7jp5ss8PH1Uc7jeDiRQoN6KO1AhULG-ZGatkmOqPplNqnSNNA=s288-c-no';
+        document.getElementById('selected-avatar-img').src = avatarUrl;
+        document.getElementById('selected-avatar').style.display = 'flex';
+
+        // Update button styles
+        document.querySelectorAll('.avatar-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        document.querySelector(`[onclick="selectUser('${user}')"]`).classList.add('active');
+    };
 
     const modifyCategory = (category, delta) => {
         if (users[currentUser][category] + delta >= 0) {
@@ -438,7 +467,7 @@ const selectUser = (user) => {
 
         const row = `<tr>
             <td>${user}</td>
-            <td>Work Time: ${workTime}<br>Break Time: ${breakTime}<br>Total Posts: ${totalPosts}<br>${details || 'No data'}</td>
+            <td>Work Time: ${workTime}<br><br>Break Time: ${breakTime}<br><br>Total Posts: ${totalPosts}<br><br>${details || 'No data'}</td>
         </tr>`;
         tableBody.insertAdjacentHTML('beforeend', row);
     });
