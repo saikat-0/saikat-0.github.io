@@ -8,33 +8,96 @@
         body { font-family: Arial, sans-serif; background: #f3f4f7; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
         .container { width: 80%; max-width: 1200px; background: #fff; padding: 20px; margin-top: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #333; }
-        .user-selection button {
-    width: 90px; height: 90px; border-radius: 50%; border: 10px solid hotpink;
-    background: linear-gradient(135deg, #0a004d, #004a4d); /* Gradient background for a modern look */
-    color: #fff;
-    font-size: 20px; /* Larger font size for improved readability */
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Subtle shadow for depth */
-}
-.user-selection {
-    margin-bottom: 30px; /* Increased space for better layout */
-    text-align: center;
+       
+        /* Modal Styling */
+#avatar-modal {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    bottom: 10px;
+    right: 10px;
+    width: 100%;
+    height: 100%;
+    color: #FFF;
+    background: rgba(0,0,0,0.8);
     display: flex;
     justify-content: center;
-    gap: 25px; /* Increased gap for better spacing */
-}
-.user-selection button.active {
-    background: linear-gradient(135deg, red, indigo); /* Reversed gradient for active state */
-    box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Deeper shadow for active state */
-    transform: scale(1.05); /* Slight scaling for a pressed effect */
+    align-items: center;
 }
 
-.user-selection button:hover {
-    background: linear-gradient(135deg, #bf0046, #000000); /* Darker gradient for hover state */
-    transform: scale(1.1); /* Slightly larger scale for hover effect */
-    box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Enhanced shadow on hover */
+.modal-content {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    bottom: 10px;
+    right: 10px;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #00000000;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    
 }
+
+.modal-content button {
+    margin: 10px;
+}
+
+        
+        .avatar-button {
+    border: none;
+    color: hotpink;
+    font-size: 1rem;
+    font-weight: 900;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding: 10px;
+}
+
+        .avatar-button:hover {
+            
+            padding: 15px 20px;
+            color: #fff;
+            background: linear-gradient(135deg, red, indigo);
+            border-radius: 50%;
+            transform: scale(1.1); /* Slightly larger scale for hover effect */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Enhanced shadow on hover */
+        }
+        
+        .avatar-button.active {
+            padding: 15px 20px;
+            color: #fff;
+            background: linear-gradient(135deg, red, indigo);
+            border-radius: 50%;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Deeper shadow for active state */
+        }
+        
+        .avatar-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid hotpink;
+            object-fit: cover;
+        }
+        
+        .user-selection {
+            margin-bottom: 30px; /* Increased space for better layout */
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 25px; /* Increased gap for better spacing */
+        }
+
+        
         .categories, .pomodoro-controls, .admin-dashboard { margin-top: 20px; }
         .categories { display: flex; justify-content: space-between; margin-bottom: 20px; }
         .category { width: 18%; text-align: center; padding: 10px; border-radius: 8px; background: #f0f0f0; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
@@ -61,10 +124,22 @@
 <div class="container">
     <h1>Advanced Pomodoro Tool</h1>
     
-    <div class="user-selection">
-        <button onclick="selectUser('saikat')">Saikat</button>
-        <button onclick="selectUser('sougata')">Sougata</button>
+    <!-- Add Modal for Avatar Selection -->
+    <div id="avatar-modal" style="display:none;">
+    <div class="modal-content">
+        <h2>Select User</h2>
+        <button onclick="selectUser('saikat')" class="avatar-button">
+            <img src="https://lh3.googleusercontent.com/a/ACg8ocJTg6fs8P1tVPRj2T8BFE7ZShmRg2qUQLH8SuydS1Pr92rfBMY_=s288-c-no" alt="Saikat" class="avatar-img">
+            <div>Saikat</div>
+        </button>
+        <button onclick="selectUser('sougata')" class="avatar-button">
+            <img src="https://lh3.googleusercontent.com/a/ACg8ocK5C7jp5ss8PH1Uc7jeDiRQoN6KO1AhULG-ZGatkmOqPplNqnSNNA=s288-c-no" alt="Sougata" class="avatar-img">
+            <div>Sougata</div>
+        </button>
+        
     </div>
+</div>
+
 
     <div class="categories">
         <div class="category">
@@ -194,12 +269,35 @@
     let breakStartTime = 0; 
     let remainingTime = 1500; 
 
-    const selectUser = (user) => {
-        currentUser = user;
-        updateCounts();
-        populateAchievements();
-        populateOtherUserData();
-    };
+    // Function to open the avatar selection modal
+const openModal = () => {
+    document.getElementById('avatar-modal').style.display = 'flex';
+};
+
+// Function to close the avatar selection modal
+const closeModal = () => {
+    document.getElementById('avatar-modal').style.display = 'none';
+};
+
+// Update initialization to open modal on load
+window.onload = () => {
+    openModal();  // Show the modal for user selection
+};
+
+// Update selectUser function to include saving user data
+const selectUser = (user) => {
+    currentUser = user;
+    updateCounts();
+    populateAchievements();
+    populateOtherUserData();
+    closeModal();  // Close the modal after selection
+
+    // Update button styles
+    document.querySelectorAll('.avatar-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    document.querySelector(`[onclick="selectUser('${user}')"]`).classList.add('active');
+};
 
     const modifyCategory = (category, delta) => {
         if (users[currentUser][category] + delta >= 0) {
@@ -215,32 +313,32 @@
     };
 
     const saveToLocal = () => {
-        const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
-        const weeklyAchievements = JSON.parse(localStorage.getItem('weeklyAchievements')) || {};
-        const monthlyAchievements = JSON.parse(localStorage.getItem('monthlyAchievements')) || {};
+    const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
+    const weeklyAchievements = JSON.parse(localStorage.getItem('weeklyAchievements')) || {};
+    const monthlyAchievements = JSON.parse(localStorage.getItem('monthlyAchievements')) || {};
 
-        const today = new Date().toISOString().split('T')[0];
-        const weekOfMonth = getWeekOfMonth(new Date());
-        const monthName = new Date().toLocaleString('default', { month: 'long' });
+    const today = new Date().toISOString().split('T')[0];
+    const weekOfMonth = getWeekOfMonth(new Date());
+    const monthName = new Date().toLocaleString('default', { month: 'long' });
 
-        const newDailyData = { ...users[currentUser], workTime: currentSessionWorkTime, breakTime: accumulatedBreakTime };
-        const newWeeklyData = { ...users[currentUser], workTime: currentSessionWorkTime, breakTime: accumulatedBreakTime };
-        const newMonthlyData = { ...users[currentUser], workTime: currentSessionWorkTime, breakTime: accumulatedBreakTime };
+    const newDailyData = { ...users[currentUser], workTime: currentSessionWorkTime, breakTime: accumulatedBreakTime };
+    const newWeeklyData = { ...users[currentUser], workTime: currentSessionWorkTime, breakTime: accumulatedBreakTime };
+    const newMonthlyData = { ...users[currentUser], workTime: currentSessionWorkTime, breakTime: accumulatedBreakTime };
 
-        dailyAchievements[currentUser] = dailyAchievements[currentUser] || {};
-        dailyAchievements[currentUser][today] = mergeData(dailyAchievements[currentUser][today] || {}, newDailyData);
-        localStorage.setItem('dailyAchievements', JSON.stringify(dailyAchievements));
+    dailyAchievements[currentUser] = dailyAchievements[currentUser] || {};
+    dailyAchievements[currentUser][today] = mergeData(dailyAchievements[currentUser][today] || {}, newDailyData);
+    localStorage.setItem('dailyAchievements', JSON.stringify(dailyAchievements));
 
-        weeklyAchievements[currentUser] = weeklyAchievements[currentUser] || {};
-        weeklyAchievements[currentUser][weekOfMonth] = mergeData(weeklyAchievements[currentUser][weekOfMonth] || {}, newWeeklyData);
-        localStorage.setItem('weeklyAchievements', JSON.stringify(weeklyAchievements));
+    weeklyAchievements[currentUser] = weeklyAchievements[currentUser] || {};
+    weeklyAchievements[currentUser][weekOfMonth] = mergeData(weeklyAchievements[currentUser][weekOfMonth] || {}, newWeeklyData);
+    localStorage.setItem('weeklyAchievements', JSON.stringify(weeklyAchievements));
 
-        monthlyAchievements[currentUser] = monthlyAchievements[currentUser] || {};
-        monthlyAchievements[currentUser][monthName] = mergeData(monthlyAchievements[currentUser][monthName] || {}, newMonthlyData);
-        localStorage.setItem('monthlyAchievements', JSON.stringify(monthlyAchievements));
+    monthlyAchievements[currentUser] = monthlyAchievements[currentUser] || {};
+    monthlyAchievements[currentUser][monthName] = mergeData(monthlyAchievements[currentUser][monthName] || {}, newMonthlyData);
+    localStorage.setItem('monthlyAchievements', JSON.stringify(monthlyAchievements));
 
-        populateAchievements();
-    };
+    populateAchievements();
+};
 
     const mergeData = (previousData, newData) => {
         const mergedData = { ...previousData };
@@ -326,25 +424,26 @@
     };
     
     const populateOtherUserData = () => {
-        const otherUsers = Object.keys(users).filter(user => user !== currentUser);
-        const tableBody = document.getElementById('other-user-achievements');
-        tableBody.innerHTML = '';
+    const otherUsers = Object.keys(users).filter(user => user !== currentUser);
+    const tableBody = document.getElementById('other-user-achievements');
+    tableBody.innerHTML = '';
 
-        otherUsers.forEach(user => {
-            const userData = JSON.parse(localStorage.getItem('dailyAchievements'))[user] || {};
-            const accumulatedData = Object.values(userData).reduce((acc, dayData) => mergeData(acc, dayData), {});
-            const workTime = formatTime(accumulatedData.workTime || 0);
-            const breakTime = formatTime(accumulatedData.breakTime || 0);
-            const totalPosts = calculateTotalPosts(accumulatedData);
-            const details = formatDetails(accumulatedData);
+    otherUsers.forEach(user => {
+        const userData = JSON.parse(localStorage.getItem('dailyAchievements'))[user] || {};
+        const accumulatedData = Object.values(userData).reduce((acc, dayData) => mergeData(acc, dayData), {});
+        const workTime = formatTime(accumulatedData.workTime || 0);
+        const breakTime = formatTime(accumulatedData.breakTime || 0);
+        const totalPosts = calculateTotalPosts(accumulatedData);
+        const details = formatDetails(accumulatedData);
 
-            const row = `<tr>
-                <td>${user}</td>
-                <td>work Time: ${workTime}<br><br>break Time: ${breakTime}<br><br>Total Posts: ${totalPosts}<br>${details || 'No data'}</td>
-            </tr>`;
-            tableBody.insertAdjacentHTML('beforeend', row);
-        });
-    };
+        const row = `<tr>
+            <td>${user}</td>
+            <td>Work Time: ${workTime}<br>Break Time: ${breakTime}<br>Total Posts: ${totalPosts}<br>${details || 'No data'}</td>
+        </tr>`;
+        tableBody.insertAdjacentHTML('beforeend', row);
+    });
+};
+
 
 
 
@@ -462,19 +561,6 @@
             document.getElementById(`${cat}-count`).textContent = 0;
         });
     };
-
-    window.onload = () => {
-    const user = prompt("Select user: (saikat or sougata)", "saikat");
-    if (user === "saikat" || user === "sougata") {
-        currentUser = user;
-        updateCounts();
-        populateAchievements();
-        populateOtherUserData();  // Ensure the data is populated on load
-    } else {
-        alert("Invalid user. Please reload the page and select a valid user.");
-    }
-};
-
 
 </script>
 
