@@ -8,15 +8,7 @@
         body { font-family: Arial, sans-serif; background: #f3f4f7; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
         .container { width: 80%; max-width: 1200px; background: #fff; padding: 20px; margin-top: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #333; }
-        .user-selection {
-    margin-bottom: 30px; /* Increased space for better layout */
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    gap: 25px; /* Increased gap for better spacing */
-}
-
-.user-selection button {
+        .user-selection button {
     width: 90px; height: 90px; border-radius: 50%; border: 10px solid hotpink;
     background: linear-gradient(135deg, #0a004d, #004a4d); /* Gradient background for a modern look */
     color: #fff;
@@ -25,7 +17,13 @@
     transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Subtle shadow for depth */
 }
-
+.user-selection {
+    margin-bottom: 30px; /* Increased space for better layout */
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 25px; /* Increased gap for better spacing */
+}
 .user-selection button.active {
     background: linear-gradient(135deg, red, indigo); /* Reversed gradient for active state */
     box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Deeper shadow for active state */
@@ -37,7 +35,6 @@
     transform: scale(1.1); /* Slightly larger scale for hover effect */
     box-shadow: 0 6px 12px rgba(0,0,0,0.3); /* Enhanced shadow on hover */
 }
-
         .categories, .pomodoro-controls, .admin-dashboard { margin-top: 20px; }
         .categories { display: flex; justify-content: space-between; margin-bottom: 20px; }
         .category { width: 18%; text-align: center; padding: 10px; border-radius: 8px; background: #f0f0f0; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
@@ -65,8 +62,8 @@
     <h1>Advanced Pomodoro Tool</h1>
     
     <div class="user-selection">
-        <button id="user-saikat" onclick="selectUser('saikat')">Saikat</button>
-        <button id="user-sougata" onclick="selectUser('sougata')">Babla</button>
+        <button onclick="selectUser('saikat')">Saikat</button>
+        <button onclick="selectUser('sougata')">Sougata</button>
     </div>
 
     <div class="categories">
@@ -181,78 +178,254 @@
     let currentSessionWorkTime = 0; 
     let accumulatedBreakTime = 0; 
     let breakStartTime = 0; 
-    let remainingTime = 1500; // 25 minutes in seconds
+    let remainingTime = 1500; 
 
-    function selectUser(user) {
-        document.querySelectorAll('.user-selection button').forEach(button => button.classList.remove('active'));
-        document.getElementById(`user-${user}`).classList.add('active');
+    const selectUser = (user) => {
         currentUser = user;
-        updateCategoryCounts();
-    }
+        updateCounts();
+        populateAchievements();
+    };
 
-    function modifyCategory(category, delta) {
+    const modifyCategory = (category, delta) => {
         if (users[currentUser][category] + delta >= 0) {
             users[currentUser][category] += delta;
-            updateCategoryCounts();
+            updateCounts();
         }
-    }
+    };
 
-    function updateCategoryCounts() {
-        Object.keys(users[currentUser]).forEach(category => {
-            document.getElementById(`${category}-count`).innerText = users[currentUser][category];
+    const updateCounts = () => {
+        Object.keys(users[currentUser]).forEach(cat => {
+            document.getElementById(`${cat}-count`).textContent = users[currentUser][cat];
         });
-    }
+    };
 
-    function togglePomodoro() {
+    const saveToLocal = () => {
+        const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
+        const weeklyAchievements = JSON.parse(localStorage.getItem('weeklyAchievements')) || {};
+        const monthlyAchievements = JSON.parse(localStorage.getItem('monthlyAchievements')) || {};
+
+        const today = new Date().toISOString().split('T')[0];
+        const weekOfMonth = getWeekOfMonth(new Date());
+        const monthName = new Date().toLocaleString('default', { month: 'long' });
+
+        const newDailyData = { ...users[currentUser], workTime: currentSessionWorkTime, breakTime: accumulatedBreakTime };
+        const newWeeklyData = { ...users[currentUser], workTime: currentSessionWorkTime, breakTime: accumulatedBreakTime };
+        const newMonthlyData = { ...users[currentUser], workTime: currentSessionWorkTime, breakTime: accumulatedBreakTime };
+
+        dailyAchievements[currentUser] = dailyAchievements[currentUser] || {};
+        dailyAchievements[currentUser][today] = mergeData(dailyAchievements[currentUser][today] || {}, newDailyData);
+        localStorage.setItem('dailyAchievements', JSON.stringify(dailyAchievements));
+
+        weeklyAchievements[currentUser] = weeklyAchievements[currentUser] || {};
+        weeklyAchievements[currentUser][weekOfMonth] = mergeData(weeklyAchievements[currentUser][weekOfMonth] || {}, newWeeklyData);
+        localStorage.setItem('weeklyAchievements', JSON.stringify(weeklyAchievements));
+
+        monthlyAchievements[currentUser] = monthlyAchievements[currentUser] || {};
+        monthlyAchievements[currentUser][monthName] = mergeData(monthlyAchievements[currentUser][monthName] || {}, newMonthlyData);
+        localStorage.setItem('monthlyAchievements', JSON.stringify(monthlyAchievements));
+
+        populateAchievements();
+    };
+
+    const mergeData = (previousData, newData) => {
+        const mergedData = { ...previousData };
+        Object.keys(newData).forEach(key => {
+            if (key === 'workTime' || key === 'breakTime') {
+                mergedData[key] = (mergedData[key] || 0) + newData[key];
+            } else {
+                mergedData[key] = (mergedData[key] || 0) + newData[key];
+            }
+        });
+        return mergedData;
+    };
+
+    const populateAchievements = () => {
+        const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
+        const weeklyAchievements = JSON.parse(localStorage.getItem('weeklyAchievements')) || {};
+        const monthlyAchievements = JSON.parse(localStorage.getItem('monthlyAchievements')) || {};
+
+        const today = new Date().toISOString().split('T')[0];
+        const weekOfMonth = getWeekOfMonth(new Date());
+        const monthName = new Date().toLocaleString('default', { month: 'long' });
+
+        const dailyData = (dailyAchievements[currentUser] || {})[today] || {};
+        const weeklyData = (weeklyAchievements[currentUser] || {})[weekOfMonth] || {};
+        const monthlyData = (monthlyAchievements[currentUser] || {})[monthName] || {};
+
+        const dailyWorkTime = formatTime(dailyData.workTime || 0);
+        const dailyBreakTime = formatTime(dailyData.breakTime || 0);
+        const dailyTotalPosts = calculateTotalPosts(dailyData);
+        const dailyDetails = formatDetails(dailyData);
+
+        document.getElementById('daily-work-time').textContent = dailyWorkTime;
+        document.getElementById('daily-break-time').textContent = dailyBreakTime;
+        document.getElementById('daily-total-posts').textContent = dailyTotalPosts;
+        document.getElementById('daily-details').innerHTML = dailyDetails || 'No data';
+
+        populateWeeklyTable(weeklyAchievements[currentUser] || {});
+        populateMonthlyTable(monthlyAchievements[currentUser] || {});
+    };
+
+    const populateWeeklyTable = (data) => {
+        const tableBody = document.getElementById('weekly-achievements');
+        tableBody.innerHTML = '';
+
+        for (let week = 1; week <= 4; week++) {
+            const weekData = data[week] || {};
+            const workTime = formatTime(weekData.workTime || 0);
+            const breakTime = formatTime(weekData.breakTime || 0);
+            const totalPosts = calculateTotalPosts(weekData);
+            const details = formatDetails(weekData);
+
+            const row = `<tr>
+                <td>Week ${week}</td>
+                <td>${workTime}</td>
+                <td>${breakTime}</td>
+                <td>${totalPosts}</td>
+                <td>${details || 'No data'}</td>
+            </tr>`;
+            tableBody.insertAdjacentHTML('beforeend', row);
+        }
+    };
+
+    const populateMonthlyTable = (data) => {
+        const tableBody = document.getElementById('monthly-achievements');
+        tableBody.innerHTML = '';
+
+        Object.keys(data).forEach(month => {
+            const monthData = data[month];
+            const workTime = formatTime(monthData.workTime || 0);
+            const breakTime = formatTime(monthData.breakTime || 0);
+            const totalPosts = calculateTotalPosts(monthData);
+            const details = formatDetails(monthData);
+
+            const row = `<tr>
+                <td>${month}</td>
+                <td>${workTime}</td>
+                <td>${breakTime}</td>
+                <td>${totalPosts}</td>
+                <td>${details || 'No data'}</td>
+            </tr>`;
+            tableBody.insertAdjacentHTML('beforeend', row);
+        });
+    };
+
+    const formatTime = (seconds) => {
+        const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        return `${minutes}:${secs}`;
+    };
+
+    const calculateTotalPosts = (data) => {
+        return Object.keys(users[currentUser]).reduce((total, category) => total + (data[category] || 0), 0);
+    };
+
+    const formatDetails = (data) => {
+        const details = {};
+        Object.keys(users[currentUser]).forEach(category => {
+            if (data[category] !== undefined) {
+                details[category] = data[category];
+            }
+        });
+        return Object.entries(details).map(([category, count]) => `<p>${category.charAt(0).toUpperCase() + category.slice(1)}: ${count}</p>`).join('');
+    };
+
+    const getWeekOfMonth = (date) => {
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        const dayOfWeek = firstDay.getDay();
+        const offset = (date.getDate() + dayOfWeek - 1) / 7;
+        return Math.ceil(offset);
+    };
+
+    const togglePomodoro = () => {
+        const pomodoroButton = document.getElementById('pomodoro-button');
         if (isPomodoroActive) {
-            clearInterval(pomodoroInterval);
-            clearInterval(breakInterval);
-            isPomodoroActive = false;
-            document.getElementById('pomodoro-button').innerText = 'Start';
+            stopPomodoro();
         } else {
             startPomodoro();
-            isPomodoroActive = true;
-            document.getElementById('pomodoro-button').innerText = 'Stop';
         }
-    }
+    };
 
-    function startPomodoro() {
-        remainingTime = 1500; // 25 minutes
-        document.getElementById('timer').innerText = formatTime(remainingTime);
+    const startPomodoro = () => {
+        remainingTime = 1500; 
+        document.getElementById('timer').textContent = '25:00';
+        isPomodoroActive = true;
+        isBreakActive = false;
+        breakStartTime = 0;
+        currentSessionWorkTime = 0; 
+        runTimer();
+        document.getElementById('pomodoro-button').textContent = 'Stop';
+    };
+
+    const runTimer = () => {
         pomodoroInterval = setInterval(() => {
-            remainingTime--;
-            document.getElementById('timer').innerText = formatTime(remainingTime);
-            if (remainingTime <= 0) {
+            if (remainingTime > 0) {
+                remainingTime--;
+                const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
+                const seconds = (remainingTime % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            } else {
                 clearInterval(pomodoroInterval);
+                currentSessionWorkTime += 1500;
+                alert('Pomodoro session completed! Take a break.');
                 isPomodoroActive = false;
-                document.getElementById('pomodoro-button').innerText = 'Start';
-                // Start Break Timer
-                startBreak();
+                isBreakActive = true;
+                breakStartTime = Date.now();
+                remainingTime = 300; 
+                document.getElementById('timer').textContent = '05:00';
+                runBreakTimer();
             }
         }, 1000);
-    }
+    };
 
-    function startBreak() {
-        accumulatedBreakTime = 0;
-        remainingTime = 300; // 5 minutes
+    const runBreakTimer = () => {
         breakInterval = setInterval(() => {
-            accumulatedBreakTime++;
-            remainingTime--;
-            document.getElementById('timer').innerText = formatTime(remainingTime);
-            if (remainingTime <= 0) {
+            if (remainingTime > 0) {
+                remainingTime--;
+                const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
+                const seconds = (remainingTime % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            } else {
                 clearInterval(breakInterval);
-                document.getElementById('timer').innerText = 'Break Over';
-                // Update user stats
-                // Update user stats in the admin dashboard (not implemented)
+                accumulatedBreakTime += 300; 
+                alert('Break completed! Get back to work.');
+                remainingTime = 1500; 
+                document.getElementById('timer').textContent = '25:00';
+                saveToLocal(); 
+                isBreakActive = false;
             }
         }, 1000);
-    }
+    };
 
-    function formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-    }
+    const stopPomodoro = () => {
+        clearInterval(pomodoroInterval);
+        clearInterval(breakInterval);
+
+        if (isPomodoroActive) {
+            currentSessionWorkTime += (1500 - remainingTime); 
+        }
+        if (isBreakActive) {
+            accumulatedBreakTime += (300 - remainingTime); 
+        }
+
+        remainingTime = 1500; 
+        document.getElementById('timer').textContent = '25:00';
+        isPomodoroActive = false;
+        isBreakActive = false;
+        breakStartTime = 0;
+        saveToLocal(); 
+        document.getElementById('pomodoro-button').textContent = 'Start';
+        resetCategories(); 
+    };
+
+    const resetCategories = () => {
+        Object.keys(users[currentUser]).forEach(cat => {
+            users[currentUser][cat] = 0;
+            document.getElementById(`${cat}-count`).textContent = 0;
+        });
+    };
+
+    window.onload = loadLocalData;
 </script>
 
 </body>
