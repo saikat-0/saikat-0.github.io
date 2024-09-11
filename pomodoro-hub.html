@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Pomodoro Tool</title>
 
 <style>
@@ -80,9 +79,10 @@ label.nav{
   grid-column-start: 1;
   grid-row-start: 2;
   grid-column-end: span 3;
-  padding: 0px 20px;
+  padding: 10px;
   display: flex;
   align-items: center;
+    overflow-y: auto;
 }
 
 .page-contents > *{
@@ -110,10 +110,9 @@ input[type="radio"]:checked + .page{
 }
 
 .page-contents{
-  max-width: 100%;
-  width: 1366px;
-  margin: 0 auto;
-  overflow-y: scroll;
+  min-width: 100%;
+  min-height: 85%;
+  height: 88vh;
 }
 </style>
 
@@ -123,7 +122,6 @@ input[type="radio"]:checked + .page{
   <input name="nav" type="radio" class="nav home-radio" id="home" checked="checked" />
   <div class="page home-page">
     <div class="page-contents">
-      <h1>Pomodoro Timer</h1>
       <iframe src="https://saikat-0.github.io/pomodoro-2.html" title="single" style="width: 100%; height: 100%; border: none;"></iframe>
     </div>
   </div>
@@ -137,7 +135,6 @@ input[type="radio"]:checked + .page{
   <input name="nav" type="radio" class="about-radio" id="about" />
   <div class="page about-page">
     <div class="page-contents">
-      <h1>Analytics</h1>
       <iframe src="https://saikat-0.github.io/analytics.html" title="single" style="width: 100%; height: 100%; border: none;"></iframe>
     </div>
   </div>
