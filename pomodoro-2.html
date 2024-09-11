@@ -322,6 +322,7 @@ const closeModal = () => {
 
 // Update initialization to open modal on load
 window.onload = () => {
+    requestNotificationPermission();
     openModal();  // Show the modal for user selection
 };
 
@@ -576,68 +577,74 @@ const selectUser = (user) => {
         currentSessionWorkTime = 0; 
         runTimer();
         document.getElementById('pomodoro-button').textContent = 'Stop';
+        showNotification('Pomodoro Started', 'You Have 1 Hour');
     };
 
     const runTimer = () => {
-        pomodoroInterval = setInterval(() => {
-            if (remainingTime > 0) {
-                remainingTime--;
-                const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
-                const seconds = (remainingTime % 60).toString().padStart(2, '0');
-                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
-            } else {
-                clearInterval(pomodoroInterval);
-                currentSessionWorkTime += 3600;
-                alert('Pomodoro session completed! Take a break.');
-                isPomodoroActive = false;
-                isBreakActive = true;
-                breakStartTime = Date.now();
-                remainingTime = 600; 
-                document.getElementById('timer').textContent = '10:00';
-                runBreakTimer();
-            }
-        }, 1000);
-    };
+    pomodoroInterval = setInterval(() => {
+        if (remainingTime > 0) {
+            remainingTime--;
+            const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
+            const seconds = (remainingTime % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+        } else {
+            clearInterval(pomodoroInterval);
+            currentSessionWorkTime += 3600;
+            showNotification('Pomodoro Session Completed', 'Take a break.');
+            alert('Pomodoro session completed! Take a break.');
+            isPomodoroActive = false;
+            isBreakActive = true;
+            breakStartTime = Date.now();
+            remainingTime = 600; // 10 minutes for break
+            document.getElementById('timer').textContent = '10:00';
+            runBreakTimer();
+        }
+    }, 1000);
+};
 
-    const runBreakTimer = () => {
-        breakInterval = setInterval(() => {
-            if (remainingTime > 0) {
-                remainingTime--;
-                const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
-                const seconds = (remainingTime % 60).toString().padStart(2, '0');
-                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
-            } else {
-                clearInterval(breakInterval);
-                accumulatedBreakTime += 600; 
-                alert('Break completed! Get back to work.');
-                remainingTime = 3600; 
-                document.getElementById('timer').textContent = '60:00';
-                saveToLocal(); 
-                isBreakActive = false;
-            }
-        }, 1000);
-    };
+const runBreakTimer = () => {
+    breakInterval = setInterval(() => {
+        if (remainingTime > 0) {
+            remainingTime--;
+            const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
+            const seconds = (remainingTime % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+        } else {
+            clearInterval(breakInterval);
+            accumulatedBreakTime += 600; // 10 minutes break
+            showNotification('Break Completed', 'Get back to work.');
+            alert('Break completed! Get back to work.');
+            remainingTime = 3600; // Reset to 60 minutes for the next session
+            document.getElementById('timer').textContent = '60:00';
+            saveToLocal(); 
+            isBreakActive = false;
+        }
+    }, 1000);
+};
 
     const stopPomodoro = () => {
-        clearInterval(pomodoroInterval);
-        clearInterval(breakInterval);
+    clearInterval(pomodoroInterval);
+    clearInterval(breakInterval);
 
-        if (isPomodoroActive) {
-            currentSessionWorkTime += (3600 - remainingTime); 
-        }
-        if (isBreakActive) {
-            accumulatedBreakTime += (600 - remainingTime); 
-        }
+    if (isPomodoroActive) {
+        currentSessionWorkTime += (3600 - remainingTime); 
+    }
+    if (isBreakActive) {
+        accumulatedBreakTime += (3600 - remainingTime); // Adjust to 60 minutes
+    }
 
-        remainingTime = 3600; 
-        document.getElementById('timer').textContent = '60:00';
-        isPomodoroActive = false;
-        isBreakActive = false;
-        breakStartTime = 0;
-        saveToLocal(); 
-        document.getElementById('pomodoro-button').textContent = 'Start';
-        resetCategories(); 
-    };
+    remainingTime = 3600; // Reset to 60 minutes
+    document.getElementById('timer').textContent = '60:00';
+    isPomodoroActive = false;
+    isBreakActive = false;
+    breakStartTime = 0;
+    saveToLocal(); 
+    document.getElementById('pomodoro-button').textContent = 'Start';
+    resetCategories(); 
+
+    showNotification('Pomodoro Stopped', 'The Pomodoro session has been stopped manually.');
+};
+
 
     const resetCategories = () => {
         Object.keys(users[currentUser]).forEach(cat => {
@@ -645,6 +652,23 @@ const selectUser = (user) => {
             document.getElementById(`${cat}-count`).textContent = 0;
         });
     };
+    
+    const requestNotificationPermission = () => {
+    if (Notification.permission !== 'granted') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('Notification permission granted.');
+            }
+        });
+    }
+};
+
+// Call this function when the page loads
+const showNotification = (title, body) => {
+    if (Notification.permission === 'granted') {
+        new Notification(title, { body });
+    }
+};
 
 </script>
 
