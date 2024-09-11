@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Pomodoro Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f3f4f7; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 80%; max-width: 1200px; background: #fff; padding: 20px; margin-top: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+       
+        /* Modal Styling */
+        #avatar-modal {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            bottom: 10px;
+            right: 10px;
+            width: 100%;
+            height: 100%;
+            color: #FFF;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+                .modal-content {
+            position: relative;
+            top: 10px;
+            left: 10px;
+            bottom: 10px;
+            right: 10px;
+            width: 50%;
+            height: 50%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #00000000;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .modal-content button {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: linear-gradient(135deg, #000, #6a0dad);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .modal-content button:hover {
+            background: linear-gradient(135deg, #ff0000, #6a0dad);
+            transform: scale(1.1);
+        }
+
+        .avatar-img {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 2px solid #ff007f;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .selected-avatar {
+            margin-top: 20px;
+            width: auto;
+            display: absolute;
+            justify-content: center;
+            background: linear-gradient(180deg, #620069, #06004d);
+            padding: 15px;
+            border-radius: 50px;
+        }
+
+        .selected-avatar img {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 4px solid hotpink;
+            object-fit: cover;
+        }
+        
+        .selected-avatar:hover { 
+            
+            background: linear-gradient(180deg, #06004d, #620069);
+            transform: scale(1.05);
+            
+        }
+        
+        .categories, .admin-dashboard { margin-top: 20px; }
+        .categories { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .category { width: 18%; text-align: center; padding: 10px; border-radius: 8px; background: #f0f0f0; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+        .category h3 { margin: 0; color: #555; }
+        .buttons { margin-top: 10px; }
+        .buttons button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid cyan; background: #007bff; color: #fff; font-size: 18px; cursor: pointer; margin: 2px; }
+        .buttons button.remove { background: #dc3545; border-color: #dc3545; border: 2px solid black; }
+        .admin-dashboard { margin-top: 30px; }
+        .admin-dashboard table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .admin-dashboard th, td { padding: 8px; text-align: center; border: 1px solid #ddd; }
+        .admin-dashboard th { background: linear-gradient(135deg, #000236, #560061); color: #fff; }
+        .admin-dashboard .no-data { text-align: center; font-style: italic; color: #888; }
+        .table-title { background: linear-gradient(135deg, #000236, hotpink); color: #fff; padding: 10px; font-size: 18px; text-align: center; border-radius: 8px; margin-bottom: 10px; }
+        .save-controls { display: flex; justify-content: center; margin-top: 20px; }
+        .save-controls button { width: 90px; height: 90px; border-radius: 50%; border: 10px solid indigo; background: hotpink; color: #000; font-size: 20px; margin: 5px; cursor: pointer; transition: background 0.3s, border-color 0.3s; }
+        .save-controls button:hover { color: white; background: linear-gradient(135deg, #000236, #560061); border-color: deepskyblue; }
+        
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Advanced Pomodoro Tool For</h1>
+    <div id="selected-avatar" class="selected-avatar" style="display:none;">
+        <img id="selected-avatar-img" src="" alt="Selected User">
+    </div>
+    
+    <!-- Add Modal for Avatar Selection -->
+    <div id="avatar-modal" style="display:none;">
+    <div class="modal-content">
+        <h2>Select User</h2>
+        <button onclick="selectUser('saikat')" class="avatar-button">
+            <img src="https://lh3.googleusercontent.com/a/ACg8ocJTg6fs8P1tVPRj2T8BFE7ZShmRg2qUQLH8SuydS1Pr92rfBMY_=s288-c-no" alt="Saikat" class="avatar-img">
+            <div>Saikat</div>
+        </button>
+        <button onclick="selectUser('sougata')" class="avatar-button">
+            <img src="https://lh3.googleusercontent.com/a/ACg8ocK5C7jp5ss8PH1Uc7jeDiRQoN6KO1AhULG-ZGatkmOqPplNqnSNNA=s288-c-no" alt="Sougata" class="avatar-img">
+            <div>Sougata</div>
+        </button>
+        <button onclick="closeModal()">Close</button>
+    </div>
+</div>
+            
+
+
+    <div class="categories">
+        <div class="category">
+            <h3>Korean</h3>
+            <div class="count" id="korean-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('korean', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('korean', -1)">-</button>
+            </div>
+        </div>
+        <div class="category">
+            <h3>Hollywood</h3>
+            <div class="count" id="hollywood-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('hollywood', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('hollywood', -1)">-</button>
+            </div>
+        </div>
+        <div class="category">
+            <h3>Bollywood</h3>
+            <div class="count" id="bollywood-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('bollywood', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('bollywood', -1)">-</button>
+            </div>
+        </div>
+        <div class="category">
+            <h3>Anime</h3>
+            <div class="count" id="anime-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('anime', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('anime', -1)">-</button>
+            </div>
+        </div>
+        <div class="category">
+            <h3>South-Indian</h3>
+            <div class="count" id="southIndian-count">0</div>
+            <div class="buttons">
+                <button onclick="modifyCategory('southIndian', 1)">+</button>
+                <button class="remove" onclick="modifyCategory('southIndian', -1)">-</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="save-controls">
+        <button id="save-button" onclick="saveToLocal(), resetCategories(), showNotification('Your input has been saved, Good Luck.');">Save</button>
+    </div>
+
+    <div class="admin-dashboard">
+        <div class="table-title">Today's Achievement</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Total Posts</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody id="daily-achievements">
+                <tr>
+                    <td id="daily-total-posts">0</td>
+                    <td id="daily-details" class="no-data">No data</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="table-title">Daily Achievement</div>
+        <table>
+    <thead>
+        <tr>
+            <th>Day</th>
+            <th>Total Posts</th>
+            <th>How Many / Category</th>
+        </tr>
+    </thead>
+    <tbody id="daily-achievement-table">
+        <!-- Data will be inserted here dynamically -->
+    </tbody>
+</table>
+        
+        
+        <div class="table-title">How Many Posts Did the other one Publish?</div>
+        <table>
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Total Posts</th>
+            <th>How Many / Category</th>
+        </tr>
+    </thead>
+    <tbody id="other-user-achievements">
+        <!-- Data will be inserted here dynamically -->
+    </tbody>
+</table>
+        
+        <div class="table-title">Weekly Achievement</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Week</th>
+                    <th>Total Posts</th>
+                    <th>How Many / Category</th>
+                </tr>
+            </thead>
+            <tbody id="weekly-achievements">
+                <!-- Week data will be inserted here dynamically -->
+            </tbody>
+        </table>
+
+        <div class="table-title">Monthly Achievement</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Total Posts</th>
+                    <th>How Many / Category</th>
+                </tr>
+            </thead>
+            <tbody id="monthly-achievements">
+                <!-- Month data will be inserted here dynamically -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const users = { saikat: { korean: 0, hollywood: 0, bollywood: 0, anime: 0, southIndian: 0 }, sougata: { korean: 0, hollywood: 0, bollywood: 0, anime: 0, southIndian: 0 } };
+    let currentUser = 'saikat';
+
+    // Function to open the avatar selection modal
+    const openModal = () => {
+        document.getElementById('avatar-modal').style.display = 'flex';
+    };
+    
+    // Function to close the avatar selection modal
+    const closeModal = () => {
+        document.getElementById('avatar-modal').style.display = 'none';
+    };
+    
+    // Update initialization to open modal on load
+    window.onload = () => {
+        requestNotificationPermission();
+        openModal();  // Show the modal for user selection
+    };
+    
+    // Update selectUser function to include saving user data
+    const selectUser = (user) => {
+        currentUser = user;
+        updateCounts();
+        populateAchievements();
+        populateDailyAchievementTable();
+        populateOtherUserData();
+        closeModal();  // Close the modal after selection
+    
+        // Update avatar display
+            const avatarUrl = user === 'saikat' 
+                ? 'https://lh3.googleusercontent.com/a/ACg8ocJTg6fs8P1tVPRj2T8BFE7ZShmRg2qUQLH8SuydS1Pr92rfBMY_=s288-c-no'
+                : 'https://lh3.googleusercontent.com/a/ACg8ocK5C7jp5ss8PH1Uc7jeDiRQoN6KO1AhULG-ZGatkmOqPplNqnSNNA=s288-c-no';
+            document.getElementById('selected-avatar-img').src = avatarUrl;
+            document.getElementById('selected-avatar').style.display = 'flex';
+    
+            // Update button styles
+            document.querySelectorAll('.avatar-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`[onclick="selectUser('${user}')"]`).classList.add('active');
+        };
+
+    const modifyCategory = (category, delta) => {
+        if (users[currentUser][category] + delta >= 0) {
+            users[currentUser][category] += delta;
+            updateCounts();
+        }
+    };
+
+    const updateCounts = () => {
+        Object.keys(users[currentUser]).forEach(cat => {
+            document.getElementById(`${cat}-count`).textContent = users[currentUser][cat];
+        });
+    };
+
+    const saveToLocal = () => {
+    const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
+    const weeklyAchievements = JSON.parse(localStorage.getItem('weeklyAchievements')) || {};
+    const monthlyAchievements = JSON.parse(localStorage.getItem('monthlyAchievements')) || {};
+
+    const today = new Date().toISOString().split('T')[0];
+    const weekOfMonth = getWeekOfMonth(new Date());
+    const monthName = new Date().toLocaleString('default', { month: 'long' });
+
+    const newDailyData = { ...users[currentUser] };
+    const newWeeklyData = { ...users[currentUser] };
+    const newMonthlyData = { ...users[currentUser]};
+
+    dailyAchievements[currentUser] = dailyAchievements[currentUser] || {};
+    dailyAchievements[currentUser][today] = mergeData(dailyAchievements[currentUser][today] || {}, newDailyData);
+    localStorage.setItem('dailyAchievements', JSON.stringify(dailyAchievements));
+
+    weeklyAchievements[currentUser] = weeklyAchievements[currentUser] || {};
+    weeklyAchievements[currentUser][weekOfMonth] = mergeData(weeklyAchievements[currentUser][weekOfMonth] || {}, newWeeklyData);
+    localStorage.setItem('weeklyAchievements', JSON.stringify(weeklyAchievements));
+
+    monthlyAchievements[currentUser] = monthlyAchievements[currentUser] || {};
+    monthlyAchievements[currentUser][monthName] = mergeData(monthlyAchievements[currentUser][monthName] || {}, newMonthlyData);
+    localStorage.setItem('monthlyAchievements', JSON.stringify(monthlyAchievements));
+
+    populateAchievements();
+    populateDailyAchievementTable();
+    updateCounts()
+};
+
+    const mergeData = (previousData, newData) => {
+        const mergedData = { ...previousData };
+        Object.keys(newData).forEach(key => {
+            if (key === 'workTime' || key === 'breakTime') {
+                mergedData[key] = (mergedData[key] || 0) + newData[key];
+            } else {
+                mergedData[key] = (mergedData[key] || 0) + newData[key];
+            }
+        });
+        return mergedData;
+    };
+
+    const populateAchievements = () => {
+        const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
+        const weeklyAchievements = JSON.parse(localStorage.getItem('weeklyAchievements')) || {};
+        const monthlyAchievements = JSON.parse(localStorage.getItem('monthlyAchievements')) || {};
+
+        const today = new Date().toISOString().split('T')[0];
+        const weekOfMonth = getWeekOfMonth(new Date());
+        const monthName = new Date().toLocaleString('default', { month: 'long' });
+
+        const dailyData = (dailyAchievements[currentUser] || {})[today] || {};
+        const weeklyData = (weeklyAchievements[currentUser] || {})[weekOfMonth] || {};
+        const monthlyData = (monthlyAchievements[currentUser] || {})[monthName] || {};
+        const dailyTotalPosts = calculateTotalPosts(dailyData);
+        const dailyDetails = formatDetails(dailyData);
+
+        document.getElementById('daily-total-posts').textContent = dailyTotalPosts;
+        document.getElementById('daily-details').innerHTML = dailyDetails || 'No data';
+
+        populateWeeklyTable(weeklyAchievements[currentUser] || {});
+        populateMonthlyTable(monthlyAchievements[currentUser] || {});
+    };
+    
+    const populateDailyAchievementTable = () => {
+    const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
+    const tableBody = document.getElementById('daily-achievement-table');
+    tableBody.innerHTML = '';
+
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    days.forEach((day, index) => {
+        const date = new Date();
+        date.setDate(date.getDate() - date.getDay() + index);
+        const dayKey = date.toISOString().split('T')[0];
+        const data = (dailyAchievements[currentUser] || {})[dayKey] || {};
+        const totalPosts = calculateTotalPosts(data);
+        const details = formatDetails(data);
+
+        const row = `<tr>
+            <td>${day}</td>
+            <td>${totalPosts}</td>
+            <td>${details || 'No data'}</td>
+        </tr>`;
+        tableBody.insertAdjacentHTML('beforeend', row);
+    });
+};
+
+    const populateWeeklyTable = (data) => {
+        const tableBody = document.getElementById('weekly-achievements');
+        tableBody.innerHTML = '';
+
+        for (let week = 1; week <= 4; week++) {
+            const weekData = data[week] || {};
+            const totalPosts = calculateTotalPosts(weekData);
+            const details = formatDetails(weekData);
+
+            const row = `<tr>
+                <td>Week ${week}</td>
+                <td>${totalPosts}</td>
+                <td>${details || 'No data'}</td>
+            </tr>`;
+            tableBody.insertAdjacentHTML('beforeend', row);
+        }
+    };
+
+    const populateMonthlyTable = (data) => {
+        const tableBody = document.getElementById('monthly-achievements');
+        tableBody.innerHTML = '';
+
+        Object.keys(data).forEach(month => {
+            const monthData = data[month];
+            const totalPosts = calculateTotalPosts(monthData);
+            const details = formatDetails(monthData);
+
+            const row = `<tr>
+                <td>${month}</td>
+                <td>${totalPosts}</td>
+                <td>${details || 'No data'}</td>
+            </tr>`;
+            tableBody.insertAdjacentHTML('beforeend', row);
+        });
+    };
+    
+    const populateOtherUserData = () => {
+    const otherUsers = Object.keys(users).filter(user => user !== currentUser);
+    const tableBody = document.getElementById('other-user-achievements');
+    tableBody.innerHTML = '';
+
+    otherUsers.forEach(user => {
+        const userData = JSON.parse(localStorage.getItem('dailyAchievements'))[user] || {};
+        const accumulatedData = Object.values(userData).reduce((acc, dayData) => mergeData(acc, dayData), {});
+        const totalPosts = calculateTotalPosts(accumulatedData);
+        const details = formatDetails(accumulatedData);
+
+        const row = `<tr>
+            <td>${user}</td>
+            <td>Total Posts: ${totalPosts}</td>
+            <td>${details || 'No data'}</td>
+        </tr>`;
+        tableBody.insertAdjacentHTML('beforeend', row);
+    });
+};
+
+    const calculateTotalPosts = (data) => {
+        return Object.keys(users[currentUser]).reduce((total, category) => total + (data[category] || 0), 0);
+    };
+
+    const formatDetails = (data) => {
+        const details = {};
+        Object.keys(users[currentUser]).forEach(category => {
+            if (data[category] !== undefined) {
+                details[category] = data[category];
+            }
+        });
+        return Object.entries(details).map(([category, count]) => `<p>${category.charAt(0).toUpperCase() + category.slice(1)}: ${count}</p>`).join('');
+    };
+
+    const getWeekOfMonth = (date) => {
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        const dayOfWeek = firstDay.getDay();
+        const offset = (date.getDate() + dayOfWeek - 1) / 7;
+        return Math.ceil(offset);
+    };
+
+    const resetCategories = () => {
+        Object.keys(users[currentUser]).forEach(cat => {
+            users[currentUser][cat] = 0;
+            document.getElementById(`${cat}-count`).textContent = 0;
+        });
+    };
+    
+    const requestNotificationPermission = () => {
+    if (Notification.permission !== 'granted') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('Notification permission granted.');
+            }
+        });
+    }
+};
+
+    // Call this function when the page loads
+    const showNotification = (title, body) => {
+        if (Notification.permission === 'granted') {
+            new Notification(title, { body });
+        }
+    };
+    
+
+</script>
+
+</body>
+</html>
