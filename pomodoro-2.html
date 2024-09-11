@@ -26,13 +26,13 @@
 }
 
 .modal-content {
-    position: fixed;
+    position: relative;
     top: 10px;
     left: 10px;
     bottom: 10px;
     right: 10px;
-    width: 100%;
-    height: 100%;
+    width: 50%;
+    height: 50%;
     background: rgba(0,0,0,0.5);
     display: flex;
     justify-content: center;
@@ -158,6 +158,7 @@
             <img src="https://lh3.googleusercontent.com/a/ACg8ocK5C7jp5ss8PH1Uc7jeDiRQoN6KO1AhULG-ZGatkmOqPplNqnSNNA=s288-c-no" alt="Sougata" class="avatar-img">
             <div>Sougata</div>
         </button>
+        <button onclick="closeModal()">Close</button>
     </div>
 </div>
             
@@ -210,7 +211,7 @@
         <button id="pomodoro-button" onclick="togglePomodoro()">Start</button>
     </div>
     
-    <div class="timer" id="timer">25:00</div>
+    <div class="timer" id="timer">60:00</div>
 
     <div class="admin-dashboard">
         <div class="table-title">Today's Achievement</div>
@@ -233,8 +234,26 @@
             </tbody>
         </table>
         
-        <div class="table-title">How Many Posts Did the other one Publish?</div>
+        <div class="table-title">Daily Achievement</div>
 <table>
+    <thead>
+        <tr>
+            <th>Day</th>
+            <th>Work Time</th>
+            <th>Break Time</th>
+            <th>Total Posts</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody id="daily-achievement-table">
+        <!-- Data will be inserted here dynamically -->
+    </tbody>
+</table>
+
+
+        
+        <div class="table-title">How Many Posts Did the other one Publish?</div>
+        <table>
     <thead>
         <tr>
             <th>User</th>
@@ -289,7 +308,7 @@
     let currentSessionWorkTime = 0; 
     let accumulatedBreakTime = 0; 
     let breakStartTime = 0; 
-    let remainingTime = 1500; 
+    let remainingTime = 3600; 
 
     // Function to open the avatar selection modal
 const openModal = () => {
@@ -311,6 +330,7 @@ const selectUser = (user) => {
     currentUser = user;
     updateCounts();
     populateAchievements();
+    populateDailyAchievementTable();
     populateOtherUserData();
     closeModal();  // Close the modal after selection
 
@@ -367,6 +387,7 @@ const selectUser = (user) => {
     localStorage.setItem('monthlyAchievements', JSON.stringify(monthlyAchievements));
 
     populateAchievements();
+    populateDailyAchievementTable();
 };
 
     const mergeData = (previousData, newData) => {
@@ -407,6 +428,33 @@ const selectUser = (user) => {
         populateWeeklyTable(weeklyAchievements[currentUser] || {});
         populateMonthlyTable(monthlyAchievements[currentUser] || {});
     };
+    
+    const populateDailyAchievementTable = () => {
+    const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
+    const tableBody = document.getElementById('daily-achievement-table');
+    tableBody.innerHTML = '';
+
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    days.forEach((day, index) => {
+        const date = new Date();
+        date.setDate(date.getDate() - date.getDay() + index);
+        const dayKey = date.toISOString().split('T')[0];
+        const data = (dailyAchievements[currentUser] || {})[dayKey] || {};
+        const workTime = formatTime(data.workTime || 0);
+        const breakTime = formatTime(data.breakTime || 0);
+        const totalPosts = calculateTotalPosts(data);
+        const details = formatDetails(data);
+
+        const row = `<tr>
+            <td>${day}</td>
+            <td>${workTime}</td>
+            <td>${breakTime}</td>
+            <td>${totalPosts}</td>
+            <td>${details || 'No data'}</td>
+        </tr>`;
+        tableBody.insertAdjacentHTML('beforeend', row);
+    });
+};
 
     const populateWeeklyTable = (data) => {
         const tableBody = document.getElementById('weekly-achievements');
@@ -477,10 +525,17 @@ const selectUser = (user) => {
 
 
     const formatTime = (seconds) => {
-        const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const secs = (seconds % 60).toString().padStart(2, '0');
-        return `${minutes}:${secs}`;
-    };
+    const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    
+    if (seconds >= 3600) {
+        return `${hrs}:${mins}:${secs}`; // Format: HH:MM:SS
+    } else {
+        return `${mins}:${secs}`; // Format: MM:SS
+    }
+};
+
 
     const calculateTotalPosts = (data) => {
         return Object.keys(users[currentUser]).reduce((total, category) => total + (data[category] || 0), 0);
@@ -513,8 +568,8 @@ const selectUser = (user) => {
     };
 
     const startPomodoro = () => {
-        remainingTime = 1500; 
-        document.getElementById('timer').textContent = '25:00';
+        remainingTime = 3600;
+        document.getElementById('timer').textContent = '60:00';
         isPomodoroActive = true;
         isBreakActive = false;
         breakStartTime = 0;
@@ -532,13 +587,13 @@ const selectUser = (user) => {
                 document.getElementById('timer').textContent = `${minutes}:${seconds}`;
             } else {
                 clearInterval(pomodoroInterval);
-                currentSessionWorkTime += 1500;
+                currentSessionWorkTime += 3600;
                 alert('Pomodoro session completed! Take a break.');
                 isPomodoroActive = false;
                 isBreakActive = true;
                 breakStartTime = Date.now();
-                remainingTime = 300; 
-                document.getElementById('timer').textContent = '05:00';
+                remainingTime = 600; 
+                document.getElementById('timer').textContent = '10:00';
                 runBreakTimer();
             }
         }, 1000);
@@ -553,10 +608,10 @@ const selectUser = (user) => {
                 document.getElementById('timer').textContent = `${minutes}:${seconds}`;
             } else {
                 clearInterval(breakInterval);
-                accumulatedBreakTime += 300; 
+                accumulatedBreakTime += 600; 
                 alert('Break completed! Get back to work.');
-                remainingTime = 1500; 
-                document.getElementById('timer').textContent = '25:00';
+                remainingTime = 3600; 
+                document.getElementById('timer').textContent = '60:00';
                 saveToLocal(); 
                 isBreakActive = false;
             }
@@ -568,14 +623,14 @@ const selectUser = (user) => {
         clearInterval(breakInterval);
 
         if (isPomodoroActive) {
-            currentSessionWorkTime += (1500 - remainingTime); 
+            currentSessionWorkTime += (3600 - remainingTime); 
         }
         if (isBreakActive) {
-            accumulatedBreakTime += (300 - remainingTime); 
+            accumulatedBreakTime += (600 - remainingTime); 
         }
 
-        remainingTime = 1500; 
-        document.getElementById('timer').textContent = '25:00';
+        remainingTime = 3600; 
+        document.getElementById('timer').textContent = '60:00';
         isPomodoroActive = false;
         isBreakActive = false;
         breakStartTime = 0;
