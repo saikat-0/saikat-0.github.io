@@ -294,43 +294,44 @@
     let remainingTime = 3600; 
 
     // Function to open the avatar selection modal
-const openModal = () => {
-    document.getElementById('avatar-modal').style.display = 'flex';
-};
-
-// Function to close the avatar selection modal
-const closeModal = () => {
-    document.getElementById('avatar-modal').style.display = 'none';
-};
-
-// Update initialization to open modal on load
-window.onload = () => {
-    requestNotificationPermission();
-    openModal();  // Show the modal for user selection
-};
-
-// Update selectUser function to include saving user data
-const selectUser = (user) => {
-    currentUser = user;
-    updateCounts();
-    populateAchievements();
-    populateDailyAchievementTable();
-    populateOtherUserData();
-    closeModal();  // Close the modal after selection
-
-    // Update avatar display
-        const avatarUrl = user === 'saikat' 
-            ? 'https://lh3.googleusercontent.com/a/ACg8ocJTg6fs8P1tVPRj2T8BFE7ZShmRg2qUQLH8SuydS1Pr92rfBMY_=s288-c-no'
-            : 'https://lh3.googleusercontent.com/a/ACg8ocK5C7jp5ss8PH1Uc7jeDiRQoN6KO1AhULG-ZGatkmOqPplNqnSNNA=s288-c-no';
-        document.getElementById('selected-avatar-img').src = avatarUrl;
-        document.getElementById('selected-avatar').style.display = 'flex';
-
-        // Update button styles
-        document.querySelectorAll('.avatar-button').forEach(button => {
-            button.classList.remove('active');
-        });
-        document.querySelector(`[onclick="selectUser('${user}')"]`).classList.add('active');
+    const openModal = () => {
+        document.getElementById('avatar-modal').style.display = 'flex';
     };
+    
+    // Function to close the avatar selection modal
+    const closeModal = () => {
+        document.getElementById('avatar-modal').style.display = 'none';
+    };
+    
+    // Update initialization to open modal on load
+    window.onload = () => {
+        requestNotificationPermission();
+        openModal();// Show the modal for user selection
+        checkForNewMonth();
+    };
+
+    // Update selectUser function to include saving user data
+    const selectUser = (user) => {
+        currentUser = user;
+        updateCounts();
+        populateAchievements();
+        populateDailyAchievementTable();
+        populateOtherUserData();
+        closeModal();  // Close the modal after selection
+    
+        // Update avatar display
+            const avatarUrl = user === 'saikat' 
+                ? 'https://lh3.googleusercontent.com/a/ACg8ocJTg6fs8P1tVPRj2T8BFE7ZShmRg2qUQLH8SuydS1Pr92rfBMY_=s288-c-no'
+                : 'https://lh3.googleusercontent.com/a/ACg8ocK5C7jp5ss8PH1Uc7jeDiRQoN6KO1AhULG-ZGatkmOqPplNqnSNNA=s288-c-no';
+            document.getElementById('selected-avatar-img').src = avatarUrl;
+            document.getElementById('selected-avatar').style.display = 'flex';
+    
+            // Update button styles
+            document.querySelectorAll('.avatar-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`[onclick="selectUser('${user}')"]`).classList.add('active');
+        };
 
     const modifyCategory = (category, delta) => {
         if (users[currentUser][category] + delta >= 0) {
@@ -344,6 +345,82 @@ const selectUser = (user) => {
             document.getElementById(`${cat}-count`).textContent = users[currentUser][cat];
         });
     };
+    
+    const cleanUpOldData = () => {
+    const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
+    const weeklyAchievements = JSON.parse(localStorage.getItem('weeklyAchievements')) || {};
+    const monthlyAchievements = JSON.parse(localStorage.getItem('monthlyAchievements')) || {};
+    
+    const currentDate = new Date();
+    const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
+    const previousMonthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+    const previousMonth = previousMonthDate.toLocaleString('default', { month: 'long' });
+
+    // Only retain the previous month's and the current month's monthly data
+    Object.keys(monthlyAchievements).forEach(user => {
+        const userMonthlyData = monthlyAchievements[user] || {};
+
+        Object.keys(userMonthlyData).forEach(month => {
+            if (month !== currentMonth && month !== previousMonth) {
+                delete userMonthlyData[month]; // Remove data for months older than the previous month
+            }
+        });
+
+        // Update the cleaned data back to the storage
+        monthlyAchievements[user] = userMonthlyData;
+    });
+
+    // Delete all daily and weekly data older than the previous month
+    Object.keys(dailyAchievements).forEach(user => {
+        const userDailyData = dailyAchievements[user] || {};
+
+        Object.keys(userDailyData).forEach(dateString => {
+            const date = new Date(dateString);
+            const monthOfData = date.toLocaleString('default', { month: 'long' });
+
+            // Remove daily data if it's not from the previous or current month
+            if (monthOfData !== currentMonth && monthOfData !== previousMonth) {
+                delete userDailyData[dateString];
+            }
+        });
+
+        dailyAchievements[user] = userDailyData;
+    });
+
+    Object.keys(weeklyAchievements).forEach(user => {
+        const userWeeklyData = weeklyAchievements[user] || {};
+
+        Object.keys(userWeeklyData).forEach(week => {
+            const weekDate = new Date(weeklyAchievements[user][week].date); // assuming date is stored in weekly data
+            const monthOfData = weekDate.toLocaleString('default', { month: 'long' });
+
+            // Remove weekly data if it's not from the previous or current month
+            if (monthOfData !== currentMonth && monthOfData !== previousMonth) {
+                delete userWeeklyData[week];
+            }
+        });
+
+        weeklyAchievements[user] = userWeeklyData;
+    });
+
+    // Save the updated data back to localStorage
+    localStorage.setItem('dailyAchievements', JSON.stringify(dailyAchievements));
+    localStorage.setItem('weeklyAchievements', JSON.stringify(weeklyAchievements));
+    localStorage.setItem('monthlyAchievements', JSON.stringify(monthlyAchievements));
+};
+
+    const checkForNewMonth = () => {
+    const currentMonth = new Date().toLocaleString('default', { month: 'long' });
+    const storedMonth = localStorage.getItem('lastCheckedMonth');
+
+    if (storedMonth !== currentMonth) {
+        // A new month has started, clean up old data
+        cleanUpOldData();
+
+        // Update the last checked month in localStorage
+        localStorage.setItem('lastCheckedMonth', currentMonth);
+    }
+};
 
     const saveToLocal = () => {
     const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
@@ -375,16 +452,17 @@ const selectUser = (user) => {
 };
 
     const mergeData = (previousData, newData) => {
-        const mergedData = { ...previousData };
-        Object.keys(newData).forEach(key => {
-            if (key === 'workTime' || key === 'breakTime') {
-                mergedData[key] = (mergedData[key] || 0) + newData[key];
-            } else {
-                mergedData[key] = (mergedData[key] || 0) + newData[key];
-            }
-        });
-        return mergedData;
-    };
+    const mergedData = { ...previousData };
+    Object.keys(newData).forEach(key => {
+        if (key === 'workTime' || key === 'breakTime') {
+            mergedData[key] = (mergedData[key] || 0) + newData[key];
+        } else {
+            mergedData[key] = (mergedData[key] || 0) + newData[key];
+        }
+    });
+    return mergedData;
+};
+
 
     const populateAchievements = () => {
         const dailyAchievements = JSON.parse(localStorage.getItem('dailyAchievements')) || {};
@@ -433,7 +511,7 @@ const selectUser = (user) => {
             <td>${day}</td>
             <td>${workTime}</td>
             <td>${breakTime}</td>
-            <td>${totalPosts}</td>
+            <td>${totalPosts}  Posts</td>
             <td>${details || 'No data'}</td>
         </tr>`;
         tableBody.insertAdjacentHTML('beforeend', row);
@@ -455,7 +533,7 @@ const selectUser = (user) => {
                 <td>Week ${week}</td>
                 <td>${workTime}</td>
                 <td>${breakTime}</td>
-                <td>${totalPosts}</td>
+                <td>${totalPosts} Posts</td>
                 <td>${details || 'No data'}</td>
             </tr>`;
             tableBody.insertAdjacentHTML('beforeend', row);
@@ -477,7 +555,7 @@ const selectUser = (user) => {
                 <td>${month}</td>
                 <td>${workTime}</td>
                 <td>${breakTime}</td>
-                <td>${totalPosts}</td>
+                <td>${totalPosts}  Posts</td>
                 <td>${details || 'No data'}</td>
             </tr>`;
             tableBody.insertAdjacentHTML('beforeend', row);
@@ -536,11 +614,15 @@ const selectUser = (user) => {
     };
 
     const getWeekOfMonth = (date) => {
-        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-        const dayOfWeek = firstDay.getDay();
-        const offset = (date.getDate() + dayOfWeek - 1) / 7;
-        return Math.ceil(offset);
-    };
+    const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const dayOfWeek = startOfMonth.getDay(); // Day of the week of the 1st of the month
+    const dayOfMonth = date.getDate(); // Day of the month for the current date
+
+    // Calculate the week number
+    return Math.ceil((dayOfMonth + dayOfWeek) / 7);
+};
+
+
 
     const togglePomodoro = () => {
         const pomodoroButton = document.getElementById('pomodoro-button');
@@ -551,22 +633,29 @@ const selectUser = (user) => {
         }
     };
 
+    let pomodoroStartTime;  // Track when the Pomodoro started
+    let breakStartTimeActual; // Track the actual break start time
+    
     const startPomodoro = () => {
+        pomodoroStartTime = Date.now();  // Save the actual start time
         remainingTime = 3600;
         document.getElementById('timer').textContent = '60:00';
         isPomodoroActive = true;
         isBreakActive = false;
-        breakStartTime = 0;
-        currentSessionWorkTime = 0; 
+        currentSessionWorkTime = 0;
         runTimer();
         document.getElementById('pomodoro-button').textContent = 'Stop';
         showNotification('Pomodoro Started', 'You Have 1 Hour');
     };
 
     const runTimer = () => {
+    const expectedEndTime = pomodoroStartTime + remainingTime * 1000;  // Calculate when the session should end
+    
     pomodoroInterval = setInterval(() => {
+        const currentTime = Date.now();
+        remainingTime = Math.floor((expectedEndTime - currentTime) / 1000);  // Calculate remaining time based on system clock
+
         if (remainingTime > 0) {
-            remainingTime--;
             const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
             const seconds = (remainingTime % 60).toString().padStart(2, '0');
             document.getElementById('timer').textContent = `${minutes}:${seconds}`;
@@ -577,27 +666,31 @@ const selectUser = (user) => {
             alert('Pomodoro session completed! Take a break.');
             isPomodoroActive = false;
             isBreakActive = true;
-            breakStartTime = Date.now();
-            remainingTime = 600; // 10 minutes for break
+            breakStartTimeActual = Date.now();  // Track break start time
+            remainingTime = 600;  // Set 10-minute break time
             document.getElementById('timer').textContent = '10:00';
             runBreakTimer();
         }
     }, 1000);
 };
 
-const runBreakTimer = () => {
+    const runBreakTimer = () => {
+    const expectedBreakEndTime = breakStartTimeActual + remainingTime * 1000;
+
     breakInterval = setInterval(() => {
+        const currentTime = Date.now();
+        remainingTime = Math.floor((expectedBreakEndTime - currentTime) / 1000);  // Sync with system clock
+
         if (remainingTime > 0) {
-            remainingTime--;
             const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
             const seconds = (remainingTime % 60).toString().padStart(2, '0');
             document.getElementById('timer').textContent = `${minutes}:${seconds}`;
         } else {
             clearInterval(breakInterval);
-            accumulatedBreakTime += 600; // 10 minutes break
+            accumulatedBreakTime += 600;  // 10 minutes break
             showNotification('Break Completed', 'Get back to work.');
             alert('Break completed! Get back to work.');
-            remainingTime = 3600; // Reset to 60 minutes for the next session
+            remainingTime = 3600;  // Reset to 60 minutes for the next session
             document.getElementById('timer').textContent = '60:00';
             saveToLocal(); 
             isBreakActive = false;
@@ -613,7 +706,7 @@ const runBreakTimer = () => {
         currentSessionWorkTime += (3600 - remainingTime); 
     }
     if (isBreakActive) {
-        accumulatedBreakTime += (3600 - remainingTime); // Adjust to 60 minutes
+        accumulatedBreakTime += (600 - remainingTime); // Adjust to 10 minutes
     }
 
     remainingTime = 3600; // Reset to 60 minutes
@@ -627,7 +720,6 @@ const runBreakTimer = () => {
 
     showNotification('Pomodoro Stopped', 'The Pomodoro session has been stopped manually.');
 };
-
 
     const resetCategories = () => {
         Object.keys(users[currentUser]).forEach(cat => {
@@ -646,12 +738,19 @@ const runBreakTimer = () => {
     }
 };
 
-// Call this function when the page loads
-const showNotification = (title, body) => {
-    if (Notification.permission === 'granted') {
-        new Notification(title, { body });
+    // Call this function when the page loads
+    const showNotification = (title, body) => {
+        if (Notification.permission === 'granted') {
+            new Notification(title, { body });
+        }
+    };
+    
+    window.addEventListener('beforeunload', (event) => {
+    if (isPomodoroActive || isBreakActive) {
+        stopPomodoro();  // Ensure data is saved when leaving the page
     }
-};
+});
+
 
 </script>
 
