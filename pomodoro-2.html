@@ -649,8 +649,8 @@
     };
 
     const runTimer = () => {
-    const expectedEndTime = pomodoroStartTime + remainingTime * 1000;  // Calculate when the session should end
-    
+    const expectedEndTime = pomodoroStartTime + remainingTime * 1000;
+
     pomodoroInterval = setInterval(() => {
         const currentTime = Date.now();
         remainingTime = Math.floor((expectedEndTime - currentTime) / 1000);  // Calculate remaining time based on system clock
@@ -669,57 +669,61 @@
             breakStartTimeActual = Date.now();  // Track break start time
             remainingTime = 600;  // Set 10-minute break time
             document.getElementById('timer').textContent = '10:00';
+            saveToLocal();
+            resetCategories();
             runBreakTimer();
         }
     }, 1000);
 };
 
     const runBreakTimer = () => {
-    const expectedBreakEndTime = breakStartTimeActual + remainingTime * 1000;
-
-    breakInterval = setInterval(() => {
-        const currentTime = Date.now();
-        remainingTime = Math.floor((expectedBreakEndTime - currentTime) / 1000);  // Sync with system clock
-
-        if (remainingTime > 0) {
-            const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
-            const seconds = (remainingTime % 60).toString().padStart(2, '0');
-            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
-        } else {
-            clearInterval(breakInterval);
-            accumulatedBreakTime += 600;  // 10 minutes break
-            showNotification('Break Completed', 'Get back to work.');
-            alert('Break completed! Get back to work.');
-            remainingTime = 3600;  // Reset to 60 minutes for the next session
-            document.getElementById('timer').textContent = '60:00';
-            saveToLocal(); 
-            isBreakActive = false;
-        }
-    }, 1000);
-};
-
+        const expectedBreakEndTime = breakStartTimeActual + remainingTime * 1000;
+    
+        breakInterval = setInterval(() => {
+            const currentTime = Date.now();
+            remainingTime = Math.floor((expectedBreakEndTime - currentTime) / 1000);  // Sync with system clock
+    
+            if (remainingTime > 0) {
+                const minutes = Math.floor(remainingTime / 60).toString().padStart(2, '0');
+                const seconds = (remainingTime % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            } else {
+                clearInterval(breakInterval);
+                accumulatedBreakTime += 600;  // 10 minutes break
+                showNotification('Break Completed', 'Get back to work.');
+                alert('Break completed! Get back to work.');
+                remainingTime = 3600;  // Reset to 60 minutes for the next session
+                document.getElementById('timer').textContent = '60:00';
+                saveToLocal(); 
+                isBreakActive = false;
+                resetCategories(); // Reset categories after saving
+            }
+        }, 1000);
+    };
+    
     const stopPomodoro = () => {
-    clearInterval(pomodoroInterval);
-    clearInterval(breakInterval);
+        clearInterval(pomodoroInterval);
+        clearInterval(breakInterval);
+    
+        if (isPomodoroActive) {
+            currentSessionWorkTime += (3600 - remainingTime); 
+        }
+        if (isBreakActive) {
+            accumulatedBreakTime += (600 - remainingTime); // Adjust to 10 minutes
+        }
+    
+        remainingTime = 3600; // Reset to 60 minutes
+        document.getElementById('timer').textContent = '60:00';
+        isPomodoroActive = false;
+        isBreakActive = false;
+        breakStartTime = 0;
+        saveToLocal(); 
+        document.getElementById('pomodoro-button').textContent = 'Start';
+        resetCategories(); // Reset categories after saving
+    
+        showNotification('Pomodoro Stopped', 'The Pomodoro session has been stopped manually.');
+    };
 
-    if (isPomodoroActive) {
-        currentSessionWorkTime += (3600 - remainingTime); 
-    }
-    if (isBreakActive) {
-        accumulatedBreakTime += (600 - remainingTime); // Adjust to 10 minutes
-    }
-
-    remainingTime = 3600; // Reset to 60 minutes
-    document.getElementById('timer').textContent = '60:00';
-    isPomodoroActive = false;
-    isBreakActive = false;
-    breakStartTime = 0;
-    saveToLocal(); 
-    document.getElementById('pomodoro-button').textContent = 'Start';
-    resetCategories(); 
-
-    showNotification('Pomodoro Stopped', 'The Pomodoro session has been stopped manually.');
-};
 
     const resetCategories = () => {
         Object.keys(users[currentUser]).forEach(cat => {
