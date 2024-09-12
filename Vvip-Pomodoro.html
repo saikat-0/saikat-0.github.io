@@ -58,11 +58,6 @@
       color: #888;
       margin-top: 5px;
     }
-    .info {
-      font-size: 1.2em;
-      color: #333;
-      text-align: center;
-    }
     /* Advanced Digital Clock Style */
 .timer {
   font-family: 'Courier New', Courier, monospace;
@@ -181,31 +176,34 @@
 
   <script>
     const tasks = [
-      { day: 'Monday-Friday', time: '13:00-14:00', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
-      { day: 'Monday-Friday', time: '14:10-15:10', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
-      { day: 'Monday-Friday', time: '15:20-15:30', task: 'Lunch Break', break: '' },
-      { day: 'Monday-Friday', time: '15:30-16:30', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
-      { day: 'Monday-Friday', time: '16:40-17:40', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
-      { day: 'Monday-Friday', time: '17:50-18:50', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
-      { day: 'Monday-Friday', time: '19:00-20:00', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from AllKpop.', break: '10-minute break' },
-      { day: 'Monday-Friday', time: '20:10-21:10', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from Soompi.', break: '10-minute break' },
-      { day: 'Monday-Friday', time: '21:20-22:10', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
-      { day: 'Monday-Friday', time: '22:20-22:30', task: 'Dinner Break', break: '' },
-      { day: 'Monday-Friday', time: '22:30-23:30', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from AllKpop.', break: '10-minute break' },
-      { day: 'Monday-Friday', time: '23:40-23:59', task: 'Write 3 short articles: 1 from PinkVilla Korean and 2 from Soompi.', break: 'End of workday' },
-      { day: 'Saturday-Sunday', time: '13:00-14:00', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
-      { day: 'Saturday-Sunday', time: '14:10-15:10', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
-      { day: 'Saturday-Sunday', time: '15:20-15:30', task: 'Lunch Break', break: '' },
-      { day: 'Saturday-Sunday', time: '15:30-16:30', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
-      { day: 'Saturday-Sunday', time: '16:40-17:40', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from AllKpop.', break: '10-minute break' },
-      { day: 'Saturday-Sunday', time: '17:50-18:50', task: 'Write 3 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from Soompi.', break: 'Publish and review all articles for edits.' },
+      { day: 'Monday-Friday', time: '1:00 PM-2:00 PM', task: 'Write 4 short articles from PinkVilla Korean.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '2:11 PM-03:11 PM', task: 'Write 4 short articles from PinkVilla Korean.', break: '' },
+      { day: 'Monday-Friday', time: '03:12 PM-03:44 PM', task: 'Lunch Break', break: '' },
+      { day: 'Monday-Friday', time: '03:45 PM-05:30 PM', task: 'Write 5 short articles from PinkVilla Korean.', break: '' },
+      { day: 'Monday-Friday', time: '05:31 PM-06:09 PM', task: 'Cleaning / Bathing / Smoking Break', break: '' },
+      { day: 'Monday-Friday', time: '06:10 PM-07:10 PM', task: 'Write 4 short articles: 2 from PinkVilla Korean and 2 from KoreaBoo.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '07:21 PM-08:21 PM', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '08:32 PM-10:09 PM', task: 'Write 5 short articles: 3 from PinkVilla Korean, 1 from KoreaBoo, 1 from AllKpop.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '10:10 PM-10:30 PM', task: 'Dinner Break', break: '' },
+      { day: 'Monday-Friday', time: '10:31 PM-11:31 PM', task: 'Write 4 short articles: 1 from PinkVilla Korean, 1 from KoreaBoo, 1 from Soompi.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '11:41 PM-11:59 PM', task: 'Write 1 short articles. and Analyze Todays Work', break: '10-minute break' },
+      { day: 'Saturday-Sunday', time: '01:00 PM-02:00 PM', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
+      { day: 'Saturday-Sunday', time: '02:11 PM-03:11 PM', task: 'Write 3 short articles: 2 from PinkVilla Korean and 1 from KoreaBoo.', break: '10-minute break' },
+      { day: 'Saturday-Sunday', time: '03:22 PM-03:44 PM', task: 'Lunch Break', break: '' },
+      { day: 'Saturday-Sunday', time: '03:45 PM-05:30 PM', task: 'Write as many articles you can and complete todays work', break: '' },
+      { day: 'Saturday-Sunday', time: '05:31 PM-06:29 PM', task: 'Cleaning / Bathing / Smoking Break', break: '' },
+      { day: 'Saturday-Sunday', time: '06:30 PM-10:09 PM', task: 'Do Website Enhancements, Research News Sites, Create Web Tools', break: '' },
+      { day: 'Saturday-Sunday', time: '10:11 PM-10:30 PM', task: 'Dinner Break', break: '' },
+      { day: 'Saturday-Sunday', time: '10:31 PM-11:59 PM', task: 'Watch Movie/Dramas, Do Website Enhancements, Create Web Tools', break: 'Publish and review all articles for edits.' },
     ];
 
     let lastTask = null;
     let taskStartTime = null;
+    let taskEndTime = null;
+    let taskCompleted = false;
+    let breakEndTime = null;
     let taskHistory = JSON.parse(localStorage.getItem('taskHistory')) || [];
 
-    // Request desktop notification permission on page load
     document.addEventListener('DOMContentLoaded', function() {
       if (Notification.permission !== 'granted') {
         Notification.requestPermission();
@@ -213,32 +211,42 @@
     });
 
     function formatTime(ms) {
-      const minutes = Math.floor(ms / 60000);
-      const seconds = Math.floor((ms % 60000) / 1000);
-      return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-    }
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  const hours = Math.floor(minutes / 60);
+  const displayMinutes = minutes % 60;
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const formattedHours = hours % 12 || 12; // Convert 24-hour to 12-hour format
+  return `${formattedHours}:${displayMinutes < 10 ? '0' : ''}${displayMinutes} ${period}`;
+}
+
 
     function isWeekday(day) {
-  return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day);
+  return ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'].includes(day.toLowerCase());
 }
 
 function isWeekend(day) {
-  return ['Saturday', 'Sunday'].includes(day);
+  return ['saturday', 'sunday'].includes(day.toLowerCase());
 }
 
+
 function parseTimeString(timeString) {
-  const [hours, minutes] = timeString.split(':').map(Number);
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
+  const [time, modifier] = timeString.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+  if (modifier === 'PM' && hours < 12) hours += 12;
+  if (modifier === 'AM' && hours === 12) hours = 0;
+  return new Date(new Date().setHours(hours, minutes, 0, 0));
 }
+
 
 
 function timeInRange(currentTime, taskTimeRange) {
   const [startTimeStr, endTimeStr] = taskTimeRange.split('-');
   const startTime = parseTimeString(startTimeStr);
   const endTime = parseTimeString(endTimeStr);
-  return currentTime >= startTime && currentTime <= endTime;
+  return currentTime >= startTime.getTime() && currentTime <= endTime.getTime();
 }
+
 
 function getRemainingTime(endTime) {
   const now = new Date();
@@ -267,7 +275,7 @@ function getCurrentTask() {
   });
 }
 
-    function displayTasks() {
+        function displayTasks() {
   const taskList = document.getElementById('taskList');
   const now = new Date();
   const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
@@ -321,92 +329,134 @@ function getCurrentTask() {
   });
 }
 
-
-function getTaskProgress(task) {
-  const [startTimeStr, endTimeStr] = task.time.split('-');
-  const startTime = parseTimeString(startTimeStr);
-  const endTime = parseTimeString(endTimeStr);
-  const now = new Date().getTime();
-
-  if (now < startTime) return 0;
-  if (now > endTime) return 100;
-
-  const progress = ((now - startTime) / (endTime - startTime)) * 100;
-  return progress;
-}
-
-
-
-
+    
 function checkTask() {
-  const now = new Date();
-  const currentTask = getCurrentTask();
+    const now = new Date();
+    const currentTask = getCurrentTask();
 
-  if (currentTask) {
-    if (currentTask !== lastTask) {
-      lastTask = currentTask;
-      taskStartTime = now;
+    if (currentTask) {
+        if (currentTask !== lastTask) {
+            // Task started
+            lastTask = currentTask;
+            taskStartTime = now;
 
-      // Parse task time and get end time
-      const [startTimeStr, endTimeStr] = currentTask.time.split('-');
-      taskEndTime = parseTimeString(endTimeStr);  // End time in milliseconds
+            // Parse task time and get end time
+            const [startTimeStr, endTimeStr] = currentTask.time.split('-');
+            taskEndTime = parseTimeString(endTimeStr);
 
-      // Show task details
-      document.getElementById('info').textContent = `Current Task: ${currentTask.task} (${currentTask.time})`;
+            // Display task info
+            document.getElementById('info').textContent = `Current Task: ${currentTask.task} (${currentTask.time})`;
 
-      // Send a desktop notification
-      sendDesktopNotification('New Task Started', currentTask.task);
+            // Send task start notification if it's a new task
+            sendDesktopNotification('Task Started', currentTask.task);
 
-      // Add task to task history
-      taskHistory.push({ task: currentTask.task, time: currentTask.time, completedAt: now });
-      localStorage.setItem('taskHistory', JSON.stringify(taskHistory));
-      updateHistoryList();
+            // Add task to history
+            taskHistory.push({ task: currentTask.task, time: currentTask.time, completedAt: now });
+            localStorage.setItem('taskHistory', JSON.stringify(taskHistory));
+            updateHistoryList();
+
+            taskCompleted = false; // Reset completion flag for the new task
+        }
+
+        // Calculate remaining time for the current task
+        const remainingTime = getRemainingTime(taskEndTime);
+        document.getElementById('timer').textContent = formatRemainingTime(remainingTime);
+
+        // Update progress bar for the active task
+        const activeTaskElement = document.querySelector('.task-item.active .progress-bar');
+        if (activeTaskElement) {
+            const progress = getTaskProgress(currentTask);
+            activeTaskElement.style.width = `${progress}%`;
+        }
+
+        // Check if the task is completed
+        if (remainingTime.minutes === 0 && remainingTime.seconds === 0 && !taskCompleted) {
+            taskCompleted = true; // Prevent multiple notifications
+
+            // Notify task completion and start break
+            document.getElementById('timer').textContent = 'Task Completed! Time for a break.';
+            sendDesktopNotification('Task Completed', `Time for a break! (${currentTask.break})`);
+
+            if (currentTask.break && currentTask.break.includes('break')) {
+                const breakDuration = 10 * 60 * 1000; // 10-minute break in milliseconds
+                breakEndTime = new Date().getTime() + breakDuration;
+
+                // Ensure only one interval is set
+                if (!window.breakTimer) {
+                    window.breakTimer = setInterval(updateBreakTimer, 1000); // Start break timer countdown
+                }
+            }
+        }
+    } else {
+        // Reset if no current task
+        lastTask = null;
+        document.getElementById('info').textContent = 'No current task';
+        document.getElementById('timer').textContent = '00:00';
     }
 
-    // Calculate remaining time for the current task
-    const remainingTime = getRemainingTime(taskEndTime);
-    document.getElementById('timer').textContent = formatRemainingTime(remainingTime);
-
-    // Stop timer when time runs out
-    if (remainingTime.minutes === 0 && remainingTime.seconds === 0) {
-      document.getElementById('timer').textContent = 'Task Completed! take a 10 min break';
-      sendDesktopNotification('Breaktime', currentTask.task);
-      lastTask = null;
-      // Reset lastTask so it doesn't repeat
-    }
-  }
+    // Update the task list
+    displayTasks();
 }
 
-// Run the checkTask function every second to update the timer and task
-setInterval(checkTask, 1000);
+// Modified updateBreakTimer function
+function updateBreakTimer() {
+    const now = new Date().getTime();
+    const timeRemaining = breakEndTime - now;
 
-// Initially populate task history
-updateHistoryList();
+    if (timeRemaining > 0) {
+        const minutes = Math.floor(timeRemaining / 60000);
+        const seconds = Math.floor((timeRemaining % 60000) / 1000);
+        document.getElementById('timer').textContent = `Break Time: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    } else {
+        document.getElementById('timer').textContent = 'Break Over! Time to get back to work.';
+        sendDesktopNotification('Break Completed', `Time for Work again!`);
 
-
-
-    function sendDesktopNotification(title, body) {
-      if (Notification.permission === 'granted') {
-        new Notification(title, { body });
-      }
+        // Clear the break timer interval
+        clearInterval(window.breakTimer);
+        window.breakTimer = null;
     }
 
-    function updateHistoryList() {
-      const historyList = document.getElementById('historyList');
-      historyList.innerHTML = '';
-      taskHistory.forEach(entry => {
+    // Update the task list after break
+    displayTasks();
+}
+
+// Helper function to update the progress of a task
+function getTaskProgress(task) {
+    const [startTimeStr, endTimeStr] = task.time.split('-');
+    const startTime = parseTimeString(startTimeStr);
+    const endTime = parseTimeString(endTimeStr);
+    const now = new Date().getTime();
+
+    if (now < startTime) return 0;
+    if (now > endTime) return 100;
+
+    const progress = ((now - startTime) / (endTime - startTime)) * 100;
+    return progress;
+}
+
+function sendDesktopNotification(title, body) {
+    if (Notification.permission === 'granted') {
+        new Notification(title, { body });
+    }
+}
+
+function updateHistoryList() {
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '';
+    taskHistory.forEach(entry => {
         const listItem = document.createElement('li');
         listItem.textContent = `${entry.task} (Completed at: ${new Date(entry.completedAt).toLocaleTimeString()})`;
         historyList.appendChild(listItem);
-      });
-    }
+    });
+}
 
-    // Run the checkTask function every second to update the timer and task
-    setInterval(checkTask, 1000);
+// Set interval to check tasks every second
+setInterval(checkTask, 1000);
 
-    // Initially populate task history
-    updateHistoryList();
-    displayTasks();
+// Initial population of the task list and history
+updateHistoryList();
+displayTasks();
+
   </script>
 </body>
 </html>
