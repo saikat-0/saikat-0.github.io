@@ -58,56 +58,60 @@
       color: #888;
       margin-top: 5px;
     }
-    .timer {
-      font-size: 2em;
-      color: #e74c3c;
-      text-align: center;
-      margin: 20px 0;
-    }
     .info {
       font-size: 1.2em;
       color: #333;
       text-align: center;
     }
-    #popupOverlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      color: #fff;
-      z-index: 1000;
-      text-align: center;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      padding: 20px;
-    }
-    #popupOverlay h2 {
-      margin: 0;
-      font-size: 2em;
-    }
-    #popupOverlay p {
-      font-size: 1.5em;
-    }
-    #popupTimer {
-      font-size: 2em;
-      margin-top: 10px;
-    }
-    #popupOverlay .close-button {
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: #e74c3c;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+    /* Advanced Digital Clock Style */
+.timer {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 3em;
+  color: #00ffcc;
+  text-align: center;
+  margin: 20px 0;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 20px rgba(0, 255, 204, 0.8), 0 0 40px rgba(0, 255, 204, 0.6), 
+               0 0 60px rgba(0, 255, 204, 0.4), 0 0 80px rgba(0, 255, 204, 0.2);
+  position: relative;
+  display: auto;
+  padding: 10px 20px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(0, 255, 204, 0.5);
+}
+
+@keyframes glow {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(0, 255, 204, 0.8), 0 0 40px rgba(0, 255, 204, 0.6), 
+                 0 0 60px rgba(0, 255, 204, 0.4), 0 0 80px rgba(0, 255, 204, 0.2);
+  }
+  50% {
+    text-shadow: 0 0 25px rgba(0, 255, 204, 1), 0 0 50px rgba(0, 255, 204, 0.8), 
+                 0 0 75px rgba(0, 255, 204, 0.6), 0 0 100px rgba(0, 255, 204, 0.4);
+  }
+}
+
+.timer span {
+  display: inline-block;
+  animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes fade {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Blinking colon */
+.timer .colon {
+  animation: fade 1s infinite;
+}
+
+    .info {
       font-size: 1.2em;
-    }
-    #popupOverlay .close-button:hover {
-      background: #c0392b;
+      color: #333;
+      text-align: center;
     }
     .task-history {
       margin-top: 20px;
@@ -163,18 +167,11 @@
   </style>
 </head>
 <body>
-  <h1>Pomodoro To-Do List</h1>
+<h1>Pomodoro To-Do List</h1>
   <div class="timer" id="timer">00:00</div>
   <div class="info" id="info"></div>
   <ul id="taskList" class="task-list"></ul>
 
-  <!-- Popup Overlay -->
-  <div id="popupOverlay">
-    <h2 id="popupTitle">Task Update</h2>
-    <p id="popupDetails">Task details will be here</p>
-    <div id="popupTimer">00:00</div>
-    <button class="close-button" onclick="closePopup()">Close</button>
-  </div>
 
   <!-- Task History -->
   <div class="task-history" id="taskHistory">
@@ -184,7 +181,7 @@
 
   <script>
     const tasks = [
-      { day: 'Monday-Friday', time: '13:00-14:00', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
+      { day: 'Monday-Friday', time: '06:06-06:08', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
       { day: 'Monday-Friday', time: '14:10-15:10', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
       { day: 'Monday-Friday', time: '15:20-15:30', task: 'Lunch Break', break: '' },
       { day: 'Monday-Friday', time: '15:30-16:30', task: 'Write 3 short articles from PinkVilla Korean.', break: '10-minute break' },
@@ -205,10 +202,15 @@
     ];
 
     let lastTask = null;
-    let timerInterval = null;
-    let popupEndTime = null;
     let taskStartTime = null;
     let taskHistory = JSON.parse(localStorage.getItem('taskHistory')) || [];
+
+    // Request desktop notification permission on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      if (Notification.permission !== 'granted') {
+        Notification.requestPermission();
+      }
+    });
 
     function formatTime(ms) {
       const minutes = Math.floor(ms / 60000);
@@ -216,198 +218,195 @@
       return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     }
 
-    function getCurrentTask() {
-      const now = new Date();
-      const currentTime = now.toTimeString().slice(0, 5);
-      const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
-      const todayTasks = tasks.filter(task => task.day.includes(currentDay));
+    function isWeekday(day) {
+  return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(day);
+}
 
-      return todayTasks.find(task => {
-        const [start, end] = task.time.split('-');
-        return currentTime >= start && currentTime <= end;
-      });
+function isWeekend(day) {
+  return ['Saturday', 'Sunday'].includes(day);
+}
+
+function parseTimeString(timeString) {
+  const [hours, minutes] = timeString.split(':').map(Number);
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
+}
+
+
+function timeInRange(currentTime, taskTimeRange) {
+  const [startTimeStr, endTimeStr] = taskTimeRange.split('-');
+  const startTime = parseTimeString(startTimeStr);
+  const endTime = parseTimeString(endTimeStr);
+  return currentTime >= startTime && currentTime <= endTime;
+}
+
+function getRemainingTime(endTime) {
+  const now = new Date();
+  const timeRemaining = endTime - now;
+  const minutes = Math.floor(timeRemaining / 60000);
+  const seconds = Math.floor((timeRemaining % 60000) / 1000);
+  return { minutes, seconds };
+}
+
+function formatRemainingTime({ minutes, seconds }) {
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+function getCurrentTask() {
+  const now = new Date();
+  const currentTime = now.getTime();  // Get time in milliseconds
+  const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+
+  return tasks.find(task => {
+    if (task.day === 'Monday-Friday' && isWeekday(currentDay)) {
+      return timeInRange(currentTime, task.time);
+    } else if (task.day === 'Saturday-Sunday' && isWeekend(currentDay)) {
+      return timeInRange(currentTime, task.time);
     }
+    return task.day === currentDay && timeInRange(currentTime, task.time);
+  });
+}
 
     function displayTasks() {
-      const taskList = document.getElementById('taskList');
-      const now = new Date();
-      const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+  const taskList = document.getElementById('taskList');
+  const now = new Date();
+  const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
 
-      taskList.innerHTML = '';
+  taskList.innerHTML = ''; // Clear current task list
 
-      const todayTasks = tasks.filter(task => task.day.includes(currentDay));
-      if (todayTasks.length) {
-        const dateHeader = document.createElement('div');
-        dateHeader.className = 'date';
-        dateHeader.textContent = `Tasks for ${currentDay}`;
-        taskList.appendChild(dateHeader);
-      }
-
-      const currentTask = getCurrentTask();
-      todayTasks.forEach(task => {
-        const li = document.createElement('li');
-        li.className = 'task-item';
-
-        if (task === currentTask) {
-          li.classList.add('active');
-        } else if (new Date() > new Date(`1970-01-01T${task.time.split('-')[1]}`)) {
-          li.classList.add('past');
-        }
-
-        li.innerHTML = `
-          <div class="progress-bar-container">
-            <div class="progress-bar" style="width: ${getTaskProgress(task)};"></div>
-          </div>
-          <div class="time">${task.time}</div>
-          <div class="task">${task.task}</div>
-          <div class="break">${task.break}</div>
-        `;
-        taskList.appendChild(li);
-      });
+  // Filter tasks for the current day
+  const todayTasks = tasks.filter(task => {
+    if (task.day === 'Monday-Friday' && isWeekday(currentDay)) {
+      return true;
+    } else if (task.day === 'Saturday-Sunday' && isWeekend(currentDay)) {
+      return true;
     }
+    return task.day === currentDay;
+  });
 
-    function getTaskProgress(task) {
-      const now = new Date();
-      const [start, end] = task.time.split('-');
-      const startTime = new Date(`${now.toDateString()} ${start}`);
-      const endTime = new Date(`${now.toDateString()} ${end}`);
+  if (todayTasks.length) {
+    // Create a header for today's tasks
+    const dateHeader = document.createElement('div');
+    dateHeader.className = 'date';
+    dateHeader.textContent = `Tasks for ${currentDay}`;
+    taskList.appendChild(dateHeader);
+  }
 
-      if (now < startTime) return '0%';
-      if (now > endTime) return '100%';
+  // Display each task for today
+  todayTasks.forEach(task => {
+    const li = document.createElement('li');
+    li.className = 'task-item';
 
-      const totalDuration = endTime - startTime;
-      const elapsedDuration = now - startTime;
-      return `${Math.min(100, (elapsedDuration / totalDuration) * 100)}%`;
-    }
-
-    function updatePopupTimer() {
-      if (popupEndTime) {
-        const timeLeft = popupEndTime - Date.now();
-        if (timeLeft <= 0) {
-          closePopup();
-        } else {
-          document.getElementById('popupTimer').textContent = formatTime(timeLeft);
-        }
+    // Add 'active' class to the current task
+    const currentTask = getCurrentTask();
+    if (task === currentTask) {
+      li.classList.add('active');
+    } else {
+      const taskEndTime = parseTimeString(task.time.split('-')[1]);
+      if (now > taskEndTime) {
+        li.classList.add('past');
       }
     }
 
-    function showPopup(title, details, duration) {
-      const popupOverlay = document.getElementById('popupOverlay');
-      document.getElementById('popupTitle').textContent = title;
-      document.getElementById('popupDetails').textContent = details;
+    li.innerHTML = `
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: ${getTaskProgress(task)}%;"></div>
+      </div>
+      <div class="time">${task.time}</div>
+      <div class="task">${task.task}</div>
+      <div class="break">${task.break}</div>
+    `;
 
-      popupEndTime = new Date(Date.now() + duration);
-      document.getElementById('popupTimer').textContent = formatTime(duration);
+    taskList.appendChild(li);
+  });
+}
 
-      popupOverlay.style.display = 'flex';
-      window.focus();
 
-      clearInterval(timerInterval);
-      timerInterval = setInterval(updatePopupTimer, 1000);
+function getTaskProgress(task) {
+  const [startTimeStr, endTimeStr] = task.time.split('-');
+  const startTime = parseTimeString(startTimeStr);
+  const endTime = parseTimeString(endTimeStr);
+  const now = new Date().getTime();
 
-      // Play sound notification
-      const audio = new Audio('notification.mp3');
-      audio.play();
-    }
+  if (now < startTime) return 0;
+  if (now > endTime) return 100;
 
-    function closePopup() {
-      document.getElementById('popupOverlay').style.display = 'none';
-      clearInterval(timerInterval);
-      timerInterval = null;
-      popupEndTime = null;
-    }
+  const progress = ((now - startTime) / (endTime - startTime)) * 100;
+  return progress;
+}
 
-    function showTaskUpdatePopup(task, type) {
-      const now = new Date();
-      const [start, end] = task.time.split('-');
-      const taskDetails = `Task: ${task.task}\nTime: ${task.time}`;
-      const startTime = new Date(`${now.toDateString()} ${start}`);
-      const endTime = new Date(`${now.toDateString()} ${end}`);
-      let duration = 0;
 
-      if (type === 'start') {
-        duration = endTime - now;
-        showPopup('Task Started', `Task started.\n${taskDetails}`, duration);
-        taskStartTime = now;
-        handleBreakTime(task);
-      } else if (type === 'end') {
-        duration = 10 * 60 * 1000; // 10 minutes in milliseconds
-        showPopup('Task Ended', `Task ended.\n${taskDetails}`, duration);
-        taskStartTime = null;
-        addTaskToHistory(task);
-      } else if (type === 'break') {
-        duration = 10 * 60 * 1000; // 10 minutes in milliseconds
-        showPopup('Break Time', `Break time! You have a ${task.break}.\n${taskDetails}`, duration);
-      }
-    }
 
-    function addTaskToHistory(task) {
-      taskHistory.push({ ...task, completedAt: new Date().toLocaleTimeString() });
+
+function checkTask() {
+  const now = new Date();
+  const currentTask = getCurrentTask();
+
+  if (currentTask) {
+    if (currentTask !== lastTask) {
+      lastTask = currentTask;
+      taskStartTime = now;
+
+      // Parse task time and get end time
+      const [startTimeStr, endTimeStr] = currentTask.time.split('-');
+      taskEndTime = parseTimeString(endTimeStr);  // End time in milliseconds
+
+      // Show task details
+      document.getElementById('info').textContent = `Current Task: ${currentTask.task} (${currentTask.time})`;
+
+      // Send a desktop notification
+      sendDesktopNotification('New Task Started', currentTask.task);
+
+      // Add task to task history
+      taskHistory.push({ task: currentTask.task, time: currentTask.time, completedAt: now });
       localStorage.setItem('taskHistory', JSON.stringify(taskHistory));
-      updateTaskHistory();
+      updateHistoryList();
     }
 
-    function updateTaskHistory() {
+    // Calculate remaining time for the current task
+    const remainingTime = getRemainingTime(taskEndTime);
+    document.getElementById('timer').textContent = formatRemainingTime(remainingTime);
+
+    // Stop timer when time runs out
+    if (remainingTime.minutes === 0 && remainingTime.seconds === 0) {
+      document.getElementById('timer').textContent = 'Task Completed! take a 10 min break';
+      sendDesktopNotification('Breaktime', currentTask.task);
+      lastTask = null;
+      // Reset lastTask so it doesn't repeat
+    }
+  }
+}
+
+// Run the checkTask function every second to update the timer and task
+setInterval(checkTask, 1000);
+
+// Initially populate task history
+updateHistoryList();
+
+
+
+    function sendDesktopNotification(title, body) {
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body });
+      }
+    }
+
+    function updateHistoryList() {
       const historyList = document.getElementById('historyList');
       historyList.innerHTML = '';
-
-      taskHistory.forEach(task => {
-        const li = document.createElement('li');
-        li.textContent = `${task.task} (Completed at ${task.completedAt})`;
-        historyList.appendChild(li);
+      taskHistory.forEach(entry => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${entry.task} (Completed at: ${new Date(entry.completedAt).toLocaleTimeString()})`;
+        historyList.appendChild(listItem);
       });
     }
 
-    function handleBreakTime(task) {
-      if (taskStartTime) {
-        const workTime = 30 * 60 * 1000; // 30 minutes in milliseconds
-        const breakDuration = 10 * 60 * 1000; // 10 minutes in milliseconds
-        const breakStartTime = new Date(taskStartTime.getTime() + workTime);
+    // Run the checkTask function every second to update the timer and task
+    setInterval(checkTask, 1000);
 
-        if (new Date() >= breakStartTime && new Date() < breakStartTime + breakDuration) {
-          showTaskUpdatePopup(task, 'break');
-        }
-      }
-    }
-
-    function update() {
-      const currentTask = getCurrentTask();
-      const timerElement = document.getElementById('timer');
-      const infoElement = document.getElementById('info');
-
-      if (currentTask) {
-        const now = new Date();
-        const [start, end] = currentTask.time.split('-');
-        const startTime = new Date(`${now.toDateString()} ${start}`);
-        const endTime = new Date(`${now.toDateString()} ${end}`);
-        const remainingTime = endTime - now;
-
-        if (remainingTime > 0) {
-          timerElement.textContent = formatTime(remainingTime);
-          infoElement.textContent = `Current Task: ${currentTask.task}. Time remaining: ${formatTime(remainingTime)}.`;
-
-          if (now >= startTime && now < endTime && (!lastTask || lastTask !== currentTask)) {
-            showTaskUpdatePopup(currentTask, 'start');
-            lastTask = currentTask;
-          }
-        } else {
-          if (lastTask === currentTask) {
-            showTaskUpdatePopup(currentTask, 'end');
-            lastTask = null;
-          }
-        }
-      } else {
-        timerElement.textContent = '00:00';
-        infoElement.textContent = 'No Active Task';
-        lastTask = null;
-      }
-
-      displayTasks();
-    }
-
-    // Load task history on page load
-    updateTaskHistory();
-    setInterval(update, 1000);
+    // Initially populate task history
+    updateHistoryList();
+    displayTasks();
   </script>
 </body>
 </html>
