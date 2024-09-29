@@ -445,6 +445,7 @@ case 'TOGGLE_CAPTION':
         return (
           
 					<div className="container">
+					
 						<form onSubmit={(e) => e.preventDefault()}>
 							<div
                 className="drag-drop-area"
@@ -468,7 +469,24 @@ case 'TOGGLE_CAPTION':
                 value={state.caption}
                 onChange={(e) => dispatch({ type: 'SET_CAPTION', payload: e.target.value })}
               />
-							<label>
+							
+              
+              {state.loading && 
+							<div className="loading-spinner"></div>}
+              
+              {!state.loading && state.imageUrls.length > 0 && (
+                
+							<button type="button" onClick={downloadImage}>
+                  Download Image
+                </button>
+              )}
+              {state.notification && (
+                
+							<div className={`notification ${state.notification.type}`}>
+                  {state.notification.message}
+                </div>
+              )}
+            <label>
 								<input
       type="checkbox"
       checked={state.showWatermark}
@@ -486,23 +504,6 @@ case 'TOGGLE_CAPTION':
     Show Caption
   
 							</label>
-              
-              {state.loading && 
-							<div className="loading-spinner"></div>}
-              
-              {!state.loading && state.imageUrls.length > 0 && (
-                
-							<button type="button" onClick={downloadImage}>
-                  Download Image
-                </button>
-              )}
-              {state.notification && (
-                
-							<div className={`notification ${state.notification.type}`}>
-                  {state.notification.message}
-                </div>
-              )}
-            
 						</form>
 						<br />
             {!state.loading && state.imageUrls.length > 0 && (
