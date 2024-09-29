@@ -1,4 +1,30 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vvip Times Multi Image Creator Pro ++ (Enhanced)</title><style>body{font-family:'Segoe UI',sans-serif;background:#f0fff0;margin:0;padding:0;color:#333}.container{max-width:1200px;margin:auto;padding:30px;text-align:center}h1{font-size:3rem;margin-bottom:20px;color:navy}form{display:flex;flex-direction:column;align-items:center;gap:15px}input[type=text]{border:2px dashed navy;border-radius:8px;padding:12px;width:100%;font-size:1.4rem;text-align:center}button{background:#4a0026F2;color:#fff;border:10px solid #ff69b4;border-radius:50px;padding:9px;font-size:1.5rem;cursor:pointer;transition:background .3s;width:250px;max-width:400px}button:hover{background:#08005DF5;border:10px solid #0071F9F0;color:#fff}.drag-drop-area{border:2px dashed navy;border-radius:12px;padding:60px 250px;min-height:30vh;min-width:30vw;background:#fff;cursor:pointer;position:relative;margin:20px 0;transition:border-color .3s,background .3s}.drag-drop-area.dragover{border-color:#004d40;background:#b2dfdb}.drag-drop-area input[type=file]{display:none}.drag-drop-area::after{content:'Drag & Drop or Click to Upload Images';color:navy;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;font-weight:600}.image-preview-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:10px;background:#ff69b4;padding:10px;border-radius:12px}.image-wrapper{position:relative;width:100%;height:0;padding-top:52%}.image-wrapper img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}.remove-image-button{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.6rem;z-index:1}.remove-image-button:hover{background:rgba(0,0,0,.9);border:3px solid #ff69b4}.flip-image-button{position:absolute;top:3px;left:3px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.6rem;z-index:1}.flip-image-button:hover{background:rgba(0,0,0,.9);border:3px solid #ff69b4}.loading-spinner{border:60px solid #000000da;border-top:60px solid #09004f;border-radius:50%;width:300px;height:300px;animation:spin 1s linear infinite;margin:20px auto}.notification{background:#00796b;color:#fff;padding:15px;border-radius:8px;margin:20px auto;width:90%;max-width:400px}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}</style></head><body><div id="root"></div><script src="https://unpkg.com/react@18/umd/react.development.js"></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script><script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/compressorjs@1.1.1/dist/compressor.min.js"></script><script type="text/babel">const { useState, useReducer, useRef, useCallback, useEffect } = React;
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vvip Times Multi Image Creator Pro ++ (Enhanced)</title><style>body{font-family:'Segoe UI',sans-serif;background:#f0fff0;margin:0;padding:0;color:#333}.container{max-width:1200px;margin:auto;padding:30px;text-align:center}h1{font-size:3rem;margin-bottom:20px;color:navy}form{display:flex;flex-direction:column;align-items:center;gap:15px}input[type=text]{border:2px dashed navy;border-radius:8px;padding:12px;width:100%;font-size:1.4rem;text-align:center}button{background:#4a0026F2;color:#fff;border:10px solid #ff69b4;border-radius:50px;padding:9px;font-size:1.5rem;cursor:pointer;transition:background .3s;width:250px;max-width:400px}button:hover{background:#08005DF5;border:10px solid #0071F9F0;color:#fff}.drag-drop-area{border:2px dashed navy;border-radius:12px;padding:60px 250px;min-height:30vh;min-width:30vw;background:#fff;cursor:pointer;position:relative;margin:20px 0;transition:border-color .3s,background .3s}.drag-drop-area.dragover{border-color:#004d40;background:#b2dfdb}.drag-drop-area input[type=file]{display:none}.drag-drop-area::after{content:'Drag & Drop or Click to Upload Images';color:navy;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2rem;font-weight:600}.image-preview-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:10px;background:#ff69b4;padding:10px;border-radius:12px}.image-wrapper{position:relative;width:100%;height:0;padding-top:52%}.image-wrapper img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}.remove-image-button{position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.6rem;z-index:1}.remove-image-button:hover{background:rgba(0,0,0,.9);border:3px solid #ff69b4}.flip-image-button{position:absolute;top:3px;left:3px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.6rem;z-index:1}.flip-image-button:hover{background:rgba(0,0,0,.9);border:3px solid #ff69b4}.loading-spinner{border:60px solid #000000da;border-top:60px solid #09004f;border-radius:50%;width:300px;height:300px;animation:spin 1s linear infinite;margin:20px auto}.notification{background:#00796b;color:#fff;padding:15px;border-radius:8px;margin:20px auto;width:90%;max-width:400px}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    label {
+          display: flex;
+          font-family: Arial, sans-serif;
+          background: #08005df5;
+        border: 6px solid #0071f9f0;
+        border-radius: 50px;
+        padding: 4px 8px;
+        font-size: 15px;
+        color: #fff;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: background 0.3s;
+        }
+        
+        label:hover {
+        background: #4a0026f2;
+        border: 6px solid #ff69b4;
+        color: #fff;
+      }
+        
+    input[type="checkbox"] {
+          margin-right: 9px;
+            cursor: pointer;
+        }
+</style>
+</head><body><div id="root"></div><script src="https://unpkg.com/react@18/umd/react.development.js"></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script><script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/compressorjs@1.1.1/dist/compressor.min.js"></script><script type="text/babel">const { useState, useReducer, useRef, useCallback, useEffect } = React;
 
       const initialState = {
         imageUrls: [],
@@ -90,7 +116,6 @@
     const ctx = canvas.getContext('2d');
     const imgCount = state.imageUrls.length;
 
-    // Define canvas dimensions based on image count
     let canvasWidth = 1200;
     let canvasHeight = 628;
     canvas.width = canvasWidth;
@@ -105,35 +130,28 @@
     });
 
     const images = await Promise.all(imageElements);
-    
 
-    // Drawing logic based on number of images
     const drawImages = (ctx, imgs, width, height) => {
       ctx.clearRect(0, 0, width, height);
-      
+
       const drawImage = (img, x, y, maxWidth, maxHeight) => {
-    const imgRatio = img.width / img.height;
-    const canvasRatio = maxWidth / maxHeight;
+        const imgRatio = img.width / img.height;
+        const canvasRatio = maxWidth / maxHeight;
+        let drawWidth, drawHeight;
 
-    let drawWidth, drawHeight;
+        if (imgRatio > canvasRatio) {
+          drawWidth = img.width * (maxHeight / img.height);
+          drawHeight = maxHeight;
+        } else {
+          drawWidth = maxWidth;
+          drawHeight = img.height * (maxWidth / img.width);
+        }
 
-    if (imgRatio > canvasRatio) {
-        // Image is wider relative to the canvas
-        drawWidth = img.width * (maxHeight / img.height);
-        drawHeight = maxHeight;
-    } else {
-        // Image is taller relative to the canvas
-        drawWidth = maxWidth;
-        drawHeight = img.height * (maxWidth / img.width);
-    }
+        const offsetX = (drawWidth - maxWidth) / 2;
+        const offsetY = (drawHeight - maxHeight) / 2;
+        ctx.drawImage(img, -offsetX, -offsetY, drawWidth, drawHeight, x, y, maxWidth, maxHeight);
+      };
 
-    const offsetX = (drawWidth - maxWidth) / 2;
-    const offsetY = (drawHeight - maxHeight) / 2;
-
-    ctx.drawImage(img, -offsetX, -offsetY, drawWidth, drawHeight, x, y, maxWidth, maxHeight);
-};
-
-      
       switch (imgs.length) {
         case 1:
           ctx.drawImage(imgs[0], 0, 0, width, height);
@@ -306,34 +324,36 @@
       ctx.drawImage(imgs[13], width * 3 / 5, rowHeight15 * 2, width / 5, rowHeight15);
       ctx.drawImage(imgs[14], width * 4 / 5, rowHeight15 * 2, width / 5, rowHeight15);
       break;
-      
-        default:
+      default:
           throw new Error('Unsupported image count.');
       }
     };
 
     drawImages(ctx, images, canvasWidth, canvasHeight);
 
-    // Add watermark
-    const watermarkPadding = 5;
-    const watermarkWidth = 150;
-    const watermarkHeight = 36;
-    ctx.font = '700 24px Arial';
-    ctx.fillStyle = '#010642';
-    ctx.globalAlpha = 0.77;
-    const watermarkX = canvas.width - watermarkWidth - watermarkPadding;
-    const watermarkY = watermarkPadding + watermarkHeight / 2;
-    ctx.beginPath();
-    ctx.roundRect(watermarkX, watermarkPadding, watermarkWidth, watermarkHeight, 50);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'white';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('Vvip Times', canvas.width - (watermarkWidth / 2) - watermarkPadding, watermarkY);
+    const includeWatermark = document.getElementById('toggleWatermark').checked;
+    const includeCaption = document.getElementById('toggleCaption').checked;
 
-    // Add caption
-    if (state.caption) {
+    if (includeWatermark) {
+      const watermarkPadding = 5;
+      const watermarkWidth = 150;
+      const watermarkHeight = 36;
+      ctx.font = '700 24px Arial';
+      ctx.fillStyle = '#010642';
+      ctx.globalAlpha = 0.77;
+      const watermarkX = canvas.width - watermarkWidth - watermarkPadding;
+      const watermarkY = watermarkPadding + watermarkHeight / 2;
+      ctx.beginPath();
+      ctx.roundRect(watermarkX, watermarkPadding, watermarkWidth, watermarkHeight, 50);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Vvip Times', canvas.width - (watermarkWidth / 2) - watermarkPadding, watermarkY);
+    }
+
+    if (includeCaption && state.caption) {
       ctx.font = '500 22px Arial';
       ctx.fillStyle = 'black';
       ctx.globalAlpha = 0.7;
@@ -363,6 +383,7 @@
     dispatch({ type: 'SET_LOADING', payload: false });
   }
 }, [state.imageUrls]);
+
 
 
         const removeImage = (index) => {
@@ -412,6 +433,14 @@
                 value={state.caption}
                 onChange={(e) => dispatch({ type: 'SET_CAPTION', payload: e.target.value })}
               />
+              
+              <label>
+  <input type="checkbox" id="toggleWatermark" defaultChecked /> Watermark
+</label>
+<label>
+  <input type="checkbox" id="toggleCaption" defaultChecked /> Caption
+</label>
+
               
               {state.loading && <div className="loading-spinner"></div>}
               
