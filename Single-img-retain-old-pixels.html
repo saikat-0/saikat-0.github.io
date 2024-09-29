@@ -42,6 +42,31 @@
         font-size: 1.4rem;
         text-align: center;
       }
+      
+      label {
+          display: flex;
+          font-family: Arial, sans-serif;
+          background: #08005df5;
+        border: 6px solid #0071f9f0;
+        border-radius: 50px;
+        padding: 4px 8px;
+        font-size: 15px;
+        color: #fff;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: background 0.3s;
+        }
+        
+        label:hover {
+        background: #4a0026f2;
+        border: 6px solid #ff69b4;
+        color: #fff;
+      }
+        
+    input[type="checkbox"] {
+          margin-right: 9px;
+            cursor: pointer;
+        }
 
       button {
         background: #4a0026f2;
@@ -209,10 +234,19 @@
 </head>
 <body>
     <div class="container">
-    <h2>Single image (same pixels/dimention as input file)</h2>
+        <h2>Single image (same pixels/dimension as input file)</h2>
         <div id="dragDropArea" class="drag-drop-area"></div>
         <form>
             <input type="text" placeholder="Enter caption here" id="captionInput">
+            
+            <!-- Add checkboxes for toggling watermark and caption -->
+            <label>
+                <input type="checkbox" id="toggleWatermark" checked> Add Watermark
+            </label>
+            <label>
+                <input type="checkbox" id="toggleCaption" checked> Add Caption
+            </label>
+            
             <button type="button" id="downloadButton">Download Image</button>
             <div id="loadingSpinner" class="loading-spinner" style="display: none;"></div>
             <div id="notification" class="notification" style="display: none;"></div>
@@ -220,244 +254,233 @@
         <br />
         <div class="image-preview-container" id="imagePreviewContainer"></div>
     </div>
+
     <script src="https://unpkg.com/pica/dist/pica.min.js"></script>
-
     <script>
-    
-    document.addEventListener("DOMContentLoaded", () => {
-    const dragDropArea = document.getElementById("dragDropArea");
-    const imagePreviewContainer = document.getElementById("imagePreviewContainer");
-    const captionInput = document.getElementById("captionInput");
-    const downloadButton = document.getElementById("downloadButton");
-    const loadingSpinner = document.getElementById("loadingSpinner");
-    const notification = document.getElementById("notification");
-    let imageUrl = null;
-    let flipHorizontal = false;
+        document.addEventListener("DOMContentLoaded", () => {
+            const dragDropArea = document.getElementById("dragDropArea");
+            const imagePreviewContainer = document.getElementById("imagePreviewContainer");
+            const captionInput = document.getElementById("captionInput");
+            const downloadButton = document.getElementById("downloadButton");
+            const loadingSpinner = document.getElementById("loadingSpinner");
+            const notification = document.getElementById("notification");
 
-    dragDropArea.addEventListener("dragover", e => {
-        e.preventDefault();
-        dragDropArea.classList.add("dragover");
-    });
+            // New: Get references to the toggle checkboxes
+            const toggleWatermark = document.getElementById("toggleWatermark");
+            const toggleCaption = document.getElementById("toggleCaption");
 
-    dragDropArea.addEventListener("dragleave", e => {
-        e.preventDefault();
-        dragDropArea.classList.remove("dragover");
-    });
+            let imageUrl = null;
+            let flipHorizontal = false;
 
-    dragDropArea.addEventListener("drop", e => {
-        e.preventDefault();
-        dragDropArea.classList.remove("dragover");
-        handleFiles(Array.from(e.dataTransfer.files));
-    });
+            dragDropArea.addEventListener("dragover", e => {
+                e.preventDefault();
+                dragDropArea.classList.add("dragover");
+            });
 
-    dragDropArea.addEventListener("click", () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.multiple = true;
-        input.addEventListener('change', () => {
-            handleFiles(Array.from(input.files));
-        });
-        input.click();
-    });
+            dragDropArea.addEventListener("dragleave", e => {
+                e.preventDefault();
+                dragDropArea.classList.remove("dragover");
+            });
 
-    function handleFiles(files) {
-        files.forEach(file => {
-            if (file.type.startsWith("image/")) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    imageUrl = e.target.result;
+            dragDropArea.addEventListener("drop", e => {
+                e.preventDefault();
+                dragDropArea.classList.remove("dragover");
+                handleFiles(Array.from(e.dataTransfer.files));
+            });
+
+            dragDropArea.addEventListener("click", () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.addEventListener('change', () => {
+                    handleFiles(Array.from(input.files));
+                });
+                input.click();
+            });
+
+            function handleFiles(files) {
+                files.forEach(file => {
+                    if (file.type.startsWith("image/")) {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            imageUrl = e.target.result;
+                            updateImagePreview();
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        showNotification("Only image files are supported.", "error");
+                    }
+                });
+            }
+
+            function updateImagePreview() {
+                imagePreviewContainer.innerHTML = "";
+                if (imageUrl) {
+                    const imageWrapper = document.createElement("div");
+                    imageWrapper.className = "image-wrapper";
+                    const img = document.createElement("img");
+                    img.src = imageUrl;
+                    img.alt = "Image";
+                    const rotateButton = document.createElement("button");
+                    rotateButton.className = "rotate-button";
+                    rotateButton.innerHTML = "⥃";
+                    rotateButton.addEventListener("click", () => flipImage());
+                    const removeButton = document.createElement("button");
+                    removeButton.className = "remove-image-button";
+                    removeButton.innerHTML = "×";
+                    removeButton.addEventListener("click", () => {
+                        imageUrl = null;
+                        flipHorizontal = false;
+                        updateImagePreview();
+                    });
+                    const captionDiv = document.createElement("div");
+                    captionDiv.className = "caption";
+                    captionDiv.textContent = captionInput.value;
+                    const watermarkDiv = document.createElement("div");
+                    watermarkDiv.className = "watermark";
+                    watermarkDiv.textContent = "Vvip Times";
+
+                    imageWrapper.append(img, rotateButton, removeButton);
+                    
+                    // Only append caption and watermark if toggled on
+                    if (toggleCaption.checked) {
+                        imageWrapper.appendChild(captionDiv);
+                    }
+                    if (toggleWatermark.checked) {
+                        imageWrapper.appendChild(watermarkDiv);
+                    }
+
+                    imagePreviewContainer.appendChild(imageWrapper);
+                }
+            }
+
+            function flipImage() {
+                flipHorizontal = !flipHorizontal;
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                const img = new Image();
+                img.src = imageUrl;
+                img.onload = () => {
+                    canvas.width = img.width * 2;
+                    canvas.height = img.height * 2;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    if (flipHorizontal) {
+                        ctx.translate(canvas.width, 0);
+                        ctx.scale(-1, 1);
+                    }
+                    ctx.drawImage(img, 0, 0, img.width * 2, img.height * 2);
+                    ctx.restore();
+                    imageUrl = canvas.toDataURL("image/webp");
                     updateImagePreview();
                 };
-                reader.readAsDataURL(file);
-            } else {
-                showNotification("Only image files are supported.", "error");
+            }
+
+            downloadButton.addEventListener("click", () => {
+                if (imageUrl) {
+                    loadingSpinner.style.display = "block";
+                    setTimeout(() => {
+                        createAndDownloadImage();
+                        loadingSpinner.style.display = "none";
+                    }, 2000); // Simulate delay for processing
+                } else {
+                    showNotification("Please add an image first.", "error");
+                }
+            });
+
+            async function createAndDownloadImage() {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                const img = new Image();
+                img.src = imageUrl;
+                img.onload = async () => {
+                    // Set high-resolution canvas size
+                    canvas.width = img.width * 2;
+                    canvas.height = img.height * 2;
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    // Conditionally add watermark and caption based on toggle checkboxes
+                    if (toggleWatermark.checked) {
+                        addWatermark(ctx, canvas);
+                    }
+                    if (toggleCaption.checked) {
+                        addCaption(ctx, canvas, captionInput.value);
+                    }
+
+                    // Create a new canvas for final image
+                    const finalCanvas = document.createElement("canvas");
+                    finalCanvas.width = img.width;
+                    finalCanvas.height = img.height;
+                    const finalCtx = finalCanvas.getContext("2d");
+                    finalCtx.drawImage(canvas, 0, 0, img.width, img.height);
+
+                    await compressAndDownloadImage(finalCanvas);
+                };
+            }
+
+            function addWatermark(ctx, canvas) {
+                const padding = 5;
+                const width = 150;
+                const height = 36;
+                ctx.font = "700 24px Arial";
+                ctx.fillStyle = "#010642";
+                ctx.globalAlpha = 0.77;
+                ctx.beginPath();
+                ctx.roundRect(canvas.width - width - padding, padding, width, height, 50);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = "white";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("VvipTimes", canvas.width - width / 2 - padding, padding + height / 2);
+            }
+
+            function addCaption(ctx, canvas, caption) {
+                if (!caption) return;
+                ctx.font = "500 22px Arial";
+                ctx.fillStyle = "black";
+                ctx.globalAlpha = 0.7;
+                const textMetrics = ctx.measureText(caption);
+                const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+                const captionHeight = textHeight + 10;
+                ctx.globalAlpha = 0.7;
+                ctx.beginPath();
+                ctx.roundRect(0, canvas.height - captionHeight, canvas.width, captionHeight, 15);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = "white";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(caption, canvas.width / 2, canvas.height - captionHeight / 2);
+            }
+
+            async function compressAndDownloadImage(canvas) {
+                const maxFileSize = 50 * 1024; // 50 KB
+                let quality = 1.0; // Start with high quality
+                const minQuality = 0.5;
+                let blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", quality));
+                while (blob.size > maxFileSize && quality > minQuality) {
+                    quality -= 0.05; // Reduce quality
+                    blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", quality));
+                }
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "image.webp";
+                a.click();
+                URL.revokeObjectURL(url);
+                showNotification("Image downloaded successfully!", "success");
+            }
+
+            function showNotification(message, type) {
+                notification.textContent = message;
+                notification.style.backgroundColor = type === "success" ? "green" : "red";
+                notification.style.display = "block";
+                setTimeout(() => {
+                    notification.style.display = "none";
+                }, 5000);
             }
         });
-    }
-
-    function updateImagePreview() {
-        imagePreviewContainer.innerHTML = "";
-        if (imageUrl) {
-            const imageWrapper = document.createElement("div");
-            imageWrapper.className = "image-wrapper";
-            const img = document.createElement("img");
-            img.src = imageUrl;
-            img.alt = "Image";
-            const rotateButton = document.createElement("button");
-            rotateButton.className = "rotate-button";
-            rotateButton.innerHTML = "⥃";
-            rotateButton.addEventListener("click", () => flipImage());
-            const removeButton = document.createElement("button");
-            removeButton.className = "remove-image-button";
-            removeButton.innerHTML = "×";
-            removeButton.addEventListener("click", () => {
-                imageUrl = null;
-                flipHorizontal = false;
-                updateImagePreview();
-            });
-            const captionDiv = document.createElement("div");
-            captionDiv.className = "caption";
-            captionDiv.textContent = captionInput.value;
-            const watermarkDiv = document.createElement("div");
-            watermarkDiv.className = "watermark";
-            watermarkDiv.textContent = "Vvip Times";
-            imageWrapper.append(img, rotateButton, removeButton, captionDiv, watermarkDiv);
-            imagePreviewContainer.appendChild(imageWrapper);
-        }
-    }
-
-    function flipImage() {
-        flipHorizontal = !flipHorizontal;
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const img = new Image();
-        img.src = imageUrl;
-        img.onload = () => {
-            canvas.width = img.width * 2;
-            canvas.height = img.height * 2;
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            if (flipHorizontal) {
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
-            }
-            ctx.drawImage(img, 0, 0, img.width * 2, img.height * 2);
-            ctx.restore();
-            imageUrl = canvas.toDataURL("image/webp");
-            updateImagePreview();
-        };
-    }
-
-    downloadButton.addEventListener("click", () => {
-        if (imageUrl) {
-            loadingSpinner.style.display = "block";
-            setTimeout(() => {
-                createAndDownloadImage();
-                loadingSpinner.style.display = "none";
-            }, 2000); // Simulate delay for processing
-        } else {
-            showNotification("Please add an image first.", "error");
-        }
-    });
-
-    async function createAndDownloadImage() {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const img = new Image();
-        img.src = imageUrl;
-        img.onload = async () => {
-            // Set high-resolution canvas size
-            canvas.width = img.width * 2;
-            canvas.height = img.height * 2;
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-            // Add watermark and caption
-            addWatermark(ctx, canvas);
-            addCaption(ctx, canvas, captionInput.value);
-
-            // Create a new canvas for final image
-            const finalCanvas = document.createElement("canvas");
-            finalCanvas.width = img.width;
-            finalCanvas.height = img.height;
-            const finalCtx = finalCanvas.getContext("2d");
-            finalCtx.drawImage(canvas, 0, 0, img.width, img.height);
-
-            await compressAndDownloadImage(finalCanvas);
-        };
-    }
-
-    function addWatermark(ctx, canvas) {
-        const padding = 5;
-        const width = 150;
-        const height = 36;
-        ctx.font = "700 24px Arial";
-        ctx.fillStyle = "#010642";
-        ctx.globalAlpha = 0.77;
-        ctx.beginPath();
-        ctx.roundRect(canvas.width - width - padding, padding, width, height, 50);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("VvipTimes", canvas.width - width / 2 - padding, padding + height / 2);
-    }
-
-    function addCaption(ctx, canvas, caption) {
-        if (!caption) return;
-        ctx.font = "500 22px Arial";
-        ctx.fillStyle = "black";
-        ctx.globalAlpha = 0.7;
-        const textMetrics = ctx.measureText(caption);
-        const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
-        const captionHeight = textHeight + 10;
-        ctx.globalAlpha = 0.7;
-        ctx.beginPath();
-        ctx.roundRect(0, canvas.height - captionHeight, canvas.width, captionHeight, 15);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(caption, canvas.width / 2, canvas.height - captionHeight / 2);
-    }
-
-    async function compressAndDownloadImage(canvas) {
-        const maxFileSize = 50 * 1024; // 50 KB
-        let quality = 1.0; // Start with high quality
-        const minQuality = 0.5;
-        const maxQuality = 1.0;
-
-        function getFileSize(blob) {
-            return new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result.byteLength);
-                reader.readAsArrayBuffer(blob);
-            });
-        }
-
-        async function adjustQuality(low, high) {
-            if (high - low < 0.0001) {
-                return low;
-            }
-            const mid = (low + high) / 2;
-            const blob = await new Promise(resolve => canvas.toBlob(blob => resolve(blob), "image/webp", mid));
-            const size = await getFileSize(blob);
-            if (size <= maxFileSize) {
-                return adjustQuality(mid, high);
-            } else {
-                return adjustQuality(low, mid);
-            }
-        }
-
-        const finalQuality = await adjustQuality(minQuality, maxQuality);
-
-        canvas.toBlob(async blob => {
-            if (blob) {
-                const size = await getFileSize(blob);
-                console.log(`Final image size: ${size} bytes, quality: ${finalQuality}`);
-                const fileName = `VvipTimes_${captionInput.value.replace(/\s+/g, '_')}.webp`;
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = fileName;
-                link.click();
-            } else {
-                showNotification("Failed to compress image.", "error");
-            }
-        }, "image/webp", finalQuality);
-    }
-
-    function showNotification(message, type = "info") {
-        notification.textContent = message;
-        notification.className = `notification ${type}`;
-        notification.style.display = "block";
-        setTimeout(() => {
-            notification.style.display = "none";
-        }, 3000);
-    }
-});
-
-
     </script>
 </body>
 </html>
