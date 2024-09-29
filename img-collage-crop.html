@@ -42,6 +42,32 @@
         font-size: 1.4rem;
         text-align: center;
       }
+      
+      label {
+          display: flex;
+          font-family: Arial, sans-serif;
+          background: #08005df5;
+        border: 6px solid #0071f9f0;
+        border-radius: 50px;
+        padding: 4px 8px;
+        font-size: 15px;
+        color: #fff;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: background 0.3s;
+        }
+        
+        label:hover {
+        background: #4a0026f2;
+        border: 6px solid #ff69b4;
+        color: #fff;
+      }
+        
+    input[type="checkbox"] {
+          margin-right: 9px;
+            cursor: pointer;
+        }
+
 
       button {
         background: #4a0026f2;
@@ -49,8 +75,14 @@
         border: 10px solid #ff69b4;
         border-radius: 50px;
         padding: 9px;
-        font-size: 1.5rem;
+        font-size: 1.3rem;
+        background: #4a0026f2;
+        color: #fff;
+        border: 10px solid #ff69b4;
         cursor: pointer;
+        transition: background 0.3s;
+        width: 250px;
+        max-width: 400px;
         transition: background 0.3s;
         width: 250px;
         max-width: 400px;
@@ -211,11 +243,25 @@
     <div class="container">
       <div id="dragDropArea" class="drag-drop-area"></div>
       <form>
-        <input type="text" placeholder="Enter caption here" id="captionInput">
-        <button type="button" id="downloadButton">Download Collage</button>
-        <div id="loadingSpinner" class="loading-spinner" style="display: none;"></div>
-        <div id="notification" class="notification" style="display: none;"></div>
-      </form>
+  <input type="text" placeholder="Enter caption here" id="captionInput">
+  
+  <!-- Add checkboxes for watermark and caption -->
+  <label>
+    <input type="checkbox" id="captionToggle" checked>
+    Caption
+  </label>
+  
+  <label>
+    <input type="checkbox" id="watermarkToggle" checked>
+    Watermark
+  </label>
+  
+      <button type="button" id="downloadButton">Download</button>
+  
+  <div id="loadingSpinner" class="loading-spinner" style="display: none;"></div>
+  <div id="notification" class="notification" style="display: none;"></div>
+</form>
+
       <br />
       <div class="image-preview-container" id="imagePreviewContainer"></div>
     </div>
@@ -355,28 +401,38 @@
           setTimeout(() => notification.style.display = "none", 3000);
         }
         async function createCollage() {
-          loadingSpinner.style.display = "block";
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          canvas.width = 1200;
-          canvas.height = 628;
-          try {
-            const images = await Promise.all(imageUrls.map(loadImage));
-            console.log('Loaded images:', images);
-            const layoutFunction = getLayoutFunction(images.length);
-            console.log('Selected layout function:', layoutFunction);
-            layoutFunction(ctx, images, canvas.width, canvas.height);
-            addWatermark(ctx, canvas);
-            addCaption(ctx, canvas, captionInput.value);
-            const dataUrl = await compressImage(canvas, 50 * 1024, "image/webp");
-            downloadImage(dataUrl);
-          } catch (error) {
-            console.error("Error creating collage:", error);
-            showNotification("Error creating collage.", "error");
-          } finally {
-            loadingSpinner.style.display = "none";
-          }
-        }
+  loadingSpinner.style.display = "block";
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = 1200;
+  canvas.height = 628;
+  try {
+    const images = await Promise.all(imageUrls.map(loadImage));
+    const layoutFunction = getLayoutFunction(images.length);
+    layoutFunction(ctx, images, canvas.width, canvas.height);
+    
+    // Check if watermark should be added
+    const watermarkToggle = document.getElementById('watermarkToggle').checked;
+    if (watermarkToggle) {
+      addWatermark(ctx, canvas);
+    }
+
+    // Check if caption should be added
+    const captionToggle = document.getElementById('captionToggle').checked;
+    if (captionToggle) {
+      addCaption(ctx, canvas, captionInput.value);
+    }
+
+    const dataUrl = await compressImage(canvas, 50 * 1024, "image/webp");
+    downloadImage(dataUrl);
+  } catch (error) {
+    console.error("Error creating collage:", error);
+    showNotification("Error creating collage.", "error");
+  } finally {
+    loadingSpinner.style.display = "none";
+  }
+}
+
 
         function loadImage(src) {
           return new Promise((resolve, reject) => {
