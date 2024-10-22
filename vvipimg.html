@@ -159,6 +159,15 @@
   <button id="downloadImage"><i class="fas fa-download"></i> Download Image</button>
   <button id="undoButton"><i class="fas fa-undo"></i></button>
     <button id="redoButton"><i class="fas fa-redo"></i></button>
+    <!-- Caption Input Field -->
+
+<input type="text" id="captionInput" placeholder="Enter caption..." style="margin-left: 10px;">
+  <button><a for="captionCheckbox">Show Caption
+  <input type="checkbox" id="captionCheckbox"></a>
+
+  <a for="watermarkCheckbox">Show Watermark
+  <input type="checkbox" id="watermarkCheckbox"></a>
+</button>
   </div>
 
   <!-- Context Menu -->
@@ -710,51 +719,101 @@ document.getElementById('resetTransform').addEventListener('click', function () 
     });
     
     // Download the image in lossless WebP format, resized to 1200x628px and within 50 KB
+// Function to add Caption
+function addCaption(ctx, canvas, caption) {
+  if (!caption) return;
+  ctx.font = "500 22px Arial";
+  ctx.fillStyle = "black";
+  ctx.globalAlpha = 0.7;
+  const textMetrics = ctx.measureText(caption);
+  const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+  const captionHeight = textHeight + 10;
+  ctx.globalAlpha = 0.7;
+  ctx.beginPath();
+  ctx.roundRect(0, canvas.height - captionHeight, canvas.width, captionHeight, 15);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(caption, canvas.width / 2, canvas.height - captionHeight / 2);
+}
+
+// Function to add Watermark
+function addWatermark(ctx, canvas) {
+  const padding = 5;
+  const width = 150;
+  const height = 36;
+  ctx.font = "700 24px Arial";
+  ctx.fillStyle = "#010642";
+  ctx.globalAlpha = 0.77;
+  ctx.beginPath();
+  ctx.roundRect(canvas.width - width - padding, padding, width, height, 50);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("VvipTimes", canvas.width - width / 2 - padding, padding + height / 2);
+}
+
+// Modify the download image function to include the caption and watermark logic
 document.getElementById('downloadImage').addEventListener('click', function () {
-    // Create a temporary canvas to resize and draw the final image
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = 1200; // Set desired width
-    tempCanvas.height = 628; // Set desired height
-    const ctx = tempCanvas.getContext('2d');
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = 1200; 
+  tempCanvas.height = 628; 
+  const ctx = tempCanvas.getContext('2d');
 
-    // Draw the fabric canvas on the temporary canvas
-    const imageData = canvas.toDataURL({
-        format: 'png', // Start with PNG for better quality before compressing
-        quality: 1
-    });
+  // Draw the fabric canvas on the temporary canvas
+  const imageData = canvas.toDataURL({
+    format: 'png',
+    quality: 1
+  });
 
-    const img = new Image();
-    img.onload = function () {
-        // Draw the original image onto the temporary canvas
-        ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+  const img = new Image();
+  img.onload = function () {
+    ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
 
-        // Attempt to download the image as WebP with adjusted quality to ensure size
-        let downloadDataUrl = tempCanvas.toDataURL('image/webp', 0.8); // Start with 80% quality
-        let downloadLink = document.createElement('a');
+    // Add caption if checkbox is checked
+    const caption = document.getElementById('captionInput').value;
+    const showCaption = document.getElementById('captionCheckbox').checked;
+    if (showCaption && caption) {
+      addCaption(ctx, tempCanvas, caption);
+    }
 
-        // Check the size and adjust quality if needed
-        const checkSize = (dataUrl) => {
-            const byteString = atob(dataUrl.split(',')[1]);
-            const size = byteString.length; // Get size in bytes
-            return size <= 50 * 1024; // Check if size is under 50 KB
-        };
+    // Add watermark if checkbox is checked
+    const showWatermark = document.getElementById('watermarkCheckbox').checked;
+    if (showWatermark) {
+      addWatermark(ctx, tempCanvas);
+    }
 
-        // Loop to reduce quality until the image is under 50 KB
-        let quality = 0.8;
-        while (!checkSize(downloadDataUrl) && quality > 0) {
-            quality -= 0.05; // Decrease quality
-            downloadDataUrl = tempCanvas.toDataURL('image/webp', quality); // Re-encode
-        }
+    // Proceed to download the image as WebP
+    let downloadDataUrl = tempCanvas.toDataURL('image/webp', 0.8);
+    let downloadLink = document.createElement('a');
 
-        downloadLink.href = downloadDataUrl;
-        downloadLink.download = 'canvas_image.webp';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
+    // Check size and adjust quality
+    const checkSize = (dataUrl) => {
+      const byteString = atob(dataUrl.split(',')[1]);
+      const size = byteString.length;
+      return size <= 50 * 1024;
     };
 
-    img.src = imageData; // Start loading the image data
+    let quality = 0.8;
+    while (!checkSize(downloadDataUrl) && quality > 0) {
+      quality -= 0.05;
+      downloadDataUrl = tempCanvas.toDataURL('image/webp', quality);
+    }
+
+    downloadLink.href = downloadDataUrl;
+    downloadLink.download = 'canvas_image.webp';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
+
+  img.src = imageData;
 });
+
 
 // Get submenu and filter item
 // Get references to the sliders
