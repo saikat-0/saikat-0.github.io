@@ -183,6 +183,12 @@
     <div class="context-menu-item" id="rotateLayer">Rotate</div>
     
     <div class="context-menu-item" id="resetTransform">Reset Align</div>
+    
+    <div class="context-menu-item" id="pasteImage">Paste</div>
+    
+    <div class="context-menu-item" id="setAsBackground">Set as Background</div>
+    
+    <div class="context-menu-item" id="detachBackground" style="display: none;">Detach Background</div>
 
       <!-- Align Submenu -->
   <div class="context-menu-item" id="alignMenu">Align
@@ -237,7 +243,7 @@
     // Load image into canvas and center it
     function loadImage(img) {
       const imgInstance = new fabric.Image(img);
-      const scaleFactor = 0.5; // Scale image to 70% of canvas size
+      const scaleFactor = 0.3; // Scale image to 70% of canvas size
 
       imgInstance.set({
         left: (canvas.width / 2) - (img.width * scaleFactor / 2),
@@ -254,6 +260,24 @@
       addHistory(); // Add to history after adding an image
       updateLayerOptions(true);
     }
+    
+    document.getElementById('pasteImage').addEventListener('click', function () {
+  navigator.clipboard.read().then(items => {
+    for (const item of items) {
+      if (item.types.includes('image/png')) {
+        item.getType('image/png').then(blob => {
+          const img = new Image();
+          img.src = URL.createObjectURL(blob);
+          img.onload = function () {
+            loadImage(img);  // Assuming loadImage function is already handling adding image to canvas
+          };
+        });
+      }
+    }
+  });
+  contextMenu.style.display = 'none'; // Hide context menu after action
+});
+
 
     document.getElementById('uploadImage').addEventListener('change', function (e) {
       if (e.target.files.length === 0) {
@@ -301,19 +325,7 @@
     const contextMenu = document.getElementById('contextMenu');
 
     // Handle right-click on canvas
-    canvasContainer.addEventListener('contextmenu', function (e) {
-      e.preventDefault(); // Prevent default context menu
-      const activeObject = canvas.getActiveObject();
-
-      // Show context menu only if an object is selected
-      if (activeObject) {
-        contextMenu.style.display = 'block';
-        contextMenu.style.left = `${e.clientX}px`; // Set menu position
-        contextMenu.style.top = `${e.clientY}px`;
-      } else {
-        contextMenu.style.display = 'none'; // Hide if no active object
-      }
-    });
+    
 
     // Hide context menu on left click or anywhere else
     document.addEventListener('click', function () {
@@ -817,6 +829,153 @@ document.addEventListener('keydown', function (event) {
         }
     }
 });
+
+
+
+    let backgroundImage = null;
+
+document.getElementById('setAsBackground').addEventListener('click', function () {
+  const activeObject = canvas.getActiveObject();
+  if (activeObject && activeObject.type === 'image') {
+    const img = new Image();
+    img.src = activeObject.toDataURL(); // Get the image data URL
+
+    img.onload = function() {
+      const canvasWidth = 1200;  // Canvas width
+      const canvasHeight = 628;   // Canvas height
+      const imgRatio = img.width / img.height;
+      const canvasRatio = canvasWidth / canvasHeight;
+      let drawWidth, drawHeight, drawX, drawY;
+
+      // Calculate drawing dimensions
+      if (imgRatio > canvasRatio) {
+        drawHeight = canvasHeight;
+        drawWidth = drawHeight * imgRatio;
+        drawX = (drawWidth - canvasWidth) / 2;  // Center the image
+        drawY = 0;
+      } else {
+        drawWidth = canvasWidth;
+        drawHeight = drawWidth / imgRatio;
+        drawX = 0;
+        drawY = (drawHeight - canvasHeight) / 2;  // Center the image
+      }
+
+      // Set the background image with cropping
+      canvas.setBackgroundImage(img.src, () => {
+        canvas.renderAll();  // Refresh the canvas to display the background
+      }, {
+        // Setting the background image properties
+        originX: 'center',
+        originY: 'center',
+        left: canvasWidth / 2,
+        top: canvasHeight / 2,
+        scaleX: drawWidth / img.width,
+        scaleY: drawHeight / img.height
+      });
+
+      // Store the original image as background
+      backgroundImage = activeObject;
+
+      // Remove the image object from the canvas after setting it as background
+      canvas.remove(activeObject);
+
+      // Hide the "Set as Background" and show "Detach Background"
+      document.getElementById('setAsBackground').style.display = 'none';
+      document.getElementById('detachBackground').style.display = 'block';
+
+      addHistory(); // Add this action to history for undo functionality
+    };
+  }
+  contextMenu.style.display = 'none'; // Hide the context menu after action
+});
+
+
+document.getElementById('detachBackground').addEventListener('click', function () {
+  if (backgroundImage) {
+    // Remove the background image from the canvas
+    canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+
+    // Re-add the original image to the canvas
+    const originalImg = new Image();
+    originalImg.src = backgroundImage.toDataURL(); // Get the original image data URL
+
+    originalImg.onload = function () {
+      const imgInstance = new fabric.Image(originalImg, {
+        left: canvas.width / 2 - (backgroundImage.width / 2), // Center the image horizontally
+        top: canvas.height / 2 - (backgroundImage.height / 2), // Center the image vertically
+        selectable: true
+      });
+
+      // Add the image back to the canvas
+      canvas.add(imgInstance);
+      canvas.renderAll(); // Refresh the canvas
+
+      // Clear the reference to the background image
+      backgroundImage = null;
+
+      // Hide "Detach Background" and show "Set as Background"
+      document.getElementById('setAsBackground').style.display = 'block';
+      document.getElementById('detachBackground').style.display = 'none';
+
+      addHistory(); // Add this action to history for undo functionality
+    };
+  }
+  contextMenu.style.display = 'none'; // Hide the context menu after action
+});
+
+
+
+
+
+
+
+    canvasContainer.addEventListener('contextmenu', function (e) {
+  e.preventDefault(); // Prevent default context menu
+  const activeObject = canvas.getActiveObject();
+  const canvasHasObjects = canvas.getObjects().length > 0; // Check if canvas has any objects
+  const hasBackgroundImage = !!canvas.backgroundImage; // Check if a background image is set
+
+  // Clear previous context menu state
+  document.getElementById('pasteImage').style.display = 'none';
+  document.getElementById('setAsBackground').style.display = 'none';
+  document.getElementById('detachBackground').style.display = 'none';
+  document.getElementById('layersMenu').style.display = 'none';
+  document.getElementById('flipMenu').style.display = 'none';
+  document.getElementById('rotateLayer').style.display = 'none';
+  document.getElementById('resetTransform').style.display = 'none';
+  document.getElementById('alignMenu').style.display = 'none';
+  document.getElementById('filtersMenu').style.display = 'none';
+  document.getElementById('circularCropButton').style.display = 'none';
+
+  // If the canvas has no objects, only show the "Paste" option
+  if (!canvasHasObjects) {
+    document.getElementById('pasteImage').style.display = 'block';
+  }
+
+  // If an image is selected, show the full context menu
+  if (activeObject && activeObject.type === 'image') {
+    document.getElementById('pasteImage').style.display = 'block';  // Always show paste
+    document.getElementById('setAsBackground').style.display = 'block'; // Show "Set as Background" for images
+    document.getElementById('layersMenu').style.display = 'block';
+  document.getElementById('flipMenu').style.display = 'block';
+  document.getElementById('rotateLayer').style.display = 'block';
+  document.getElementById('resetTransform').style.display = 'block';
+  document.getElementById('alignMenu').style.display = 'block';
+  document.getElementById('filtersMenu').style.display = 'block';
+  document.getElementById('circularCropButton').style.display = 'block';
+  }
+
+  // Show "Detach Background" option only if a background image has been set
+  if (hasBackgroundImage) {
+    document.getElementById('detachBackground').style.display = 'block';
+  }
+
+  // Position the context menu at the point of the right-click
+  contextMenu.style.left = `${e.clientX}px`;
+  contextMenu.style.top = `${e.clientY}px`;
+  contextMenu.style.display = 'block';  // Show the context menu
+});
+
 
 
   </script>
