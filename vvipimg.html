@@ -676,51 +676,68 @@
       }
       // Modify the download image function to include the caption and watermark logic
       document.getElementById('downloadImage').addEventListener('click', function() {
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = 1200;
-        tempCanvas.height = 628;
-        const ctx = tempCanvas.getContext('2d');
-        // Draw the fabric canvas on the temporary canvas
-        const imageData = canvas.toDataURL({
-          format: 'png',
-          quality: 1
-        });
-        const img = new Image();
-        img.onload = function() {
-          ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
-          // Add caption if checkbox is checked
-          const caption = document.getElementById('captionInput').value;
-          const showCaption = document.getElementById('captionCheckbox').checked;
-          if (showCaption && caption) {
-            addCaption(ctx, tempCanvas, caption);
-          }
-          // Add watermark if checkbox is checked
-          const showWatermark = document.getElementById('watermarkCheckbox').checked;
-          if (showWatermark) {
-            addWatermark(ctx, tempCanvas);
-          }
-          // Proceed to download the image as WebP
-          let downloadDataUrl = tempCanvas.toDataURL('image/webp', 0.8);
-          let downloadLink = document.createElement('a');
-          // Check size and adjust quality
-          const checkSize = (dataUrl) => {
+    // Create a temporary canvas for rendering
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 1200; // Output width
+    tempCanvas.height = 628;  // Output height
+    const ctx = tempCanvas.getContext('2d');
+
+    // Get the image data from the fabric canvas
+    const imageData = canvas.toDataURL({
+        format: 'png',
+        quality: 1.0  // Use the highest quality for PNG
+    });
+    const img = new Image();
+    
+    img.onerror = function() {
+        console.error('Failed to load image data.');
+    };
+
+    img.onload = function() {
+        // Draw the loaded image onto the temporary canvas
+        ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+
+        // Add caption if the checkbox is checked
+        const caption = document.getElementById('captionInput').value;
+        const showCaption = document.getElementById('captionCheckbox').checked;
+        if (showCaption && caption) {
+            addCaption(ctx, tempCanvas, caption); // Assuming addCaption is defined
+        }
+
+        // Add watermark if the checkbox is checked
+        const showWatermark = document.getElementById('watermarkCheckbox').checked;
+        if (showWatermark) {
+            addWatermark(ctx, tempCanvas); // Assuming addWatermark is defined
+        }
+
+        // Proceed to download the image as WebP
+        let downloadDataUrl = tempCanvas.toDataURL('image/webp', 1.0); // Start with high quality
+        let downloadLink = document.createElement('a');
+
+        // Function to check the size of the generated data URL
+        const checkSize = (dataUrl) => {
             const byteString = atob(dataUrl.split(',')[1]);
             const size = byteString.length;
-            return size <= 50 * 1024;
-          };
-          let quality = 0.8;
-          while (!checkSize(downloadDataUrl) && quality > 0) {
-            quality -= 0.05;
-            downloadDataUrl = tempCanvas.toDataURL('image/webp', quality);
-          }
-          downloadLink.href = downloadDataUrl;
-          downloadLink.download = 'canvas_image.webp';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
+            return size <= 50 * 1024; // Limit to 50 KB
         };
-        img.src = imageData;
-      });
+
+        let quality = 1.0; // Start with maximum quality
+        while (!checkSize(downloadDataUrl) && quality > 0) {
+            quality -= 0.04; // Decrease quality in steps
+            downloadDataUrl = tempCanvas.toDataURL('image/webp', quality);
+        }
+
+        // Set the download link attributes
+        downloadLink.href = downloadDataUrl;
+        downloadLink.download = 'canvas_image.webp';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    };
+
+    img.src = imageData; // Start loading the image
+});
+
       // Get submenu and filter item
       // Get references to the sliders
       const brightnessSlider = document.getElementById('brightnessFilter');
