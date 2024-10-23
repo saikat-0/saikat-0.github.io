@@ -795,34 +795,37 @@
           const img = new Image();
           img.src = activeObject.toDataURL(); // Get the image data URL
           img.onload = function() {
-            const canvasWidth = 1200; // Canvas width
-            const canvasHeight = 628; // Canvas height
-            const imgRatio = img.width / img.height;
-            const canvasRatio = canvasWidth / canvasHeight;
-            let drawWidth, drawHeight, drawX, drawY;
-            // Calculate drawing dimensions
-            if (imgRatio > canvasRatio) {
-              drawHeight = canvasHeight;
-              drawWidth = drawHeight * imgRatio;
-              drawX = (drawWidth - canvasWidth) / 2; // Center the image
-              drawY = 0;
+            const canvasWidth = 800; // dynamic canvas width
+            const canvasHeight = 418; // dynamic canvas height
+            const outputWidth = 1200; // output image width
+            const outputHeight = 628; // output image height
+            const imgRatio = img.width / img.height; // Image aspect ratio
+            const canvasRatio = canvasWidth / canvasHeight; // Canvas aspect ratio
+            const outputRatio = outputWidth / outputHeight; // Output image aspect ratio
+            let drawWidth, drawHeight;
+            // Adjust dimensions based on aspect ratios
+            if (imgRatio > outputRatio) {
+              // Image is wider compared to the output canvas
+              drawWidth = outputWidth;
+              drawHeight = outputWidth / imgRatio;
             } else {
-              drawWidth = canvasWidth;
-              drawHeight = drawWidth / imgRatio;
-              drawX = 0;
-              drawY = (drawHeight - canvasHeight) / 2; // Center the image
+              // Image is taller compared to the output canvas
+              drawHeight = outputHeight;
+              drawWidth = outputHeight * imgRatio;
             }
-            // Set the background image with cropping
-            canvas.setBackgroundImage(img.src, () => {
-              canvas.renderAll(); // Refresh the canvas to display the background
-            }, {
-              // Setting the background image properties
-              originX: 'center',
-              originY: 'center',
-              left: canvasWidth / 2,
-              top: canvasHeight / 2,
-              scaleX: drawWidth / img.width,
-              scaleY: drawHeight / img.height
+            // Scale the canvas to match output image size
+            canvas.setDimensions({
+              width: canvasWidth,
+              height: canvasHeight
+            });
+            // Set the image on the canvas with accurate scaling and center alignment
+            canvas.setBackgroundImage(img.src, canvas.renderAll.bind(canvas), {
+              originX: 'left', // Align from the left
+              originY: 'top', // Align from the top
+              left: (canvasWidth - drawWidth) / 2, // Center horizontally
+              top: (canvasHeight - drawHeight) / 2, // Center vertically
+              scaleX: drawWidth / img.width, // Scale to fit width
+              scaleY: drawHeight / img.height // Scale to fit height
             });
             // Store the original image as background
             backgroundImage = activeObject;
