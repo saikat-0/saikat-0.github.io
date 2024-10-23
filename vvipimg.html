@@ -1,1042 +1,1068 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Image Editor with Fabric.js</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #f0f2f5; /* Softer background */
-    }
-
-    .toolbar {
-      padding: 10px 15px; /* Increased padding for better spacing */
-      background-color: #343a40;
-      color: white;
-      display: flex;
-      gap: 15px; /* Increased gap for clearer separation */
-      justify-content: center;
-      flex-wrap: nowrap;
-      width: 100%;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* Deeper shadow for depth */
-      border-bottom: 2px solid #495057; /* Added border for distinction */
-    }
-
-    label,
-    button {
-      padding: 8px 10px; /* Consistent padding */
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s; /* Added shadow transition */
-      font-size: 15px; /* Increased font size */
-       /* Slightly larger minimum width */
-      text-align: center;
-      background-color: #495057; /* Unified button background */
-    }
-
-    label {
-      background-color: #007bff; /* Primary color for upload button */
-    }
-
-    label:hover {
-      background-color: #0056b3;
-      box-shadow: 0 4px 12px rgba(0, 86, 179, 0.5); /* Shadow on hover */
-    }
-
-    button {
-      background-color: #28a745; /* Unified button background */
-    }
-
-    button:hover {
-      background-color: #218838;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.5); /* Shadow on hover */
-    }
-
-    .canvas-container {
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Image Editor with Fabric.js</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 10px; /* Increased padding */
-      position: relative;
-    }
-
-    #imageCanvas {
-      border: 2px solid #ccc;
-      background-color: #ffffff;
-      cursor: crosshair;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Added shadow for depth */
-      border-radius: 8px; /* Rounded corners for canvas */
-    }
-
-    .layer-options {
-      display: none;
-      gap: 15px; /* Increased gap for better spacing */
-      margin: 10px 0;
-    }
-
-    .layer-options.active {
-      display: flex;
-    }
-
-    .selected {
-      outline: 3px solid #007bff; /* Stronger outline for selected items */
-    }
-
-    .context-menu {
-      position: absolute;
-      z-index: 100;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      display: none; /* Initially hidden */
-      flex-direction: column;
-      padding: 10px;
-    }
-
-    .context-menu-item {
-      padding: 8px 12px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .context-menu-item:hover {
-      background-color: #f0f2f5; /* Subtle hover effect */
-    }
-
-    @media (max-width: 600px) {
-      .toolbar {
+        padding: 0;
+        display: flex;
         flex-direction: column;
+        align-items: center;
+        background-color: #f0f2f5
       }
-    }
-    
-.submenu {
-    display: none; /* Hide submenu by default */
-    position: absolute;
-    left: 100%; /* Position submenu to the exact right */
-    top: 0; /* Align submenu vertically with the parent */
-    background: white;
-    border: 1px solid #ccc;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    z-index: 101; /* Ensure it's above other elements */
-}
 
-.context-menu-item {
-    position: relative; /* Make this item the positioning context for submenu */
-}
+      .toolbar {
+        padding: 10px 15px;
+        background-color: #343a40;
+        color: #fff;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: nowrap;
+        width: 100%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+        border-bottom: 2px solid #495057
+      }
 
-.context-menu-item:hover .submenu {
-    display: block; /* Show submenu on hover of parent item */
-}
-.submenu-item {
-    padding: 8px 12px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
+      button,
+      label {
+        padding: 8px 10px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: background-color .3s, transform .3s, box-shadow .3s;
+        font-size: 15px;
+        text-align: center;
+        background-color: #495057
+      }
 
-.submenu-item:hover {
-    background-color: #f0f2f5; /* Subtle hover effect for submenu */
-}
+      label {
+        background-color: #007bff
+      }
 
-  </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
-</head>
-<body>
-<div class="toolbar">
-  <!-- Upload Button -->
-  <label for="uploadImage"><i class="fas fa-upload"></i> Upload Image</label>
-  <input type="file" id="uploadImage" style="display: none;" accept="image/*">
-  <button id="downloadImage"><i class="fas fa-download"></i> Download Image</button>
-  <button id="undoButton"><i class="fas fa-undo"></i></button>
-    <button id="redoButton"><i class="fas fa-redo"></i></button>
-    <!-- Caption Input Field -->
+      label:hover {
+        background-color: #0056b3;
+        box-shadow: 0 4px 12px rgba(0, 86, 179, .5)
+      }
 
-<input type="text" id="captionInput" placeholder="Enter caption..." style="margin-left: 10px;">
-  <button><a for="captionCheckbox">Show Caption
-  <input type="checkbox" id="captionCheckbox"></a>
+      button {
+        background-color: #28a745
+      }
 
-  <a for="watermarkCheckbox">Show Watermark
-  <input type="checkbox" id="watermarkCheckbox"></a>
-</button>
-  </div>
+      button:hover {
+        background-color: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, .5)
+      }
 
-  <!-- Context Menu -->
-  <div id="contextMenu" class="context-menu">
-    <div class="context-menu-item" id="circularCropButton">Circular Crop</div>
-    <div class="context-menu-item" id="layersMenu">Layers
-    <div class="submenu" id="submenu-layers">
-        <div class="submenu-item" id="bringToFront">Bring to Front</div>
-        <div class="submenu-item" id="sendToBack">Send to Back</div>
-        <div class="submenu-item" id="deleteLayerContext">Delete Selected</div>
-        <div class="submenu-item" id="duplicateLayer">Duplicate</div>
+      .canvas-container {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+        position: relative
+      }
+
+      #imageCanvas {
+        border: 2px solid #ccc;
+        background-color: #fff;
+        cursor: crosshair;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
+        border-radius: 8px
+      }
+
+      .layer-options {
+        display: none;
+        gap: 15px;
+        margin: 10px 0
+      }
+
+      .layer-options.active {
+        display: flex
+      }
+
+      .selected {
+        outline: 3px solid #007bff
+      }
+
+      .context-menu {
+        position: absolute;
+        z-index: 100;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, .2);
+        display: none;
+        flex-direction: column;
+        padding: 10px
+      }
+
+      .context-menu-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background-color .3s
+      }
+
+      .context-menu-item:hover {
+        background-color: #f0f2f5
+      }
+
+      @media (max-width:600px) {
+        .toolbar {
+          flex-direction: column
+        }
+      }
+
+      .submenu {
+        display: none;
+        position: absolute;
+        left: 100%;
+        top: 0;
+        background: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, .2);
+        z-index: 101
+      }
+
+      .context-menu-item {
+        position: relative
+      }
+
+      .context-menu-item:hover .submenu {
+        display: block
+      }
+
+      .submenu-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background-color .3s
+      }
+
+      .submenu-item:hover {
+        background-color: #f0f2f5
+      }
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+      
+      
+      
+      
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+  </head>
+  <body>
+    <div class="toolbar">
+      <label for="uploadImage">
+        <i class="fas fa-upload"></i>Upload Image </label>
+      <input type="file" id="uploadImage" style="display:none" accept="image/*">
+      <button id="downloadImage">
+        <i class="fas fa-download"></i>Download Image </button>
+      <button id="undoButton">
+        <i class="fas fa-undo"></i>
+      </button>
+      <button id="redoButton">
+        <i class="fas fa-redo"></i>
+      </button>
+      <input type="text" id="captionInput" placeholder="Enter caption..." style="margin-left:10px">
+      <button>
+        <a for="captionCheckbox">Show Caption <input type="checkbox" id="captionCheckbox">
+        </a>
+        <a for="watermarkCheckbox">Show Watermark <input type="checkbox" id="watermarkCheckbox">
+        </a>
+      </button>
     </div>
-</div>
-
-    <div class="context-menu-item" id="flipMenu">Flip
-    <div class="submenu" id="submenu-flip">
-        <div class="submenu-item" id="flipHorizontal">Flip Horizontal</div>
-        <div class="submenu-item" id="flipVertical">Flip Vertical</div>
-    </div>
-</div>
-
-    <div class="context-menu-item" id="rotateLayer">Rotate</div>
-    
-    <div class="context-menu-item" id="resetTransform">Reset Align</div>
-    
-    <div class="context-menu-item" id="pasteImage">Paste</div>
-    
-    <div class="context-menu-item" id="setAsBackground">Set as Background</div>
-    
-    <div class="context-menu-item" id="detachBackground" style="display: none;">Detach Background</div>
-
-      <!-- Align Submenu -->
-  <div class="context-menu-item" id="alignMenu">Align
-    <div class="submenu" id="alignSubmenu">
-      <div class="submenu-item" id="alignLeft">Align Left</div>
-      <div class="submenu-item" id="alignCenter">Align Center</div>
-      <div class="submenu-item" id="alignRight">Align Right</div>
-    </div>
-  </div>
-
-    
-    <div class="context-menu-item" id="filtersMenu">Filters
-    <div class="submenu" id="submenu">
-        <div class="submenu-item" id="grayscaleFilter">Grayscale</div>
-
-        <!-- Brightness Filter with Slider -->
-        <div class="submenu-item">
+    <div id="contextMenu" class="context-menu">
+      <div class="context-menu-item" id="circularCropButton">Circular Crop</div>
+      <div class="context-menu-item" id="layersMenu">Layers <div class="submenu" id="submenu-layers">
+          <div class="submenu-item" id="bringToFront">Bring to Front</div>
+          <div class="submenu-item" id="sendToBack">Send to Back</div>
+          <div class="submenu-item" id="deleteLayerContext">Delete Selected</div>
+          <div class="submenu-item" id="duplicateLayer">Duplicate</div>
+        </div>
+      </div>
+      <div class="context-menu-item" id="flipMenu">Flip <div class="submenu" id="submenu-flip">
+          <div class="submenu-item" id="flipHorizontal">Flip Horizontal</div>
+          <div class="submenu-item" id="flipVertical">Flip Vertical</div>
+        </div>
+      </div>
+      <div class="context-menu-item" id="rotateLayer">Rotate</div>
+      <div class="context-menu-item" id="resetTransform">Reset Align</div>
+      <div class="context-menu-item" id="pasteImage">Paste</div>
+      <div class="context-menu-item" id="setAsBackground">Set as Background</div>
+      <div class="context-menu-item" id="detachBackground" style="display:none">Detach Background</div>
+      <div class="context-menu-item" id="alignMenu">Align <div class="submenu" id="alignSubmenu">
+          <div class="submenu-item" id="alignLeft">Align Left</div>
+          <div class="submenu-item" id="alignCenter">Align Center</div>
+          <div class="submenu-item" id="alignRight">Align Right</div>
+        </div>
+      </div>
+      <div class="context-menu-item" id="filtersMenu">Filters <div class="submenu" id="submenu">
+          <div class="submenu-item" id="grayscaleFilter">Grayscale</div>
+          <div class="submenu-item">
             <a for="brightnessFilter">Brightness</a>
             <input type="range" id="brightnessFilter" min="-100" max="100" value="0">
-        </div>
-
-        <!-- Contrast Filter with Slider -->
-        <div class="submenu-item">
+          </div>
+          <div class="submenu-item">
             <a for="contrastFilter">Contrast</a>
             <input type="range" id="contrastFilter" min="-100" max="100" value="0">
-        </div>
-
-        <!-- Saturation Filter with Slider -->
-        <div class="submenu-item">
+          </div>
+          <div class="submenu-item">
             <a for="saturationFilter">Saturation</a>
             <input type="range" id="saturationFilter" min="-100" max="100" value="0">
+          </div>
         </div>
+      </div>
     </div>
-</div>
-
-  </div>
-
-  <!-- Canvas Container -->
-  <div class="canvas-container" id="canvasContainer">
-    <canvas id="imageCanvas" width="1080" height="565"></canvas>
-  </div>
-
-  <script>
-    const canvas = new fabric.Canvas('imageCanvas', {
-      preserveObjectStacking: true
-    });
-    let isCropping = false;
-    let cropCircle;
-    let history = [];
-    let historyIndex = -1;
-
-    // Load image into canvas and center it
-    function loadImage(img) {
-      const imgInstance = new fabric.Image(img);
-      const scaleFactor = 0.85; // Scale image to 70% of canvas size
-
-      imgInstance.set({
-        left: (canvas.width / 2) - (img.width * scaleFactor / 2),
-        top: (canvas.height / 2) - (img.height * scaleFactor / 2),
-        scaleX: scaleFactor,
-        scaleY: scaleFactor,
-        hasControls: true,
-        hasBorders: true,
-        selectable: true,
+    <div class="canvas-container" id="canvasContainer">
+      <canvas id="imageCanvas" width="1080" height="565"></canvas>
+    </div>
+    <script>
+      const canvas = new fabric.Canvas('imageCanvas', {
+        preserveObjectStacking: true
       });
-
-      canvas.add(imgInstance).setActiveObject(imgInstance);
-      canvas.renderAll();
-      addHistory(); // Add to history after adding an image
-      updateLayerOptions(true);
-    }
-    
-    document.getElementById('pasteImage').addEventListener('click', function () {
-  navigator.clipboard.read().then(items => {
-    for (const item of items) {
-      if (item.types.includes('image/png')) {
-        item.getType('image/png').then(blob => {
-          const img = new Image();
-          img.src = URL.createObjectURL(blob);
-          img.onload = function () {
-            loadImage(img);  // Assuming loadImage function is already handling adding image to canvas
-          };
+      let isCropping = false;
+      let cropCircle;
+      let history = [];
+      let historyIndex = -1;
+      // Load image into canvas and center it
+      function loadImage(img) {
+        const imgInstance = new fabric.Image(img);
+        const scaleFactor = 0.85; // Scale image to 70% of canvas size
+        imgInstance.set({
+          left: (canvas.width / 2) - (img.width * scaleFactor / 2),
+          top: (canvas.height / 2) - (img.height * scaleFactor / 2),
+          scaleX: scaleFactor,
+          scaleY: scaleFactor,
+          hasControls: true,
+          hasBorders: true,
+          selectable: true,
         });
+        canvas.add(imgInstance).setActiveObject(imgInstance);
+        canvas.renderAll();
+        addHistory(); // Add to history after adding an image
+        updateLayerOptions(true);
       }
-    }
-  });
-  contextMenu.style.display = 'none'; // Hide context menu after action
-});
-
-
-    document.getElementById('uploadImage').addEventListener('change', function (e) {
-      if (e.target.files.length === 0) {
-        alert('Please select an image file.');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function (event) {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = function () {
-          loadImage(img);
-        };
-      };
-      reader.readAsDataURL(e.target.files[0]);
-    });
-
-    // Handle drag and drop functionality
-    const canvasContainer = document.getElementById('canvasContainer');
-    canvasContainer.addEventListener('dragover', function (e) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-    });
-
-    canvasContainer.addEventListener('drop', function (e) {
-      e.preventDefault();
-      const files = e.dataTransfer.files;
-      if (files.length > 0 && files[0].type.startsWith('image/')) {
+      document.getElementById('pasteImage').addEventListener('click', function() {
+        navigator.clipboard.read().then(items => {
+          for (const item of items) {
+            if (item.types.includes('image/png')) {
+              item.getType('image/png').then(blob => {
+                const img = new Image();
+                img.src = URL.createObjectURL(blob);
+                img.onload = function() {
+                  loadImage(img); // Assuming loadImage function is already handling adding image to canvas
+                };
+              });
+            }
+          }
+        });
+        contextMenu.style.display = 'none'; // Hide context menu after action
+      });
+      document.getElementById('uploadImage').addEventListener('change', function(e) {
+        if (e.target.files.length === 0) {
+          alert('Please select an image file.');
+          return;
+        }
         const reader = new FileReader();
-        reader.onload = function (event) {
+        reader.onload = function(event) {
           const img = new Image();
           img.src = event.target.result;
-          img.onload = function () {
+          img.onload = function() {
             loadImage(img);
           };
         };
-        reader.readAsDataURL(files[0]);
-      } else {
-        alert('Please drop a valid image file.');
-      }
-    });
-
-    // Get context menu element
-    const contextMenu = document.getElementById('contextMenu');
-
-    // Handle right-click on canvas
-    
-
-    // Hide context menu on left click or anywhere else
-    document.addEventListener('click', function () {
-      contextMenu.style.display = 'none';
-    });
-
-    // Duplicate layer functionality
-    document.getElementById('duplicateLayer').addEventListener('click', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        const clonedObject = fabric.util.object.clone(activeObject);
-        clonedObject.set({
-          left: activeObject.left + 10, // Offset to prevent overlap
-          top: activeObject.top + 10,
-          selectable: true,
-        });
-        canvas.add(clonedObject);
-        addHistory();
-      }
-      contextMenu.style.display = 'none'; // Hide context menu
-    });
-
-    // Delete layer functionality
-    document.getElementById('deleteLayerContext').addEventListener('click', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        canvas.remove(activeObject);
-        addHistory();
-      }
-      contextMenu.style.display = 'none'; // Hide context menu
-    });
-
-    // Bring to front functionality
-    document.getElementById('bringToFront').addEventListener('click', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        canvas.bringToFront(activeObject);
-        addHistory();
-      }
-      contextMenu.style.display = 'none'; // Hide context menu
-    });
-
-    // Send to back functionality
-    document.getElementById('sendToBack').addEventListener('click', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        canvas.sendToBack(activeObject);
-        addHistory();
-      }
-      contextMenu.style.display = 'none'; // Hide context menu
-    });
-
-    // Handle double click to crop
-    canvas.on('mouse:dblclick', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject && activeObject.type === 'image') {
-        enterCropMode(activeObject);
-      }
-    });
-    
-    // Enter Crop Mode
-    function enterCropMode(image) {
-      if (isCropping) return; // Already cropping
-      isCropping = true;
-
-      // Create a cropping rectangle over the image
-      cropRect = new fabric.Rect({
-        left: image.left,
-        top: image.top,
-        width: image.width * image.scaleX,
-        height: image.height * image.scaleY,
-        fill: 'rgba(0,0,0,0.3)',
-        hasBorders: true,
-        hasControls: true,
-        selectable: true,
+        reader.readAsDataURL(e.target.files[0]);
       });
-
-      canvas.add(cropRect);
-      canvas.setActiveObject(cropRect);
-      canvas.renderAll();
-
-      // Add crop and cancel buttons
-      const cropButton = document.createElement('button');
-      cropButton.innerText = 'Crop';
-      cropButton.style.position = 'absolute';
-      cropButton.style.top = '10px';
-      cropButton.style.right = '10px';
-      document.body.appendChild(cropButton);
-
-      cropButton.addEventListener('click', function () {
-        cropImage(image);
-        document.body.removeChild(cropButton); // Remove crop button after action
+      // Handle drag and drop functionality
+      const canvasContainer = document.getElementById('canvasContainer');
+      canvasContainer.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
       });
-    }
-
-    // Crop the image based on cropping rectangle
-    function cropImage(image) {
-      if (!cropRect) return;
-
-      const croppedLeft = cropRect.left - image.left;
-      const croppedTop = cropRect.top - image.top;
-      const croppedWidth = cropRect.width * cropRect.scaleX;
-      const croppedHeight = cropRect.height * cropRect.scaleY;
-
-      const croppedCanvas = document.createElement('canvas');
-      croppedCanvas.width = croppedWidth;
-      croppedCanvas.height = croppedHeight;
-
-      const croppedCtx = croppedCanvas.getContext('2d');
-      croppedCtx.drawImage(
-        image._element,
-        croppedLeft / image.scaleX,
-        croppedTop / image.scaleY,
-        croppedWidth / image.scaleX,
-        croppedHeight / image.scaleY,
-        0,
-        0,
-        croppedWidth,
-        croppedHeight
-      );
-
-      const croppedImg = new Image();
-      croppedImg.src = croppedCanvas.toDataURL();
-      croppedImg.onload = function () {
-        const newImage = new fabric.Image(croppedImg);
-        newImage.set({
+      canvasContainer.addEventListener('drop', function(e) {
+        e.preventDefault();
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+              loadImage(img);
+            };
+          };
+          reader.readAsDataURL(files[0]);
+        } else {
+          alert('Please drop a valid image file.');
+        }
+      });
+      // Get context menu element
+      const contextMenu = document.getElementById('contextMenu');
+      // Handle right-click on canvas
+      // Hide context menu on left click or anywhere else
+      document.addEventListener('click', function() {
+        contextMenu.style.display = 'none';
+      });
+      // Duplicate layer functionality
+      document.getElementById('duplicateLayer').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          const clonedObject = fabric.util.object.clone(activeObject);
+          clonedObject.set({
+            left: activeObject.left + 10, // Offset to prevent overlap
+            top: activeObject.top + 10,
+            selectable: true,
+          });
+          canvas.add(clonedObject);
+          addHistory();
+        }
+        contextMenu.style.display = 'none'; // Hide context menu
+      });
+      // Delete layer functionality
+      document.getElementById('deleteLayerContext').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          canvas.remove(activeObject);
+          addHistory();
+        }
+        contextMenu.style.display = 'none'; // Hide context menu
+      });
+      // Bring to front functionality
+      document.getElementById('bringToFront').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          canvas.bringToFront(activeObject);
+          addHistory();
+        }
+        contextMenu.style.display = 'none'; // Hide context menu
+      });
+      // Send to back functionality
+      document.getElementById('sendToBack').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          canvas.sendToBack(activeObject);
+          addHistory();
+        }
+        contextMenu.style.display = 'none'; // Hide context menu
+      });
+      // Handle double click to crop
+      canvas.on('mouse:dblclick', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject && activeObject.type === 'image') {
+          enterCropMode(activeObject);
+        }
+      });
+      // Enter Crop Mode
+      function enterCropMode(image) {
+        if (isCropping) return; // Already cropping
+        isCropping = true;
+        // Create a cropping rectangle over the image
+        cropRect = new fabric.Rect({
           left: image.left,
           top: image.top,
-          scaleX: image.scaleX,
-          scaleY: image.scaleY,
-          hasControls: true,
+          width: image.width * image.scaleX,
+          height: image.height * image.scaleY,
+          fill: 'rgba(0,0,0,0.3)',
           hasBorders: true,
+          hasControls: true,
+          selectable: true,
         });
-        
-        canvas.remove(image); // Remove original image
-        canvas.add(newImage); // Add cropped image
-        canvas.setActiveObject(newImage);
+        canvas.add(cropRect);
+        canvas.setActiveObject(cropRect);
         canvas.renderAll();
-        addHistory(); // Add to history after cropping
-      };
-
-      canvas.remove(cropRect); // Remove cropping rectangle after cropping
-      isCropping = false;
-      cropRect = null;
-    }
-
-    // Circular Crop Button
-    document.getElementById('circularCropButton').addEventListener('click', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject && activeObject.type === 'image') {
-        enterCircularCropMode(activeObject);
+        // Add crop and cancel buttons
+        const cropButton = document.createElement('button');
+        cropButton.innerText = 'Crop';
+        cropButton.style.position = 'absolute';
+        cropButton.style.top = '10px';
+        cropButton.style.right = '10px';
+        document.body.appendChild(cropButton);
+        cropButton.addEventListener('click', function() {
+          cropImage(image);
+          document.body.removeChild(cropButton); // Remove crop button after action
+        });
       }
-    });
-
-    // Enter Circular Crop Mode
-    function enterCircularCropMode(image) {
-      if (isCropping) return; // Already cropping
-      isCropping = true;
-
-      // Create a cropping circle over the image
-      const centerX = image.left + (image.width * image.scaleX) / 2;
-      const centerY = image.top + (image.height * image.scaleY) / 2;
-      const radius = Math.min(image.width * image.scaleX, image.height * image.scaleY) / 2;
-
-      cropCircle = new fabric.Circle({
-        left: centerX - radius,
-        top: centerY - radius,
-        radius: radius,
-        fill: 'rgba(0,0,0,0.3)',
-        hasBorders: true,
-        hasControls: true,
-        selectable: true,
+      // Crop the image based on cropping rectangle
+      function cropImage(image) {
+        if (!cropRect) return;
+        const croppedLeft = cropRect.left - image.left;
+        const croppedTop = cropRect.top - image.top;
+        const croppedWidth = cropRect.width * cropRect.scaleX;
+        const croppedHeight = cropRect.height * cropRect.scaleY;
+        const croppedCanvas = document.createElement('canvas');
+        croppedCanvas.width = croppedWidth;
+        croppedCanvas.height = croppedHeight;
+        const croppedCtx = croppedCanvas.getContext('2d');
+        croppedCtx.drawImage(image._element, croppedLeft / image.scaleX, croppedTop / image.scaleY, croppedWidth / image.scaleX, croppedHeight / image.scaleY, 0, 0, croppedWidth, croppedHeight);
+        const croppedImg = new Image();
+        croppedImg.src = croppedCanvas.toDataURL();
+        croppedImg.onload = function() {
+          const newImage = new fabric.Image(croppedImg);
+          newImage.set({
+            left: image.left,
+            top: image.top,
+            scaleX: image.scaleX,
+            scaleY: image.scaleY,
+            hasControls: true,
+            hasBorders: true,
+          });
+          canvas.remove(image); // Remove original image
+          canvas.add(newImage); // Add cropped image
+          canvas.setActiveObject(newImage);
+          canvas.renderAll();
+          addHistory(); // Add to history after cropping
+        };
+        canvas.remove(cropRect); // Remove cropping rectangle after cropping
+        isCropping = false;
+        cropRect = null;
+      }
+      // Circular Crop Button
+      document.getElementById('circularCropButton').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject && activeObject.type === 'image') {
+          enterCircularCropMode(activeObject);
+        }
       });
-
-      canvas.add(cropCircle);
-      canvas.setActiveObject(cropCircle);
-      canvas.renderAll();
-
-      // Add crop and cancel buttons
-      const cropButton = document.createElement('button');
-      cropButton.innerText = 'Crop';
-      cropButton.style.position = 'absolute';
-      cropButton.style.top = '10px';
-      cropButton.style.right = '10px';
-      document.body.appendChild(cropButton);
-
-      cropButton.addEventListener('click', function () {
-        cropCircleImage(image);
-        document.body.removeChild(cropButton); // Remove crop button after action
+      // Enter Circular Crop Mode
+      function enterCircularCropMode(image) {
+        if (isCropping) return; // Already cropping
+        isCropping = true;
+        // Create a cropping circle over the image
+        const centerX = image.left + (image.width * image.scaleX) / 2;
+        const centerY = image.top + (image.height * image.scaleY) / 2;
+        const radius = Math.min(image.width * image.scaleX, image.height * image.scaleY) / 2;
+        cropCircle = new fabric.Circle({
+          left: centerX - radius,
+          top: centerY - radius,
+          radius: radius,
+          fill: 'rgba(0,0,0,0.3)',
+          hasBorders: true,
+          hasControls: true,
+          selectable: true,
+        });
+        canvas.add(cropCircle);
+        canvas.setActiveObject(cropCircle);
+        canvas.renderAll();
+        // Add crop and cancel buttons
+        const cropButton = document.createElement('button');
+        cropButton.innerText = 'Crop';
+        cropButton.style.position = 'absolute';
+        cropButton.style.top = '10px';
+        cropButton.style.right = '10px';
+        document.body.appendChild(cropButton);
+        cropButton.addEventListener('click', function() {
+          cropCircleImage(image);
+          document.body.removeChild(cropButton); // Remove crop button after action
+        });
+      }
+      // Crop the image based on cropping circle
+      function cropCircleImage(image) {
+        if (!cropCircle) return;
+        const cropRadius = cropCircle.radius * cropCircle.scaleX; // Consider circle scaling
+        const circleCenterX = cropCircle.left + cropRadius; // X center of the crop circle
+        const circleCenterY = cropCircle.top + cropRadius; // Y center of the crop circle
+        const croppedCanvas = document.createElement('canvas');
+        const croppedCtx = croppedCanvas.getContext('2d');
+        // Set the canvas size to match the diameter of the crop circle
+        const diameter = cropRadius * 2;
+        croppedCanvas.width = diameter;
+        croppedCanvas.height = diameter;
+        // Draw a circular clipping path
+        croppedCtx.beginPath();
+        croppedCtx.arc(cropRadius, cropRadius, cropRadius, 0, Math.PI * 2, false);
+        croppedCtx.clip();
+        // Calculate image offset within the crop circle
+        const imageLeftOffset = (circleCenterX - cropRadius - image.left) / image.scaleX;
+        const imageTopOffset = (circleCenterY - cropRadius - image.top) / image.scaleY;
+        // Draw the image into the clipped circular area
+        croppedCtx.drawImage(image._element, imageLeftOffset, // Source X
+          imageTopOffset, // Source Y
+          diameter / image.scaleX, // Source Width
+          diameter / image.scaleY, // Source Height
+          0, // Destination X
+          0, // Destination Y
+          diameter, // Destination Width
+          diameter // Destination Height
+        );
+        // Create a new fabric image with the cropped circular content
+        const croppedImg = new Image();
+        croppedImg.src = croppedCanvas.toDataURL();
+        croppedImg.onload = function() {
+          const newImage = new fabric.Image(croppedImg, {
+            left: image.left + (circleCenterX - cropRadius - image.left), // Correct X position
+            top: image.top + (circleCenterY - cropRadius - image.top), // Correct Y position
+            hasControls: true,
+            hasBorders: true,
+            selectable: true
+          });
+          // Replace the original image with the cropped circular image
+          canvas.remove(image);
+          canvas.add(newImage);
+          canvas.setActiveObject(newImage);
+          canvas.renderAll();
+          addHistory(); // Add to history after cropping
+        };
+        // Remove the crop circle and reset cropping state
+        canvas.remove(cropCircle);
+        cropCircle = null;
+        isCropping = false;
+      }
+      // Undo Functionality
+      document.getElementById('undoButton').addEventListener('click', function() {
+        if (historyIndex > 0) {
+          historyIndex--;
+          restoreCanvasState(history[historyIndex]);
+        }
       });
-    }
-
-    // Crop the image based on cropping circle
-    function cropCircleImage(image) {
-  if (!cropCircle) return;
-
-  const cropRadius = cropCircle.radius * cropCircle.scaleX; // Consider circle scaling
-  const circleCenterX = cropCircle.left + cropRadius; // X center of the crop circle
-  const circleCenterY = cropCircle.top + cropRadius; // Y center of the crop circle
-
-  const croppedCanvas = document.createElement('canvas');
-  const croppedCtx = croppedCanvas.getContext('2d');
-
-  // Set the canvas size to match the diameter of the crop circle
-  const diameter = cropRadius * 2;
-  croppedCanvas.width = diameter;
-  croppedCanvas.height = diameter;
-
-  // Draw a circular clipping path
-  croppedCtx.beginPath();
-  croppedCtx.arc(cropRadius, cropRadius, cropRadius, 0, Math.PI * 2, false);
-  croppedCtx.clip();
-
-  // Calculate image offset within the crop circle
-  const imageLeftOffset = (circleCenterX - cropRadius - image.left) / image.scaleX;
-  const imageTopOffset = (circleCenterY - cropRadius - image.top) / image.scaleY;
-
-  // Draw the image into the clipped circular area
-  croppedCtx.drawImage(
-    image._element,
-    imageLeftOffset, // Source X
-    imageTopOffset, // Source Y
-    diameter / image.scaleX, // Source Width
-    diameter / image.scaleY, // Source Height
-    0, // Destination X
-    0, // Destination Y
-    diameter, // Destination Width
-    diameter // Destination Height
-  );
-
-  // Create a new fabric image with the cropped circular content
-  const croppedImg = new Image();
-  croppedImg.src = croppedCanvas.toDataURL();
-  croppedImg.onload = function () {
-    const newImage = new fabric.Image(croppedImg, {
-      left: image.left + (circleCenterX - cropRadius - image.left), // Correct X position
-      top: image.top + (circleCenterY - cropRadius - image.top), // Correct Y position
-      hasControls: true,
-      hasBorders: true,
-      selectable: true
-    });
-
-    // Replace the original image with the cropped circular image
-    canvas.remove(image);
-    canvas.add(newImage);
-    canvas.setActiveObject(newImage);
-    canvas.renderAll();
-    addHistory(); // Add to history after cropping
-  };
-
-  // Remove the crop circle and reset cropping state
-  canvas.remove(cropCircle);
-  cropCircle = null;
-  isCropping = false;
-}
-
-    // Undo Functionality
-document.getElementById('undoButton').addEventListener('click', function () {
-    if (historyIndex > 0) {
-        historyIndex--;
-        restoreCanvasState(history[historyIndex]);
-    }
-});
-
-// Redo Functionality
-document.getElementById('redoButton').addEventListener('click', function () {
-    if (historyIndex < history.length - 1) {
-        historyIndex++;
-        restoreCanvasState(history[historyIndex]);
-    }
-});
-
-// Helper function to restore canvas state
-function restoreCanvasState(state) {
-    canvas.clear();
-    state.forEach(function (item) {
-        // Re-create the fabric objects from the state
-        const obj = fabric.util.enlivenObjects([item], function (enlivedObjects) {
-            enlivedObjects.forEach(function (newObj) {
-                canvas.add(newObj);
+      // Redo Functionality
+      document.getElementById('redoButton').addEventListener('click', function() {
+        if (historyIndex < history.length - 1) {
+          historyIndex++;
+          restoreCanvasState(history[historyIndex]);
+        }
+      });
+      // Helper function to restore canvas state
+      function restoreCanvasState(state) {
+        canvas.clear();
+        state.forEach(function(item) {
+          // Re-create the fabric objects from the state
+          const obj = fabric.util.enlivenObjects([item], function(enlivedObjects) {
+            enlivedObjects.forEach(function(newObj) {
+              canvas.add(newObj);
             });
             canvas.renderAll();
+          });
         });
-    });
-}
-
-// Add to history function
-function addHistory() {
-    if (historyIndex < history.length - 1) {
-        // Limit history size
-        history = history.slice(0, historyIndex + 1);
-    }
-
-    // Clone the current canvas state
-    const currentState = canvas.getObjects().map(function (obj) {
-        return fabric.util.object.clone(obj); // Clone objects for history
-    });
-    
-    history.push(currentState);
-    historyIndex++;
-
-    // Limit history length (for example, to the last 50 states)
-    if (history.length > 50) {
-        history.shift(); // Remove the oldest state
-        historyIndex--; // Adjust the index accordingly
-    }
-}
-    
-    // Flip Horizontally
-document.getElementById('flipHorizontal').addEventListener('click', function () {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-        activeObject.scaleX = -activeObject.scaleX; // Flip the object
-        canvas.renderAll();
-        addHistory(); // Add to history after flipping
-    }
-    contextMenu.style.display = 'none'; // Hide context menu
-});
-
-// Flip Vertically
-document.getElementById('flipVertical').addEventListener('click', function () {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-        activeObject.scaleY = -activeObject.scaleY; // Flip the object
-        canvas.renderAll();
-        addHistory(); // Add to history after flipping
-    }
-    contextMenu.style.display = 'none'; // Hide context menu
-});
-
-// Rotate Layer
-document.getElementById('rotateLayer').addEventListener('click', function () {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-        activeObject.angle = (activeObject.angle + 90) % 360; // Rotate the object by 90 degrees
-        canvas.renderAll();
-        addHistory(); // Add to history after rotating
-    }
-    contextMenu.style.display = 'none'; // Hide context menu
-});
-
-document.getElementById('resetTransform').addEventListener('click', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        activeObject.set({
-          scaleX: 1,
-          scaleY: 1,
-          angle: 0,
-          left: 0,
-          top: 0,
+      }
+      // Add to history function
+      function addHistory() {
+        if (historyIndex < history.length - 1) {
+          // Limit history size
+          history = history.slice(0, historyIndex + 1);
+        }
+        // Clone the current canvas state
+        const currentState = canvas.getObjects().map(function(obj) {
+          return fabric.util.object.clone(obj); // Clone objects for history
         });
-        addHistory();
-        canvas.renderAll();
+        history.push(currentState);
+        historyIndex++;
+        // Limit history length (for example, to the last 50 states)
+        if (history.length > 50) {
+          history.shift(); // Remove the oldest state
+          historyIndex--; // Adjust the index accordingly
+        }
       }
-    });
-
-    document.getElementById('alignLeft').addEventListener('click', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        activeObject.set('left', 0);
-        canvas.renderAll();
-        addHistory();
-      }
-    });
-
-    document.getElementById('alignCenter').addEventListener('click', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        activeObject.set('left', (canvas.width - activeObject.width) / 2);
-        canvas.renderAll();
-        addHistory();
-      }
-    });
-
-    document.getElementById('alignRight').addEventListener('click', function () {
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        activeObject.set('left', canvas.width - activeObject.width);
-        canvas.renderAll();
-        addHistory();
-      }
-    });
-    
-    // Download the image in lossless WebP format, resized to 1200x628px and within 50 KB
-// Function to add Caption
-function addCaption(ctx, canvas, caption) {
-  if (!caption) return;
-  ctx.font = "500 22px Arial";
-  ctx.fillStyle = "black";
-  ctx.globalAlpha = 0.7;
-  const textMetrics = ctx.measureText(caption);
-  const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
-  const captionHeight = textHeight + 10;
-  ctx.globalAlpha = 0.7;
-  ctx.beginPath();
-  ctx.roundRect(0, canvas.height - captionHeight, canvas.width, captionHeight, 15);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = "white";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(caption, canvas.width / 2, canvas.height - captionHeight / 2);
-}
-
-// Function to add Watermark
-function addWatermark(ctx, canvas) {
-  const padding = 5;
-  const width = 150;
-  const height = 36;
-  ctx.font = "700 24px Arial";
-  ctx.fillStyle = "#010642";
-  ctx.globalAlpha = 0.77;
-  ctx.beginPath();
-  ctx.roundRect(canvas.width - width - padding, padding, width, height, 50);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = "white";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("VvipTimes", canvas.width - width / 2 - padding, padding + height / 2);
-}
-
-// Modify the download image function to include the caption and watermark logic
-document.getElementById('downloadImage').addEventListener('click', function () {
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = 1200; 
-  tempCanvas.height = 628; 
-  const ctx = tempCanvas.getContext('2d');
-
-  // Draw the fabric canvas on the temporary canvas
-  const imageData = canvas.toDataURL({
-    format: 'png',
-    quality: 1
-  });
-
-  const img = new Image();
-  img.onload = function () {
-    ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
-
-    // Add caption if checkbox is checked
-    const caption = document.getElementById('captionInput').value;
-    const showCaption = document.getElementById('captionCheckbox').checked;
-    if (showCaption && caption) {
-      addCaption(ctx, tempCanvas, caption);
-    }
-
-    // Add watermark if checkbox is checked
-    const showWatermark = document.getElementById('watermarkCheckbox').checked;
-    if (showWatermark) {
-      addWatermark(ctx, tempCanvas);
-    }
-
-    // Proceed to download the image as WebP
-    let downloadDataUrl = tempCanvas.toDataURL('image/webp', 0.8);
-    let downloadLink = document.createElement('a');
-
-    // Check size and adjust quality
-    const checkSize = (dataUrl) => {
-      const byteString = atob(dataUrl.split(',')[1]);
-      const size = byteString.length;
-      return size <= 50 * 1024;
-    };
-
-    let quality = 0.8;
-    while (!checkSize(downloadDataUrl) && quality > 0) {
-      quality -= 0.05;
-      downloadDataUrl = tempCanvas.toDataURL('image/webp', quality);
-    }
-
-    downloadLink.href = downloadDataUrl;
-    downloadLink.download = 'canvas_image.webp';
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-  };
-
-  img.src = imageData;
-});
-
-
-// Get submenu and filter item
-// Get references to the sliders
-const brightnessSlider = document.getElementById('brightnessFilter');
-const contrastSlider = document.getElementById('contrastFilter');
-const saturationSlider = document.getElementById('saturationFilter');
-const grayscaleButton = document.getElementById('grayscaleFilter');
-
-// Function to apply the filters
-function applyFilters() {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-        activeObject.filters = [];
-
-        // Apply Brightness Filter
-        const brightnessValue = brightnessSlider.value / 100;  // Normalize value between -1 and 1
-        const brightnessFilter = new fabric.Image.filters.Brightness({ brightness: brightnessValue });
-        activeObject.filters.push(brightnessFilter);
-
-        // Apply Contrast Filter
-        const contrastValue = contrastSlider.value / 100;  // Normalize value between -1 and 1
-        const contrastFilter = new fabric.Image.filters.Contrast({ contrast: contrastValue });
-        activeObject.filters.push(contrastFilter);
-
-        // Apply Saturation Filter
-        const saturationValue = saturationSlider.value / 100;  // Normalize value between -1 and 1
-        const saturationFilter = new fabric.Image.filters.Saturation({ saturation: saturationValue });
-        activeObject.filters.push(saturationFilter);
-
-        // Re-apply all filters and render the canvas
-        activeObject.applyFilters();
-        canvas.renderAll();
-    }
-}
-
-// Add event listeners to the sliders to apply filters dynamically
-brightnessSlider.addEventListener('input', applyFilters);
-contrastSlider.addEventListener('input', applyFilters);
-saturationSlider.addEventListener('input', applyFilters);
-
-// Grayscale Filter Button
-grayscaleButton.addEventListener('click', function () {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-        activeObject.filters = [];
-        const grayscaleFilter = new fabric.Image.filters.Grayscale();
-        activeObject.filters.push(grayscaleFilter);
-
-        // Apply Grayscale filter and render the canvas
-        activeObject.applyFilters();
-        canvas.renderAll();
-        addHistory();
-    }
-});
-
-
-// Listen for keydown events on the entire document
-document.addEventListener('keydown', function (event) {
-    // Check if the key pressed is either Backspace (keyCode 8) or Delete (keyCode 46)
-    if (event.key === 'Backspace' || event.key === 'Delete') {
-        // Prevent the default browser behavior (like navigating back in case of Backspace)
-        event.preventDefault();
-
-        // Get the currently active object on the canvas
+      // Flip Horizontally
+      document.getElementById('flipHorizontal').addEventListener('click', function() {
         const activeObject = canvas.getActiveObject();
-
-        // If there is an active object, remove it from the canvas
         if (activeObject) {
+          activeObject.scaleX = -activeObject.scaleX; // Flip the object
+          canvas.renderAll();
+          addHistory(); // Add to history after flipping
+        }
+        contextMenu.style.display = 'none'; // Hide context menu
+      });
+      // Flip Vertically
+      document.getElementById('flipVertical').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          activeObject.scaleY = -activeObject.scaleY; // Flip the object
+          canvas.renderAll();
+          addHistory(); // Add to history after flipping
+        }
+        contextMenu.style.display = 'none'; // Hide context menu
+      });
+      // Rotate Layer
+      document.getElementById('rotateLayer').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          activeObject.angle = (activeObject.angle + 90) % 360; // Rotate the object by 90 degrees
+          canvas.renderAll();
+          addHistory(); // Add to history after rotating
+        }
+        contextMenu.style.display = 'none'; // Hide context menu
+      });
+      document.getElementById('resetTransform').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          activeObject.set({
+            scaleX: 1,
+            scaleY: 1,
+            angle: 0,
+            left: 0,
+            top: 0,
+          });
+          addHistory();
+          canvas.renderAll();
+        }
+      });
+      document.getElementById('alignLeft').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          activeObject.set('left', 0);
+          canvas.renderAll();
+          addHistory();
+        }
+      });
+      document.getElementById('alignCenter').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          activeObject.set('left', (canvas.width - activeObject.width) / 2);
+          canvas.renderAll();
+          addHistory();
+        }
+      });
+      document.getElementById('alignRight').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          activeObject.set('left', canvas.width - activeObject.width);
+          canvas.renderAll();
+          addHistory();
+        }
+      });
+      // Download the image in lossless WebP format, resized to 1200x628px and within 50 KB
+      // Function to add Caption
+      function addCaption(ctx, canvas, caption) {
+        if (!caption) return;
+        ctx.font = "500 22px Arial";
+        ctx.fillStyle = "black";
+        ctx.globalAlpha = 0.7;
+        const textMetrics = ctx.measureText(caption);
+        const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+        const captionHeight = textHeight + 10;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.roundRect(0, canvas.height - captionHeight, canvas.width, captionHeight, 15);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(caption, canvas.width / 2, canvas.height - captionHeight / 2);
+      }
+      // Function to add Watermark
+      function addWatermark(ctx, canvas) {
+        const padding = 5;
+        const width = 150;
+        const height = 36;
+        ctx.font = "700 24px Arial";
+        ctx.fillStyle = "#010642";
+        ctx.globalAlpha = 0.77;
+        ctx.beginPath();
+        ctx.roundRect(canvas.width - width - padding, padding, width, height, 50);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("VvipTimes", canvas.width - width / 2 - padding, padding + height / 2);
+      }
+      // Modify the download image function to include the caption and watermark logic
+      document.getElementById('downloadImage').addEventListener('click', function() {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = 1200;
+        tempCanvas.height = 628;
+        const ctx = tempCanvas.getContext('2d');
+        // Draw the fabric canvas on the temporary canvas
+        const imageData = canvas.toDataURL({
+          format: 'png',
+          quality: 1
+        });
+        const img = new Image();
+        img.onload = function() {
+          ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+          // Add caption if checkbox is checked
+          const caption = document.getElementById('captionInput').value;
+          const showCaption = document.getElementById('captionCheckbox').checked;
+          if (showCaption && caption) {
+            addCaption(ctx, tempCanvas, caption);
+          }
+          // Add watermark if checkbox is checked
+          const showWatermark = document.getElementById('watermarkCheckbox').checked;
+          if (showWatermark) {
+            addWatermark(ctx, tempCanvas);
+          }
+          // Proceed to download the image as WebP
+          let downloadDataUrl = tempCanvas.toDataURL('image/webp', 0.8);
+          let downloadLink = document.createElement('a');
+          // Check size and adjust quality
+          const checkSize = (dataUrl) => {
+            const byteString = atob(dataUrl.split(',')[1]);
+            const size = byteString.length;
+            return size <= 50 * 1024;
+          };
+          let quality = 0.8;
+          while (!checkSize(downloadDataUrl) && quality > 0) {
+            quality -= 0.05;
+            downloadDataUrl = tempCanvas.toDataURL('image/webp', quality);
+          }
+          downloadLink.href = downloadDataUrl;
+          downloadLink.download = 'canvas_image.webp';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+        };
+        img.src = imageData;
+      });
+      // Get submenu and filter item
+      // Get references to the sliders
+      const brightnessSlider = document.getElementById('brightnessFilter');
+      const contrastSlider = document.getElementById('contrastFilter');
+      const saturationSlider = document.getElementById('saturationFilter');
+      const grayscaleButton = document.getElementById('grayscaleFilter');
+      // Function to apply the filters
+      function applyFilters() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          activeObject.filters = [];
+          // Apply Brightness Filter
+          const brightnessValue = brightnessSlider.value / 100; // Normalize value between -1 and 1
+          const brightnessFilter = new fabric.Image.filters.Brightness({
+            brightness: brightnessValue
+          });
+          activeObject.filters.push(brightnessFilter);
+          // Apply Contrast Filter
+          const contrastValue = contrastSlider.value / 100; // Normalize value between -1 and 1
+          const contrastFilter = new fabric.Image.filters.Contrast({
+            contrast: contrastValue
+          });
+          activeObject.filters.push(contrastFilter);
+          // Apply Saturation Filter
+          const saturationValue = saturationSlider.value / 100; // Normalize value between -1 and 1
+          const saturationFilter = new fabric.Image.filters.Saturation({
+            saturation: saturationValue
+          });
+          activeObject.filters.push(saturationFilter);
+          // Re-apply all filters and render the canvas
+          activeObject.applyFilters();
+          canvas.renderAll();
+        }
+      }
+      // Add event listeners to the sliders to apply filters dynamically
+      brightnessSlider.addEventListener('input', applyFilters);
+      contrastSlider.addEventListener('input', applyFilters);
+      saturationSlider.addEventListener('input', applyFilters);
+      // Grayscale Filter Button
+      grayscaleButton.addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+          activeObject.filters = [];
+          const grayscaleFilter = new fabric.Image.filters.Grayscale();
+          activeObject.filters.push(grayscaleFilter);
+          // Apply Grayscale filter and render the canvas
+          activeObject.applyFilters();
+          canvas.renderAll();
+          addHistory();
+        }
+      });
+      // Listen for keydown events on the entire document
+      document.addEventListener('keydown', function(event) {
+        // Check if the key pressed is either Backspace (keyCode 8) or Delete (keyCode 46)
+        if (event.key === 'Backspace' || event.key === 'Delete') {
+          // Prevent the default browser behavior (like navigating back in case of Backspace)
+          event.preventDefault();
+          // Get the currently active object on the canvas
+          const activeObject = canvas.getActiveObject();
+          // If there is an active object, remove it from the canvas
+          if (activeObject) {
             canvas.remove(activeObject);
             addHistory();
-            canvas.renderAll();  // Re-render the canvas
+            canvas.renderAll(); // Re-render the canvas
+          }
         }
+      });
+      let backgroundImage = null;
+      document.getElementById('setAsBackground').addEventListener('click', function() {
+        const activeObject = canvas.getActiveObject();
+        if (activeObject && activeObject.type === 'image') {
+          const img = new Image();
+          img.src = activeObject.toDataURL(); // Get the image data URL
+          img.onload = function() {
+            const canvasWidth = 1200; // Canvas width
+            const canvasHeight = 628; // Canvas height
+            const imgRatio = img.width / img.height;
+            const canvasRatio = canvasWidth / canvasHeight;
+            let drawWidth, drawHeight, drawX, drawY;
+            // Calculate drawing dimensions
+            if (imgRatio > canvasRatio) {
+              drawHeight = canvasHeight;
+              drawWidth = drawHeight * imgRatio;
+              drawX = (drawWidth - canvasWidth) / 2; // Center the image
+              drawY = 0;
+            } else {
+              drawWidth = canvasWidth;
+              drawHeight = drawWidth / imgRatio;
+              drawX = 0;
+              drawY = (drawHeight - canvasHeight) / 2; // Center the image
+            }
+            // Set the background image with cropping
+            canvas.setBackgroundImage(img.src, () => {
+              canvas.renderAll(); // Refresh the canvas to display the background
+            }, {
+              // Setting the background image properties
+              originX: 'center',
+              originY: 'center',
+              left: canvasWidth / 2,
+              top: canvasHeight / 2,
+              scaleX: drawWidth / img.width,
+              scaleY: drawHeight / img.height
+            });
+            // Store the original image as background
+            backgroundImage = activeObject;
+            // Remove the image object from the canvas after setting it as background
+            canvas.remove(activeObject);
+            // Hide the "Set as Background" and show "Detach Background"
+            document.getElementById('setAsBackground').style.display = 'none';
+            document.getElementById('detachBackground').style.display = 'block';
+            addHistory(); // Add this action to history for undo functionality
+          };
+        }
+        contextMenu.style.display = 'none'; // Hide the context menu after action
+      });
+      document.getElementById('detachBackground').addEventListener('click', function() {
+        if (backgroundImage) {
+          // Remove the background image from the canvas
+          canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+          // Re-add the original image to the canvas
+          const originalImg = new Image();
+          originalImg.src = backgroundImage.toDataURL(); // Get the original image data URL
+          originalImg.onload = function() {
+            const imgInstance = new fabric.Image(originalImg, {
+              left: canvas.width / 2 - (backgroundImage.width / 2), // Center the image horizontally
+              top: canvas.height / 2 - (backgroundImage.height / 2), // Center the image vertically
+              selectable: true
+            });
+            // Add the image back to the canvas
+            canvas.add(imgInstance);
+            canvas.renderAll(); // Refresh the canvas
+            // Clear the reference to the background image
+            backgroundImage = null;
+            // Hide "Detach Background" and show "Set as Background"
+            document.getElementById('setAsBackground').style.display = 'block';
+            document.getElementById('detachBackground').style.display = 'none';
+            addHistory(); // Add this action to history for undo functionality
+          };
+        }
+        contextMenu.style.display = 'none'; // Hide the context menu after action
+      });
+      canvasContainer.addEventListener('contextmenu', function(e) {
+        e.preventDefault(); // Prevent default context menu
+        const activeObject = canvas.getActiveObject();
+        const canvasHasObjects = canvas.getObjects().length > 0; // Check if canvas has any objects
+        const hasBackgroundImage = !!canvas.backgroundImage; // Check if a background image is set
+        // Clear previous context menu state
+        document.getElementById('pasteImage').style.display = 'none';
+        document.getElementById('setAsBackground').style.display = 'none';
+        document.getElementById('detachBackground').style.display = 'none';
+        document.getElementById('layersMenu').style.display = 'none';
+        document.getElementById('flipMenu').style.display = 'none';
+        document.getElementById('rotateLayer').style.display = 'none';
+        document.getElementById('resetTransform').style.display = 'none';
+        document.getElementById('alignMenu').style.display = 'none';
+        document.getElementById('filtersMenu').style.display = 'none';
+        document.getElementById('circularCropButton').style.display = 'none';
+        // If the canvas has no objects, only show the "Paste" option
+        if (!canvasHasObjects) {
+          document.getElementById('pasteImage').style.display = 'block';
+        }
+        // If an image is selected, show the full context menu
+        if (activeObject && activeObject.type === 'image') {
+          document.getElementById('pasteImage').style.display = 'block'; // Always show paste
+          document.getElementById('setAsBackground').style.display = 'block'; // Show "Set as Background" for images
+          document.getElementById('layersMenu').style.display = 'block';
+          document.getElementById('flipMenu').style.display = 'block';
+          document.getElementById('rotateLayer').style.display = 'block';
+          document.getElementById('resetTransform').style.display = 'block';
+          document.getElementById('alignMenu').style.display = 'block';
+          document.getElementById('filtersMenu').style.display = 'block';
+          document.getElementById('circularCropButton').style.display = 'block';
+        }
+        // Show "Detach Background" option only if a background image has been set
+        if (hasBackgroundImage) {
+          document.getElementById('detachBackground').style.display = 'block';
+        }
+        // Position the context menu at the point of the right-click
+        contextMenu.style.left = `${e.clientX}px`;
+        contextMenu.style.top = `${e.clientY}px`;
+        contextMenu.style.display = 'block'; // Show the context menu
+      });
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    // Configuration Constants
+const CORNER_COLOR = 'rgba(75, 0, 130, 0.9)';
+const CORNER_STROKE_COLOR = 'indigo';
+const CORNER_STYLE = 'circle';
+const CORNER_STROKE_WIDTH = 2;
+
+const CORNER_SIZE = 20; // Size of corner handles
+const SHADOW_COLOR = 'rgba(75, 0, 130, 0.9)';
+const SHADOW_BLUR = 30;
+const SHADOW_OFFSET_X = 5;
+const SHADOW_OFFSET_Y = 5;
+
+const DASHED_BORDER = [6, 8]; // Dashed border effect
+
+// Extend Fabric.js to customize corner behavior
+fabric.Object.prototype.cornerColor = CORNER_COLOR;
+fabric.Object.prototype.cornerStrokeColor = CORNER_STROKE_COLOR;
+fabric.Object.prototype.cornerStyle = CORNER_STYLE;
+fabric.Object.prototype.cornerStrokeWidth = CORNER_STROKE_WIDTH;
+
+// Customize the corner size and position
+fabric.Object.prototype.corners = {
+    tl: { x: -12, y: -12 },  // Top Left
+    tr: { x: 12, y: -12 },   // Top Right
+    bl: { x: -12, y: 12 },   // Bottom Left
+    br: { x: 12, y: 12 }     // Bottom Right
+};
+
+// Function to customize corner rendering
+fabric.Object.prototype._renderCorners = function(ctx) {
+    ctx.save();
+    ctx.fillStyle = this.cornerColor;
+    ctx.strokeStyle = this.cornerStrokeColor;
+    ctx.lineWidth = this.cornerStrokeWidth;
+
+    // Draw circular corners
+    Object.entries(this.corners).forEach(([key, { x, y }]) => {
+        ctx.beginPath();
+        ctx.arc(this.left + x + this.width / 2, this.top + y + this.height / 2, CORNER_SIZE, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
+    });
+
+    ctx.restore();
+};
+
+// Function to set common styles for images
+function setImageStyles(obj, styles) {
+    if (!obj || !obj.type === 'image') return; // Validate object
+
+    obj.set({
+        borderColor: styles.borderColor || '',
+        borderDashArray: styles.borderDashArray || null,
+        cornerColor: styles.cornerColor || '',
+        cornerStrokeColor: styles.cornerStrokeColor || '',
+        shadow: styles.shadow || null,
+        opacity: styles.opacity !== undefined ? styles.opacity : 1,
+        selectable: true,
+        evented: true,
+        padding: 3,
+    });
+}
+
+// Enhance visual feedback on selection
+function enhanceSelectedImages() {
+    const activeObjects = canvas.getActiveObjects();
+
+    activeObjects.forEach((obj) => {
+        if (obj.type === 'image') {
+            setImageStyles(obj, {
+                borderColor: 'rgba(75, 0, 130, 0.9)', // Selection border color
+                borderDashArray: DASHED_BORDER, // Dashed border effect
+                cornerColor: 'rgba(75, 0, 130, 1)', // Brighter corner color
+                shadow: new fabric.Shadow({
+                    color: SHADOW_COLOR, 
+                    blur: SHADOW_BLUR,
+                    offsetX: SHADOW_OFFSET_X,
+                    offsetY: SHADOW_OFFSET_Y
+                })
+            });
+        }
+    });
+
+    canvas.renderAll(); // Refresh the canvas to apply styles
+}
+
+// Reset styles when selection is cleared
+canvas.on('selection:cleared', function() {
+    canvas.getObjects().forEach((obj) => {
+        if (obj.type === 'image') {
+            setImageStyles(obj, {
+                borderColor: '',
+                borderDashArray: null, // Reset dashed border
+                cornerColor: '',
+                cornerStrokeColor: '',
+                shadow: null,
+                opacity: 1, // Reset opacity
+            });
+        }
+    });
+
+    canvas.renderAll(); // Refresh the canvas
+});
+
+// Hover effect for images
+canvas.on('mouse:over', function(event) {
+    if (event.target && event.target.type === 'image') {
+        event.target.set('shadow', new fabric.Shadow({
+            color: SHADOW_COLOR, // Shadow color on hover
+            blur: 25,
+            offsetX: 0,
+            offsetY: 0,
+        }));
+        canvas.renderAll(); // Refresh canvas
     }
 });
 
-
-
-    let backgroundImage = null;
-
-document.getElementById('setAsBackground').addEventListener('click', function () {
-  const activeObject = canvas.getActiveObject();
-  if (activeObject && activeObject.type === 'image') {
-    const img = new Image();
-    img.src = activeObject.toDataURL(); // Get the image data URL
-
-    img.onload = function() {
-      const canvasWidth = 1200;  // Canvas width
-      const canvasHeight = 628;   // Canvas height
-      const imgRatio = img.width / img.height;
-      const canvasRatio = canvasWidth / canvasHeight;
-      let drawWidth, drawHeight, drawX, drawY;
-
-      // Calculate drawing dimensions
-      if (imgRatio > canvasRatio) {
-        drawHeight = canvasHeight;
-        drawWidth = drawHeight * imgRatio;
-        drawX = (drawWidth - canvasWidth) / 2;  // Center the image
-        drawY = 0;
-      } else {
-        drawWidth = canvasWidth;
-        drawHeight = drawWidth / imgRatio;
-        drawX = 0;
-        drawY = (drawHeight - canvasHeight) / 2;  // Center the image
-      }
-
-      // Set the background image with cropping
-      canvas.setBackgroundImage(img.src, () => {
-        canvas.renderAll();  // Refresh the canvas to display the background
-      }, {
-        // Setting the background image properties
-        originX: 'center',
-        originY: 'center',
-        left: canvasWidth / 2,
-        top: canvasHeight / 2,
-        scaleX: drawWidth / img.width,
-        scaleY: drawHeight / img.height
-      });
-
-      // Store the original image as background
-      backgroundImage = activeObject;
-
-      // Remove the image object from the canvas after setting it as background
-      canvas.remove(activeObject);
-
-      // Hide the "Set as Background" and show "Detach Background"
-      document.getElementById('setAsBackground').style.display = 'none';
-      document.getElementById('detachBackground').style.display = 'block';
-
-      addHistory(); // Add this action to history for undo functionality
-    };
-  }
-  contextMenu.style.display = 'none'; // Hide the context menu after action
+// Remove shadow on mouse out
+canvas.on('mouse:out', function(event) {
+    if (event.target && event.target.type === 'image') {
+        event.target.set('shadow', null); // Remove shadow on mouse out
+        canvas.renderAll(); // Refresh canvas
+    }
 });
 
-
-document.getElementById('detachBackground').addEventListener('click', function () {
-  if (backgroundImage) {
-    // Remove the background image from the canvas
-    canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
-
-    // Re-add the original image to the canvas
-    const originalImg = new Image();
-    originalImg.src = backgroundImage.toDataURL(); // Get the original image data URL
-
-    originalImg.onload = function () {
-      const imgInstance = new fabric.Image(originalImg, {
-        left: canvas.width / 2 - (backgroundImage.width / 2), // Center the image horizontally
-        top: canvas.height / 2 - (backgroundImage.height / 2), // Center the image vertically
-        selectable: true
-      });
-
-      // Add the image back to the canvas
-      canvas.add(imgInstance);
-      canvas.renderAll(); // Refresh the canvas
-
-      // Clear the reference to the background image
-      backgroundImage = null;
-
-      // Hide "Detach Background" and show "Set as Background"
-      document.getElementById('setAsBackground').style.display = 'block';
-      document.getElementById('detachBackground').style.display = 'none';
-
-      addHistory(); // Add this action to history for undo functionality
-    };
-  }
-  contextMenu.style.display = 'none'; // Hide the context menu after action
-});
+// Apply enhancements on selection
+canvas.on('selection:created', enhanceSelectedImages);
+canvas.on('selection:updated', enhanceSelectedImages);
 
 
 
 
 
-
-
-    canvasContainer.addEventListener('contextmenu', function (e) {
-  e.preventDefault(); // Prevent default context menu
-  const activeObject = canvas.getActiveObject();
-  const canvasHasObjects = canvas.getObjects().length > 0; // Check if canvas has any objects
-  const hasBackgroundImage = !!canvas.backgroundImage; // Check if a background image is set
-
-  // Clear previous context menu state
-  document.getElementById('pasteImage').style.display = 'none';
-  document.getElementById('setAsBackground').style.display = 'none';
-  document.getElementById('detachBackground').style.display = 'none';
-  document.getElementById('layersMenu').style.display = 'none';
-  document.getElementById('flipMenu').style.display = 'none';
-  document.getElementById('rotateLayer').style.display = 'none';
-  document.getElementById('resetTransform').style.display = 'none';
-  document.getElementById('alignMenu').style.display = 'none';
-  document.getElementById('filtersMenu').style.display = 'none';
-  document.getElementById('circularCropButton').style.display = 'none';
-
-  // If the canvas has no objects, only show the "Paste" option
-  if (!canvasHasObjects) {
-    document.getElementById('pasteImage').style.display = 'block';
-  }
-
-  // If an image is selected, show the full context menu
-  if (activeObject && activeObject.type === 'image') {
-    document.getElementById('pasteImage').style.display = 'block';  // Always show paste
-    document.getElementById('setAsBackground').style.display = 'block'; // Show "Set as Background" for images
-    document.getElementById('layersMenu').style.display = 'block';
-  document.getElementById('flipMenu').style.display = 'block';
-  document.getElementById('rotateLayer').style.display = 'block';
-  document.getElementById('resetTransform').style.display = 'block';
-  document.getElementById('alignMenu').style.display = 'block';
-  document.getElementById('filtersMenu').style.display = 'block';
-  document.getElementById('circularCropButton').style.display = 'block';
-  }
-
-  // Show "Detach Background" option only if a background image has been set
-  if (hasBackgroundImage) {
-    document.getElementById('detachBackground').style.display = 'block';
-  }
-
-  // Position the context menu at the point of the right-click
-  contextMenu.style.left = `${e.clientX}px`;
-  contextMenu.style.top = `${e.clientY}px`;
-  contextMenu.style.display = 'block';  // Show the context menu
-});
-
-
-
-  </script>
-</body>
+    
+    
+    
+    
+      
+      
+      
+    </script>
+  </body>
 </html>
