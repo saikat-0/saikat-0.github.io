@@ -674,8 +674,77 @@
         ctx.textBaseline = "middle";
         ctx.fillText("VvipTimes", canvas.width - width / 2 - padding, padding + height / 2);
       }
-      // Modify the download image function to include the caption and watermark logic
-      document.getElementById('downloadImage').addEventListener('click', function() {
+      // Function to create a Web Worker
+const createWorker = () => {
+    const blob = new Blob([`
+        onmessage = function(e) {
+            const dataUrl = e.data.dataUrl;
+            const byteString = atob(dataUrl.split(',')[1]);
+            const size = byteString.length;
+            postMessage({ size });
+        }
+    `], { type: 'application/javascript' });
+
+    return new Worker(URL.createObjectURL(blob));
+};
+
+// Advanced quality adjustment with multi-stage feedback
+const adaptiveBinarySearch = async (canvas, maxFileSize, minQuality = 0.1, maxQuality = 1.0) => {
+    let lower = minQuality;
+    let upper = maxQuality;
+    let resultQuality = minQuality;
+    let previousSize = Infinity;
+
+    while (upper - lower > 0.01) {
+        const mid = (lower + upper) / 2;
+        const dataUrl = canvas.toDataURL("image/webp", mid);
+
+        const size = await new Promise((resolve, reject) => {
+            const worker = createWorker();
+            worker.onmessage = (e) => {
+                resolve(e.data.size);
+                worker.terminate();
+            };
+            worker.onerror = (error) => {
+                reject(error);
+            };
+            worker.postMessage({ dataUrl });
+        }).catch(error => {
+            console.error("Error during compression:", error);
+            return 0; // Fail gracefully
+        });
+
+        if (size <= maxFileSize) {
+            resultQuality = mid;
+            lower = mid;
+        } else {
+            upper = mid;
+        }
+
+        // Multi-stage feedback loop for fine-tuning
+        if (size === previousSize) {
+            break; // Exit if size hasn't changed
+        }
+        previousSize = size;
+
+        // Fine-tuning towards the end
+        if (upper - lower < 0.01 && size <= maxFileSize) {
+            break;
+        }
+    }
+
+    return resultQuality;
+};
+
+// Function to compress a single image with advanced quality tuning
+const compressImage = async (canvas, maxFileSize = 75 * 1024) => {
+    const initialQuality = await adaptiveBinarySearch(canvas, maxFileSize);
+    const finalQuality = await adaptiveBinarySearch(canvas, maxFileSize, Math.max(initialQuality - 0.005, 0.5), initialQuality);
+    return canvas.toDataURL("image/webp", finalQuality);
+};
+
+// Event listener for downloading the image
+document.getElementById('downloadImage').addEventListener('click', async function() {
     // Create a temporary canvas for rendering
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = 1200; // Output width
@@ -688,12 +757,12 @@
         quality: 1.0  // Use the highest quality for PNG
     });
     const img = new Image();
-    
+
     img.onerror = function() {
         console.error('Failed to load image data.');
     };
 
-    img.onload = function() {
+    img.onload = async function() {
         // Draw the loaded image onto the temporary canvas
         ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
 
@@ -710,26 +779,11 @@
             addWatermark(ctx, tempCanvas); // Assuming addWatermark is defined
         }
 
-        // Proceed to download the image as WebP
-        let downloadDataUrl = tempCanvas.toDataURL('image/webp', 1.0); // Start with high quality
+        // Proceed to compress and download the image
+        const downloadDataUrl = await compressImage(tempCanvas, 50 * 1024); // Limit to 50 KB
         let downloadLink = document.createElement('a');
-
-        // Function to check the size of the generated data URL
-        const checkSize = (dataUrl) => {
-            const byteString = atob(dataUrl.split(',')[1]);
-            const size = byteString.length;
-            return size <= 50 * 1024; // Limit to 50 KB
-        };
-
-        let quality = 1.0; // Start with maximum quality
-        while (!checkSize(downloadDataUrl) && quality > 0) {
-            quality -= 0.04; // Decrease quality in steps
-            downloadDataUrl = tempCanvas.toDataURL('image/webp', quality);
-        }
-
-        // Set the download link attributes
         downloadLink.href = downloadDataUrl;
-        downloadLink.download = 'canvas_image.webp';
+        downloadLink.download = `VvipTimes_${captionInput.value.replace(/\s+/g, '_')}.webp`;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
