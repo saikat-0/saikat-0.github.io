@@ -187,6 +187,7 @@
         <a for="watermarkCheckbox">Show Watermark <input type="checkbox" id="watermarkCheckbox">
         </a>
       </button>
+        <input type="range" id="zoomSlider" min="0.5" max="3" step="0.005" value="1">
     </div>
     <div id="contextMenu" class="context-menu">
       <div class="context-menu-item" id="circularCropButton">Circular Crop</div>
@@ -242,23 +243,8 @@
       let history = [];
       let historyIndex = -1;
       // Load image into canvas and center it
-      function loadImage(img) {
-        const imgInstance = new fabric.Image(img);
-        const scaleFactor = 0.85; // Scale image to 70% of canvas size
-        imgInstance.set({
-          left: (canvas.width / 2) - (img.width * scaleFactor / 2),
-          top: (canvas.height / 2) - (img.height * scaleFactor / 2),
-          scaleX: scaleFactor,
-          scaleY: scaleFactor,
-          hasControls: true,
-          hasBorders: true,
-          selectable: true,
-        });
-        canvas.add(imgInstance).setActiveObject(imgInstance);
-        canvas.renderAll();
-        addHistory(); // Add to history after adding an image
-        updateLayerOptions(true);
-      }
+
+      
       document.getElementById('pasteImage').addEventListener('click', function() {
         navigator.clipboard.read().then(items => {
           for (const item of items) {
@@ -637,160 +623,190 @@
           addHistory();
         }
       });
-      // Download the image in lossless WebP format, resized to 1200x628px and within 50 KB
-      // Function to add Caption
-      function addCaption(ctx, canvas, caption) {
-        if (!caption) return;
-        ctx.font = "500 22px Arial";
-        ctx.fillStyle = "black";
-        ctx.globalAlpha = 0.7;
-        const textMetrics = ctx.measureText(caption);
-        const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
-        const captionHeight = textHeight + 10;
-        ctx.globalAlpha = 0.7;
-        ctx.beginPath();
-        ctx.roundRect(0, canvas.height - captionHeight, canvas.width, captionHeight, 15);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(caption, canvas.width / 2, canvas.height - captionHeight / 2);
-      }
-      // Function to add Watermark
-      function addWatermark(ctx, canvas) {
-        const padding = 5;
-        const width = 150;
-        const height = 36;
-        ctx.font = "700 24px Arial";
-        ctx.fillStyle = "#010642";
-        ctx.globalAlpha = 0.77;
-        ctx.beginPath();
-        ctx.roundRect(canvas.width - width - padding, padding, width, height, 50);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("VvipTimes", canvas.width - width / 2 - padding, padding + height / 2);
-      }
-      // Function to create a Web Worker
+      
+      
+      
+      
+      
+      // Function to load an image and scale it properly onto the canvas
+function loadImage(img) {
+  const imgInstance = new fabric.Image(img);
+  
+  // Calculate scaling factor based on canvas dimensions
+  const canvasAspect = canvas.width / canvas.height;
+  const imgAspect = img.width / img.height;
+
+  let scaleFactor;
+  if (canvasAspect > imgAspect) {
+    scaleFactor = canvas.height / img.height; // Fit to height
+  } else {
+    scaleFactor = canvas.width / img.width; // Fit to width
+  }
+
+  imgInstance.set({
+    left: (canvas.width - img.width * scaleFactor) / 2, // Center horizontally
+    top: (canvas.height - img.height * scaleFactor) / 2, // Center vertically
+    scaleX: scaleFactor,
+    scaleY: scaleFactor,
+    hasControls: true,
+    hasBorders: true,
+    selectable: true,
+  });
+
+  canvas.add(imgInstance).setActiveObject(imgInstance);
+  canvas.renderAll();
+  addHistory(); // Add to history after adding an image
+  updateLayerOptions(true);
+}
+
+
+
+
+
+
+
+
+
+
+    // Function to create a Web Worker for size calculation
 const createWorker = () => {
-    const blob = new Blob([`
-        onmessage = function(e) {
-            const dataUrl = e.data.dataUrl;
-            const byteString = atob(dataUrl.split(',')[1]);
-            const size = byteString.length;
-            postMessage({ size });
-        }
-    `], { type: 'application/javascript' });
-
-    return new Worker(URL.createObjectURL(blob));
-};
-
-// Advanced quality adjustment with multi-stage feedback
-const adaptiveBinarySearch = async (canvas, maxFileSize, minQuality = 0.1, maxQuality = 1.0) => {
-    let lower = minQuality;
-    let upper = maxQuality;
-    let resultQuality = minQuality;
-    let previousSize = Infinity;
-
-    while (upper - lower > 0.01) {
-        const mid = (lower + upper) / 2;
-        const dataUrl = canvas.toDataURL("image/webp", mid);
-
-        const size = await new Promise((resolve, reject) => {
-            const worker = createWorker();
-            worker.onmessage = (e) => {
-                resolve(e.data.size);
-                worker.terminate();
-            };
-            worker.onerror = (error) => {
-                reject(error);
-            };
-            worker.postMessage({ dataUrl });
-        }).catch(error => {
-            console.error("Error during compression:", error);
-            return 0; // Fail gracefully
-        });
-
-        if (size <= maxFileSize) {
-            resultQuality = mid;
-            lower = mid;
-        } else {
-            upper = mid;
-        }
-
-        // Multi-stage feedback loop for fine-tuning
-        if (size === previousSize) {
-            break; // Exit if size hasn't changed
-        }
-        previousSize = size;
-
-        // Fine-tuning towards the end
-        if (upper - lower < 0.01 && size <= maxFileSize) {
-            break;
-        }
+  const blob = new Blob([`
+    onmessage = function(e) {
+      const dataUrl = e.data.dataUrl;
+      const byteString = atob(dataUrl.split(',')[1]);
+      postMessage({ size: byteString.length });
     }
-
-    return resultQuality;
+  `], { type: 'application/javascript' });
+  return new Worker(URL.createObjectURL(blob));
 };
 
-// Function to compress a single image with advanced quality tuning
-const compressImage = async (canvas, maxFileSize = 75 * 1024) => {
-    const initialQuality = await adaptiveBinarySearch(canvas, maxFileSize);
-    const finalQuality = await adaptiveBinarySearch(canvas, maxFileSize, Math.max(initialQuality - 0.005, 0.5), initialQuality);
-    return canvas.toDataURL("image/webp", finalQuality);
+// Enhanced adaptive binary search for best quality within size limit
+const adaptiveBinarySearch = async (canvas, maxFileSize, minQuality = 0.05, maxQuality = 1.0) => {
+  let lower = minQuality;
+  let upper = maxQuality;
+  let resultQuality = minQuality;
+  let step = 0.00001; // Ultra-fine steps for precision
+
+  while (upper - lower > step) {
+    const midQuality = (lower + upper) / 2;
+    const dataUrl = canvas.toDataURL("image/webp", midQuality);
+
+    const size = await new Promise((resolve, reject) => {
+      const worker = createWorker();
+      worker.onmessage = (e) => {
+        resolve(e.data.size);
+        worker.terminate();
+      };
+      worker.onerror = (error) => {
+        console.error("Worker error during compression:", error);
+        worker.terminate();
+        reject(error);
+      };
+      worker.postMessage({ dataUrl });
+    }).catch(() => 0);
+
+    if (size <= maxFileSize) {
+      resultQuality = midQuality; // Save the optimal quality
+      lower = midQuality;
+    } else {
+      upper = midQuality;
+    }
+  }
+  return resultQuality;
+};
+
+// Function to compress image to highest quality under size limit
+const compressImage = async (canvas, maxFileSize = 50 * 1024) => {
+  const optimalQuality = await adaptiveBinarySearch(canvas, maxFileSize);
+  return canvas.toDataURL("image/webp", optimalQuality);
 };
 
 // Event listener for downloading the image
 document.getElementById('downloadImage').addEventListener('click', async function() {
-    // Create a temporary canvas for rendering
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = 1200; // Output width
-    tempCanvas.height = 628;  // Output height
-    const ctx = tempCanvas.getContext('2d');
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = 1200;
+  tempCanvas.height = 628;
+  const ctx = tempCanvas.getContext('2d');
 
-    // Get the image data from the fabric canvas
-    const imageData = canvas.toDataURL({
-        format: 'png',
-        quality: 1.0  // Use the highest quality for PNG
-    });
-    const img = new Image();
+  const imageData = canvas.toDataURL("image/png", 1.0);
+  const img = new Image();
+  img.onload = async function() {
+    // Draw image with high-quality settings
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
 
-    img.onerror = function() {
-        console.error('Failed to load image data.');
-    };
+    // Add caption if checked
+    const caption = document.getElementById('captionInput').value;
+    const showCaption = document.getElementById('captionCheckbox').checked;
+    if (showCaption && caption) addCaption(ctx, tempCanvas, caption);
 
-    img.onload = async function() {
-        // Draw the loaded image onto the temporary canvas
-        ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+    // Add watermark if checked
+    const showWatermark = document.getElementById('watermarkCheckbox').checked;
+    if (showWatermark) addWatermark(ctx, tempCanvas);
 
-        // Add caption if the checkbox is checked
-        const caption = document.getElementById('captionInput').value;
-        const showCaption = document.getElementById('captionCheckbox').checked;
-        if (showCaption && caption) {
-            addCaption(ctx, tempCanvas, caption); // Assuming addCaption is defined
-        }
-
-        // Add watermark if the checkbox is checked
-        const showWatermark = document.getElementById('watermarkCheckbox').checked;
-        if (showWatermark) {
-            addWatermark(ctx, tempCanvas); // Assuming addWatermark is defined
-        }
-
-        // Proceed to compress and download the image
-        const downloadDataUrl = await compressImage(tempCanvas, 50 * 1024); // Limit to 50 KB
-        let downloadLink = document.createElement('a');
-        downloadLink.href = downloadDataUrl;
-        downloadLink.download = `VvipTimes_${captionInput.value.replace(/\s+/g, '_')}.webp`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-    };
-
-    img.src = imageData; // Start loading the image
+    // Compress and download the image
+    const downloadDataUrl = await compressImage(tempCanvas, 50 * 1024);
+    const downloadLink = document.createElement('a');
+    downloadLink.href = downloadDataUrl;
+    downloadLink.download = `VvipTimes_${caption.replace(/\s+/g, '_')}.webp`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
+  img.src = imageData;
 });
+
+// Caption addition
+function addCaption(ctx, canvas, caption) {
+  ctx.font = "500 22px Arial";
+  ctx.fillStyle = "black";
+  ctx.globalAlpha = 0.7;
+  const textMetrics = ctx.measureText(caption);
+  const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+  
+  // Create a rounded rectangle background for the caption
+  ctx.beginPath();
+  ctx.roundRect(0, canvas.height - (textHeight + 10), canvas.width, textHeight + 10, 15);
+  ctx.fill();
+  
+  // Draw the caption text
+  ctx.globalAlpha = 1; // Reset alpha for text
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(caption, canvas.width / 2, canvas.height - (textHeight / 2 + 5));
+}
+
+// Watermark addition
+function addWatermark(ctx, canvas) {
+  const padding = 5;
+  ctx.font = "700 24px Arial";
+  ctx.fillStyle = "#010642";
+  ctx.globalAlpha = 0.77;
+  
+  // Create a rounded rectangle for the watermark background
+  ctx.beginPath();
+  ctx.roundRect(canvas.width - 150 - padding, padding, 150, 36, 50);
+  ctx.fill();
+  
+  // Draw the watermark text
+  ctx.globalAlpha = 1; // Reset alpha for text
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("VvipTimes", canvas.width - 75 - padding, padding + 18);
+}
+
+
+
+
+
+
+
+
+      
+      
 
       // Get submenu and filter item
       // Get references to the sliders
@@ -911,31 +927,44 @@ document.getElementById('downloadImage').addEventListener('click', async functio
         contextMenu.style.display = 'none'; // Hide the context menu after action
       });
       document.getElementById('detachBackground').addEventListener('click', function() {
-        if (backgroundImage) {
-          // Remove the background image from the canvas
-          canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
-          // Re-add the original image to the canvas
-          const originalImg = new Image();
-          originalImg.src = backgroundImage.toDataURL(); // Get the original image data URL
-          originalImg.onload = function() {
-            const imgInstance = new fabric.Image(originalImg, {
-              left: canvas.width / 2 - (backgroundImage.width / 2), // Center the image horizontally
-              top: canvas.height / 2 - (backgroundImage.height / 2), // Center the image vertically
-              selectable: true
-            });
-            // Add the image back to the canvas
-            canvas.add(imgInstance);
-            canvas.renderAll(); // Refresh the canvas
-            // Clear the reference to the background image
-            backgroundImage = null;
-            // Hide "Detach Background" and show "Set as Background"
-            document.getElementById('setAsBackground').style.display = 'block';
-            document.getElementById('detachBackground').style.display = 'none';
-            addHistory(); // Add this action to history for undo functionality
-          };
-        }
-        contextMenu.style.display = 'none'; // Hide the context menu after action
+  if (backgroundImage) {
+    // Remove the background image from the canvas
+    canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+    
+    // Create a new Image instance from the original image's data URL
+    const originalImg = new Image();
+    originalImg.src = backgroundImage.toDataURL(); // Get the original image data URL
+
+    originalImg.onload = function() {
+      // Create an image instance for fabric.js
+      const imgInstance = new fabric.Image(originalImg, {
+        left: (canvas.width - originalImg.width) / 2, // Center the image horizontally
+        top: (canvas.height - originalImg.height) / 2, // Center the image vertically
+        selectable: true,
+        hasControls: true, // Make sure the image is selectable and has controls
+        hasBorders: true
       });
+      
+      // Add the image back to the canvas
+      canvas.add(imgInstance);
+      canvas.setActiveObject(imgInstance); // Set the newly added image as active
+      canvas.renderAll(); // Refresh the canvas
+
+      // Clear the reference to the background image
+      backgroundImage = null;
+
+      // Hide "Detach Background" and show "Set as Background"
+      document.getElementById('setAsBackground').style.display = 'block';
+      document.getElementById('detachBackground').style.display = 'none';
+
+      // Add this action to history for undo functionality
+      addHistory();
+    };
+  }
+  contextMenu.style.display = 'none'; // Hide the context menu after action
+});
+
+
       canvasContainer.addEventListener('contextmenu', function(e) {
         e.preventDefault(); // Prevent default context menu
         const activeObject = canvas.getActiveObject();
@@ -1130,7 +1159,19 @@ canvas.on('selection:updated', enhanceSelectedImages);
 
 
 
-    
+    // Function to zoom the canvas container
+function zoomCanvas(scale) {
+    const canvasContainer = document.getElementById('canvasContainer'); // Adjust this if your container ID is different
+    canvasContainer.style.transform = `scale(${scale})`;
+    canvasContainer.style.transformOrigin = 'top left'; // Ensure scaling happens from the top left corner
+}
+
+// Event listener for the zoom slider
+document.getElementById('zoomSlider').addEventListener('input', function(event) {
+    const scaleValue = event.target.value; // Get the current value of the slider
+    zoomCanvas(scaleValue); // Call the zoom function with the slider value
+});
+
     
     
     
