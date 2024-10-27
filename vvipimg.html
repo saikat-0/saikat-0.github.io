@@ -390,7 +390,8 @@
             <i class="fas fa-align-right icon"></i>
         </div>
         <div class="context-menu-item" id="resetTransform" title="Reset Alignment">
-            <i class="fas fa-undo icon"></i> <!-- Changed icon for clarity -->
+            <i class="fa fa-refresh"></i>
+             <!-- Changed icon for clarity -->
         </div>
     </div>
   
@@ -756,26 +757,38 @@
           historyIndex--; // Adjust the index accordingly
         }
       }
+      
       // Flip Horizontally
-      document.getElementById('flipHorizontal').addEventListener('click', function() {
-        const activeObject = canvas.getActiveObject();
-        if (activeObject) {
-          activeObject.scaleX = -activeObject.scaleX; // Flip the object
-          canvas.renderAll();
-          addHistory(); // Add to history after flipping
-        }
-        contextMenu.style.display = 'none'; // Hide context menu
-      });
-      // Flip Vertically
-      document.getElementById('flipVertical').addEventListener('click', function() {
-        const activeObject = canvas.getActiveObject();
-        if (activeObject) {
-          activeObject.scaleY = -activeObject.scaleY; // Flip the object
-          canvas.renderAll();
-          addHistory(); // Add to history after flipping
-        }
-        contextMenu.style.display = 'none'; // Hide context menu
-      });
+document.getElementById('flipHorizontal').addEventListener('click', function() {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+        // Flip the object
+        activeObject.set({
+            scaleX: -activeObject.scaleX // Flip the horizontal scale
+        });
+        activeObject.setCoords(); // Update coordinates to ensure proper resizing
+        canvas.renderAll(); // Render the canvas
+        addHistory(); // Add to history after flipping
+    }
+    contextMenu.style.display = 'none'; // Hide context menu
+});
+
+// Flip Vertically
+document.getElementById('flipVertical').addEventListener('click', function() {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+        // Flip the object
+        activeObject.set({
+            scaleY: -activeObject.scaleY // Flip the vertical scale
+        });
+        activeObject.setCoords(); // Update coordinates to ensure proper resizing
+        canvas.renderAll(); // Render the canvas
+        addHistory(); // Add to history after flipping
+    }
+    contextMenu.style.display = 'none'; // Hide context menu
+});
+
+      
       // Rotate Layer
       document.getElementById('rotateLayer').addEventListener('click', function() {
         const activeObject = canvas.getActiveObject();
