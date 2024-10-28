@@ -463,21 +463,43 @@
         });
         contextMenu.style.display = 'none'; // Hide context menu after action
       });
-      document.getElementById('uploadImage').addEventListener('change', function(e) {
-        if (e.target.files.length === 0) {
-          alert('Please select an image file.');
-          return;
-        }
+      document.getElementById('uploadImage').addEventListener('change', async function (e) {
+    if (e.target.files.length === 0) {
+        alert('Please select an image file.');
+        return;
+    }
+
+    try {
         const reader = new FileReader();
-        reader.onload = function(event) {
-          const img = new Image();
-          img.src = event.target.result;
-          img.onload = function() {
-            loadImage(img);
-          };
+        reader.onload = function (event) {
+            const img = new Image();
+            img.src = event.target.result;
+
+            img.onload = function () {
+                try {
+                    loadImage(img); // Existing function to add the image to the canvas
+                } catch (error) {
+                    console.error('Error adding image to canvas:', error);
+                    
+                }
+            };
+
+            img.onerror = function () {
+                console.error('Image failed to load');
+                alert('Image format not supported or corrupted.');
+            };
+        };
+        reader.onerror = function () {
+            console.error('Error reading file');
+            alert('Failed to read the selected file.');
         };
         reader.readAsDataURL(e.target.files[0]);
-      });
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('An unexpected error occurred while uploading the image.');
+    }
+});
+
       // Handle drag and drop functionality
       const canvasContainer = document.getElementById('canvasContainer');
       canvasContainer.addEventListener('dragover', function(e) {
@@ -712,51 +734,69 @@
         cropCircle = null;
         isCropping = false;
       }
-      // Undo Functionality
-      document.getElementById('undoButton').addEventListener('click', function() {
-        if (historyIndex > 0) {
-          historyIndex--;
-          restoreCanvasState(history[historyIndex]);
-        }
-      });
-      // Redo Functionality
-      document.getElementById('redoButton').addEventListener('click', function() {
-        if (historyIndex < history.length - 1) {
-          historyIndex++;
-          restoreCanvasState(history[historyIndex]);
-        }
-      });
-      // Helper function to restore canvas state
-      function restoreCanvasState(state) {
-        canvas.clear();
-        state.forEach(function(item) {
-          // Re-create the fabric objects from the state
-          const obj = fabric.util.enlivenObjects([item], function(enlivedObjects) {
-            enlivedObjects.forEach(function(newObj) {
-              canvas.add(newObj);
-            });
-            canvas.renderAll();
-          });
-        });
-      }
-      // Add to history function
-      function addHistory() {
-        if (historyIndex < history.length - 1) {
-          // Limit history size
-          history = history.slice(0, historyIndex + 1);
-        }
-        // Clone the current canvas state
-        const currentState = canvas.getObjects().map(function(obj) {
-          return fabric.util.object.clone(obj); // Clone objects for history
-        });
-        history.push(currentState);
+      
+      
+      
+      // Attach event listeners to capture resizing actions and add them to history
+canvas.on('object:modified', function(event) {
+    // Capture the state of the canvas after resizing is complete
+    addHistory();
+});
+
+// Undo Functionality
+document.getElementById('undoButton').addEventListener('click', function() {
+    if (historyIndex > 0) {
+        historyIndex--;
+        restoreCanvasState(history[historyIndex]);
+    }
+});
+
+// Redo Functionality
+document.getElementById('redoButton').addEventListener('click', function() {
+    if (historyIndex < history.length - 1) {
         historyIndex++;
-        // Limit history length (for example, to the last 50 states)
-        if (history.length > 50) {
-          history.shift(); // Remove the oldest state
-          historyIndex--; // Adjust the index accordingly
-        }
-      }
+        restoreCanvasState(history[historyIndex]);
+    }
+});
+
+// Helper function to restore canvas state
+function restoreCanvasState(state) {
+    canvas.clear();
+    fabric.util.enlivenObjects(state, function(enlivenedObjects) {
+        enlivenedObjects.forEach(function(obj) {
+            canvas.add(obj);
+        });
+        canvas.renderAll();
+    });
+}
+
+// Add to history function with limiting
+function addHistory() {
+    if (historyIndex < history.length - 1) {
+        // Remove all redo states after the current state
+        history = history.slice(0, historyIndex + 1);
+    }
+
+    // Clone the current canvas state
+    const currentState = canvas.getObjects().map(function(obj) {
+        return fabric.util.object.clone(obj); // Deep clone objects for history
+    });
+
+    history.push(currentState);
+    historyIndex++;
+
+    // Limit history length (for example, to the last 50 states)
+    if (history.length > 50) {
+        history.shift(); // Remove the oldest state
+        historyIndex--; // Adjust the index accordingly
+    }
+}
+
+// Initial call to capture the starting state in history
+addHistory();
+
+
+
       
       // Flip Horizontally
 document.getElementById('flipHorizontal').addEventListener('click', function() {
@@ -843,6 +883,8 @@ document.getElementById('flipVertical').addEventListener('click', function() {
       
       
       // Function to load an image and scale it properly onto the canvas
+
+
 function loadImage(img) {
   const imgInstance = new fabric.Image(img);
   
@@ -871,11 +913,8 @@ function loadImage(img) {
   canvas.renderAll();
   addHistory(); // Add to history after adding an image
   updateLayerOptions(true);
+  imgInstance.dispose();
 }
-
-
-
-
 
 
 
@@ -967,6 +1006,7 @@ document.getElementById('downloadImage').addEventListener('click', async functio
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
+    resetCanvasState();
   };
   img.src = imageData;
 });
@@ -1140,6 +1180,19 @@ function addWatermark(ctx, canvas) {
         }
         contextMenu.style.display = 'none'; // Hide the context menu after action
       });
+      
+      
+      function detachImageFromCanvas(image) {
+    if (image) {
+        canvas.remove(image);
+        canvas.dispose(); // Dispose of unused canvas objects to free memory
+        canvas.renderAll();
+    }
+}
+
+      
+      
+      
       document.getElementById('detachBackground').addEventListener('click', function() {
   if (backgroundImage) {
     // Remove the background image from the canvas
@@ -1388,7 +1441,25 @@ document.getElementById('zoomSlider').addEventListener('input', function(event) 
 
     
     
+    function resetCanvasState() {
+    // Clear history
+    history = [];
+    historyIndex = -1;
     
+    // Remove background image and other states
+    canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+    backgroundImage = null;  // Reset any custom background image settings
+
+    // Retain only image objects on the canvas
+    const images = canvas.getObjects().filter(obj => obj.type === 'image');
+    canvas.clear(); // Clear everything from canvas
+    images.forEach(img => canvas.add(img)); // Re-add only images
+
+    // Clear selection and context menu visibility
+    canvas.discardActiveObject().renderAll();
+    contextMenu.style.display = 'none';
+}
+
       
       
       
