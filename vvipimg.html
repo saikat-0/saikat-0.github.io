@@ -480,7 +480,7 @@
                     loadImage(img); // Existing function to add the image to the canvas
                 } catch (error) {
                     console.error('Error adding image to canvas:', error);
-                    
+                    alert('Failed to add image to canvas. Please try again.');
                 }
             };
 
@@ -737,64 +737,51 @@
       
       
       
-      // Attach event listeners to capture resizing actions and add them to history
-canvas.on('object:modified', function(event) {
-    // Capture the state of the canvas after resizing is complete
-    addHistory();
-});
-
-// Undo Functionality
-document.getElementById('undoButton').addEventListener('click', function() {
-    if (historyIndex > 0) {
-        historyIndex--;
-        restoreCanvasState(history[historyIndex]);
-    }
-});
-
-// Redo Functionality
-document.getElementById('redoButton').addEventListener('click', function() {
-    if (historyIndex < history.length - 1) {
-        historyIndex++;
-        restoreCanvasState(history[historyIndex]);
-    }
-});
-
-// Helper function to restore canvas state
-function restoreCanvasState(state) {
-    canvas.clear();
-    fabric.util.enlivenObjects(state, function(enlivenedObjects) {
-        enlivenedObjects.forEach(function(obj) {
-            canvas.add(obj);
+      // Undo Functionality
+      document.getElementById('undoButton').addEventListener('click', function() {
+        if (historyIndex > 0) {
+          historyIndex--;
+          restoreCanvasState(history[historyIndex]);
+        }
+      });
+      // Redo Functionality
+      document.getElementById('redoButton').addEventListener('click', function() {
+        if (historyIndex < history.length - 1) {
+          historyIndex++;
+          restoreCanvasState(history[historyIndex]);
+        }
+      });
+      // Helper function to restore canvas state
+      function restoreCanvasState(state) {
+        canvas.clear();
+        state.forEach(function(item) {
+          // Re-create the fabric objects from the state
+          const obj = fabric.util.enlivenObjects([item], function(enlivedObjects) {
+            enlivedObjects.forEach(function(newObj) {
+              canvas.add(newObj);
+            });
+            canvas.renderAll();
+          });
         });
-        canvas.renderAll();
-    });
-}
-
-// Add to history function with limiting
-function addHistory() {
-    if (historyIndex < history.length - 1) {
-        // Remove all redo states after the current state
-        history = history.slice(0, historyIndex + 1);
-    }
-
-    // Clone the current canvas state
-    const currentState = canvas.getObjects().map(function(obj) {
-        return fabric.util.object.clone(obj); // Deep clone objects for history
-    });
-
-    history.push(currentState);
-    historyIndex++;
-
-    // Limit history length (for example, to the last 50 states)
-    if (history.length > 50) {
-        history.shift(); // Remove the oldest state
-        historyIndex--; // Adjust the index accordingly
-    }
-}
-
-// Initial call to capture the starting state in history
-addHistory();
-
+      }
+      // Add to history function
+      function addHistory() {
+        if (historyIndex < history.length - 1) {
+          // Limit history size
+          history = history.slice(0, historyIndex + 1);
+        }
+        // Clone the current canvas state
+        const currentState = canvas.getObjects().map(function(obj) {
+          return fabric.util.object.clone(obj); // Clone objects for history
+        });
+        history.push(currentState);
+        historyIndex++;
+        // Limit history length (for example, to the last 50 states)
+        if (history.length > 50) {
+          history.shift(); // Remove the oldest state
+          historyIndex--; // Adjust the index accordingly
+        }
+      }
 
 
       
@@ -920,96 +907,106 @@ function loadImage(img) {
 
 
 
-
-    // Function to create a Web Worker for size calculation
+// Function to create a Web Worker for size calculation
 const createWorker = () => {
-  const blob = new Blob([`
-    onmessage = function(e) {
-      const dataUrl = e.data.dataUrl;
-      const byteString = atob(dataUrl.split(',')[1]);
-      postMessage({ size: byteString.length });
-    }
-  `], { type: 'application/javascript' });
-  return new Worker(URL.createObjectURL(blob));
+    const workerScript = `
+        self.onmessage = async function(e) {
+            const { dataUrl } = e.data;
+            try {
+                const response = await fetch(dataUrl);
+                const blob = await response.blob();
+                postMessage({ size: blob.size });
+            } catch (error) {
+                postMessage({ error: error.message });
+            }
+        };
+    `;
+    const blob = new Blob([workerScript], { type: "application/javascript" });
+    return new Worker(URL.createObjectURL(blob));
 };
 
 // Enhanced adaptive binary search for best quality within size limit
-const adaptiveBinarySearch = async (canvas, maxFileSize, minQuality = 0.05, maxQuality = 1.0) => {
-  let lower = minQuality;
-  let upper = maxQuality;
-  let resultQuality = minQuality;
-  let step = 0.00001; // Ultra-fine steps for precision
+const adaptiveBinarySearch = async (canvas, maxFileSize, minQuality = 0.1, maxQuality = 1.0) => {
+    let lower = minQuality;
+    let upper = maxQuality;
+    let resultQuality = minQuality;
 
-  while (upper - lower > step) {
-    const midQuality = (lower + upper) / 2;
-    const dataUrl = canvas.toDataURL("image/webp", midQuality);
+    while (upper - lower > 0.01) {
+        const midQuality = (lower + upper) / 2;
+        const dataUrl = canvas.toDataURL("image/webp", midQuality);
+        
+        const size = await new Promise((resolve, reject) => {
+            const worker = createWorker();
+            worker.onmessage = (e) => {
+                if (e.data.error) {
+                    reject(new Error(e.data.error));
+                } else {
+                    resolve(e.data.size);
+                }
+                worker.terminate();
+            };
+            worker.onerror = (error) => {
+                reject(error);
+            };
+            worker.postMessage({ dataUrl });
+        }).catch(() => 0);
 
-    const size = await new Promise((resolve, reject) => {
-      const worker = createWorker();
-      worker.onmessage = (e) => {
-        resolve(e.data.size);
-        worker.terminate();
-      };
-      worker.onerror = (error) => {
-        console.error("Worker error during compression:", error);
-        worker.terminate();
-        reject(error);
-      };
-      worker.postMessage({ dataUrl });
-    }).catch(() => 0);
-
-    if (size <= maxFileSize) {
-      resultQuality = midQuality; // Save the optimal quality
-      lower = midQuality;
-    } else {
-      upper = midQuality;
+        if (size <= maxFileSize) {
+            resultQuality = midQuality; // Save the optimal quality
+            lower = midQuality;
+        } else {
+            upper = midQuality;
+        }
     }
-  }
-  return resultQuality;
+    return resultQuality;
 };
 
 // Function to compress image to highest quality under size limit
-const compressImage = async (canvas, maxFileSize = 50 * 1024) => {
-  const optimalQuality = await adaptiveBinarySearch(canvas, maxFileSize);
-  return canvas.toDataURL("image/webp", optimalQuality);
+const compressImage = async (canvas, maxFileSize = 75 * 1024) => {
+    const optimalQuality = await adaptiveBinarySearch(canvas, maxFileSize);
+    return canvas.toDataURL("image/webp", optimalQuality);
 };
 
 // Event listener for downloading the image
 document.getElementById('downloadImage').addEventListener('click', async function() {
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = 1200;
-  tempCanvas.height = 628;
-  const ctx = tempCanvas.getContext('2d');
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 1200; // Desired resolution
+    tempCanvas.height = 628;  // Desired resolution
+    const ctx = tempCanvas.getContext('2d');
 
-  const imageData = canvas.toDataURL("image/png", 1.0);
-  const img = new Image();
-  img.onload = async function() {
-    // Draw image with high-quality settings
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+    const imageData = canvas.toDataURL("image/png", 1.0);
+    const img = new Image();
+    img.onload = async function() {
+        // Set high-quality image smoothing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high"; // Improved quality setting
 
-    // Add caption if checked
-    const caption = document.getElementById('captionInput').value;
-    const showCaption = document.getElementById('captionCheckbox').checked;
-    if (showCaption && caption) addCaption(ctx, tempCanvas, caption);
+        // Draw image with high-quality settings
+        ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
 
-    // Add watermark if checked
-    const showWatermark = document.getElementById('watermarkCheckbox').checked;
-    if (showWatermark) addWatermark(ctx, tempCanvas);
+        // Optional: Add caption and watermark
+        const caption = document.getElementById('captionInput').value;
+        if (document.getElementById('captionCheckbox').checked && caption) {
+            addCaption(ctx, tempCanvas, caption);
+        }
+        if (document.getElementById('watermarkCheckbox').checked) {
+            addWatermark(ctx, tempCanvas);
+        }
 
-    // Compress and download the image
-    const downloadDataUrl = await compressImage(tempCanvas, 50 * 1024);
-    const downloadLink = document.createElement('a');
-    downloadLink.href = downloadDataUrl;
-    downloadLink.download = `VvipTimes_${caption.replace(/\s+/g, '_')}.webp`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    resetCanvasState();
-  };
-  img.src = imageData;
+        // Compress and download the image
+        const downloadDataUrl = await compressImage(tempCanvas, 50 * 1024); // Adjusted max file size
+        const downloadLink = document.createElement('a');
+        downloadLink.href = downloadDataUrl;
+        downloadLink.download = `VvipTimes_${caption.replace(/\s+/g, '_')}.webp`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        resetCanvasState();
+    };
+    img.src = imageData;
 });
+
+
 
 // Caption addition
 function addCaption(ctx, canvas, caption) {
@@ -1441,25 +1438,7 @@ document.getElementById('zoomSlider').addEventListener('input', function(event) 
 
     
     
-    function resetCanvasState() {
-    // Clear history
-    history = [];
-    historyIndex = -1;
     
-    // Remove background image and other states
-    canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
-    backgroundImage = null;  // Reset any custom background image settings
-
-    // Retain only image objects on the canvas
-    const images = canvas.getObjects().filter(obj => obj.type === 'image');
-    canvas.clear(); // Clear everything from canvas
-    images.forEach(img => canvas.add(img)); // Re-add only images
-
-    // Clear selection and context menu visibility
-    canvas.discardActiveObject().renderAll();
-    contextMenu.style.display = 'none';
-}
-
       
       
       
