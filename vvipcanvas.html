@@ -1,0 +1,1476 @@
+<style>
+  /* Root CSS Variables for Theme Colors and Styling */
+  :root {
+    --background-color: #292b2e;
+    --toolbar-color: #343a40;
+    --button-bg-color: #0ac990;
+    --button-hover-bg-color: #c96d0a;
+    --label-bg-color: #000000;
+    --label-hover-bg-color: #0056b3;
+    --canvas-border: #ccc;
+    --canvas-shadow: rgba(0, 0, 0, 0.2);
+    --transition-duration: 0.3s;
+    --transition-ease: cubic-bezier(0.25, 0.8, 0.25, 1);
+    --radius: 8px;
+  }
+
+  /* Basic Reset & Global Styles */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: var(--background-color);
+  }
+
+  /* Toolbar Styling with Flexbox */
+  .toolbar {
+    padding: 10px 15px;
+    background-color: var(--toolbar-color);
+    color: #fff;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: nowrap;
+    width: 100%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, .3);
+    border-bottom: 2px solid var(--button-bg-color);
+  }
+
+  /* Button & Label Styling */
+  button,
+  label {
+        padding: 10px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: background-color .3s, transform .3s, box-shadow .3s;
+        font-size: 18px;
+        text-align: center;
+        background-color: #495057
+      }
+
+      label {
+        background-color: var(--label-bg-color);
+        margin-right: 10px;
+      }
+
+      label:hover {
+        background-color: var(--label-hover-bg-color);
+        box-shadow: 0 4px 12px rgba(0, 86, 179, .5)
+      }
+      
+      
+        /* Input Field Styling */
+    .input-field {
+        width: auto; /* Set a fixed width or adjust as needed */
+        min-width: 300px; /* Minimum width */
+        max-width: 800px;
+        padding: 8px; /* Optional: padding for better appearance */
+        border: 1px solid var(--canvas-border); /* Optional: border styling */
+        border-radius: var(--radius); /* Use variable for consistent radius */
+        font-size: 15px; /* Consistent font size */
+        transition: border-color var(--transition-duration); /* Transition for border color on focus */
+    }
+    
+    .input-field:focus {
+        border-color: var(--label-bg-color); /* Change border color on focus */
+        outline: none; /* Remove default outline */
+        width: 800px;
+    }
+
+
+
+
+  button {
+    background-color: var(--button-bg-color);
+  }
+
+  button:hover {
+    background-color: var(--button-hover-bg-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, .5);
+  }
+
+  /* Canvas Container with Flexbox for Centering */
+  .canvas-container {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    position: relative;
+  }
+
+  /* Canvas with Smooth Shadows and Rounded Borders */
+  #imageCanvas {
+    border: 2px solid var(--canvas-border);
+    background-color: #fff;
+    cursor: crosshair;
+    box-shadow: 0 4px 12px var(--canvas-shadow);
+    border-radius: var(--radius);
+  }
+
+  /* Layer Options Styling with Grid */
+  .layer-options {
+    display: none;
+    gap: 15px;
+    margin: 10px 0;
+  }
+
+  .layer-options.active {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 15px;
+  }
+
+  /* Selection Outline */
+  .selected {
+    outline: 3px solid var(--label-bg-color);
+  }
+
+  /* Context Menu Styling with Glassmorphism Effect */
+  .context-menu {
+    position: absolute;
+    z-index: 100;
+    background: var(--toolbar-color);
+    backdrop-filter: var(--blur-effect);
+    border: 1px solid var(--glass-effect);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    display: none;
+    flex-direction: column;
+    padding: 10px;
+    transition: opacity var(--transition-duration) var(--transition-ease);
+  }
+
+  .context-menu-group {
+    border: 0.5px dashed rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 5px rgba(255, 192, 203, 0.2);
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px;
+    padding: 5px;
+  }
+
+  .context-menu-item {
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background-color var(--transition-duration) var(--transition-ease);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+  }
+
+  .context-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Icons within Context Menu */
+  .context-menu-item .icon {
+      
+    margin-right: 5px; /* Space between icon and text */
+    font-size: 16px; /* Adjust size for better visibility */
+  }
+
+  /* Responsive Toolbar */
+  @media (max-width: 600px) {
+    .toolbar {
+      flex-direction: column;
+      align-items: flex-start; /* Align items to the left on mobile */
+    }
+  }
+
+  /* Submenu Styling */
+  .submenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background: var(--toolbar-color);
+    backdrop-filter: var(--blur-effect);
+    border: 1px solid var(--canvas-border);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, .2);
+    z-index: 101;
+    border-radius: var(--radius);
+  }
+
+  .context-menu-item {
+    position: relative;
+  }
+
+  .context-menu-item:hover .submenu {
+    display: block;
+  }
+
+  /* Submenu Item Styling with Icons */
+  .submenu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color var(--transition-duration) var(--transition-ease);
+  }
+
+  .submenu-item:hover {
+    background-color: var(--background-color);
+  }
+
+  .submenu-item .icon {
+    margin-right: 5px; /* Space between icon and text */
+    font-size: 16px; /* Size of the icons */
+  }
+
+  /* Microinteractions for Panel Opening and Hover Effects */
+  .panel-open {
+    animation: panelFadeIn var(--transition-duration) var(--transition-ease) forwards;
+  }
+
+  /* Keyframes for Smooth Fade-In of Panels */
+  @keyframes panelFadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  
+  
+  .actions {
+    display: flex;                  /* Use Flexbox for layout */
+    justify-content: center;        /* Center items */
+    margin-top: -20px;               /* Space between the label and icons */
+    gap: 19px;                     /* Space between action icons */
+}
+
+.action-item {
+    display: flex;                 /* Make sure the icon is centered */
+    background: black;
+    color: white;
+    border: hidden;
+    box-shadow: 0 0 0 5px pink;
+      border-radius: 50px;
+    justify-content: center;       /* Center the icon */
+    align-items: center;           /* Align icon vertically */
+    cursor: pointer;               /* Change cursor on hover */
+    padding: 5px;                 /* Optio
+  
+</style>
+
+<style>
+
+/* Add neon variables */
+:root {
+  --neon-1: #00ffff;  /* Cyan */
+  --neon-2: #add8e6;  /* Light Blue */
+  --neon-3: #f0ffff;  /* Azure */
+  --neon-glow: rgba(173, 216, 230, 0.2); /* Light Blue Glow */
+}
+
+  /* Neon background overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      45deg,
+      var(--neon-1) 0%,
+      var(--neon-2) 50%,
+      var(--neon-3) 100%
+    );
+    opacity: 0.1;
+    z-index: -1;
+    animation: neonPulse 8s infinite;
+  }
+
+  /* Enhanced glow effects */
+  button, label {
+    box-shadow: 0 0 8px var(--neon-glow);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  button:hover, label:hover {
+    box-shadow: 0 0 15px var(--neon-1),
+               0 0 25px var(--neon-2),
+               0 4px 12px rgba(0, 0, 0, 0.3);
+    filter: brightness(1.1);
+  }
+
+  /* Animated neon pulse */
+  @keyframes neonPulse {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.15; }
+  }
+
+  /* Enhanced input focus */
+  .input-field:focus {
+    box-shadow: 0 0 15px var(--neon-3);
+    border-color: var(--neon-1);
+  }
+
+  /* Canvas glow */
+  #imageCanvas {
+    box-shadow: 0 0 30px var(--neon-glow);
+  }
+
+  /* Toolbar subtle glow */
+  .toolbar {
+    position: relative;
+  }
+  .toolbar::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, 
+      var(--neon-1),
+      var(--neon-2),
+      var(--neon-3)
+    );
+    opacity: 0.3;
+  }
+
+
+  /* Context Menu Neon Effects */
+  .context-menu {
+    border: 1px solid var(--neon-1);
+    background: linear-gradient(
+      145deg,
+      rgba(16, 18, 27, 0.95) 0%,
+      rgba(32, 34, 46, 0.95) 100%
+    );
+    box-shadow: 0 0 25px var(--neon-glow),
+                0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .context-menu-item {
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  .context-menu-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 15px var(--neon-glow);
+    transform: translateX(5px);
+  }
+
+  .context-menu-item::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    height: 60%;
+    width: 2px;
+    background: var(--neon-2);
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .context-menu-item:hover::before {
+    opacity: 1;
+    left: 0;
+  }
+
+  .context-menu-group {
+    border: 1px solid var(--neon-3);
+    box-shadow: 0 0 15px rgba(0, 255, 135, 0.1);
+    position: relative;
+  }
+
+  .context-menu-group::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      var(--neon-1) 50%,
+      transparent 100%
+    );
+  }
+
+  .submenu {
+    border: 1px solid var(--neon-2);
+    box-shadow: 0 0 25px rgba(255, 0, 255, 0.2);
+  }
+
+  .submenu-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 10px var(--neon-glow);
+  }
+
+  .action-item {
+    box-shadow: 0 0 0 3px var(--neon-2);
+    transition: all 0.3s ease;
+  }
+
+  .action-item:hover {
+    box-shadow: 0 0 0 5px var(--neon-1),
+               0 0 15px var(--neon-2);
+    transform: scale(1.1);
+  }
+
+  .context-menu-item .icon {
+    filter: drop-shadow(0 0 2px var(--neon-1));
+    color: var(--neon-3);
+  }
+
+  .context-menu-item span {
+    text-shadow: 0 0 5px var(--neon-glow);
+  }
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+
+
+<div class="toolbar">
+  <!-- Toolbar Section for Image Operations -->
+  <div class="toolbar-section" title="Upload Image">
+    <label for="uploadImage">
+      <i class="fas fa-upload icon"></i>
+    </label>
+    <input type="file" id="uploadImage" style="display: none;" accept="image/*">
+  </div>
+
+  <div class="toolbar-section" title="Download Image">
+    <button id="downloadImage">
+      <i class="fas fa-download icon"></i>
+    </button>
+  </div>
+
+  <!-- Toolbar Section for Undo/Redo -->
+  <div class="toolbar-section" title="Undo">
+    <button id="undoButton">
+      <i class="fas fa-undo icon"></i>
+    </button>
+  </div>
+  <div class="toolbar-section" title="Redo">
+    <button id="redoButton">
+      <i class="fas fa-redo icon"></i>
+    </button>
+  </div>
+
+  <!-- Toolbar Section for Caption and Watermark -->
+  
+  <div class="toolbar-section">
+    <input type="text" id="captionInput" placeholder="Caption..." class="input-field">
+    <label title="Show Caption">
+      
+      <input type="checkbox" id="captionCheckbox" class="checkbox" aria-label="Show Caption">
+      <i class="far fa-closed-captioning"></i>
+    </label>
+    <label title="Show Watermark">
+      <i class="fas fa-watermark icon"></i>
+      <input type="checkbox" id="watermarkCheckbox" class="checkbox" aria-label="Show Watermark">
+      <i class="fa-brands fa-wordpress"></i>
+
+    </label>
+  </div>
+
+  <!-- Toolbar Section for Zoom Control -->
+  <div class="toolbar-section" title="Zoom">
+    <input type="range" id="zoomSlider" min="0.5" max="3" step="0.005" value="1">
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div id="contextMenu" class="context-menu">
+    
+    <div class="context-menu-group">
+        <div class="context-menu-item" id="pasteImage" title="Paste">
+            <i class="fas fa-clipboard icon"></i>
+        </div>
+        <div class="context-menu-item" id="deleteLayerContext" title="Delete">
+            <i class="fas fa-trash icon"></i>
+        </div>
+        <div class="context-menu-item" id="duplicateLayer" title="Duplicate">
+            <i class="fas fa-copy icon"></i>
+        </div>
+    </div>
+  
+  <div class="context-menu-item" id="circularCropButton" title="Circular Crop">
+<i class="fas fa-circle-notch"></i>    
+    <span>Circular Crop</span>
+  </div>
+  
+  <div class="context-menu-item" id="layersMenu" title="Layers"> 
+    <i class="fas fa-layer-group icon"></i>
+    <div class="actions">
+        <div class="action-item" id="bringToFront" title="Bring to Front">
+            <i class="fas fa-arrow-up icon"></i>
+        </div>
+        <div class="action-item" id="sendToBack" title="Send to Back">
+            <i class="fas fa-arrow-down icon"></i>
+        </div>
+    </div>
+    
+</div>
+
+
+<!-- Grouped Flip and Rotate Items -->
+<div class="context-menu-group">
+    <div class="context-menu-item" id="flipMenu" title="Flip">
+        <b>Flip :- </b>
+    </div>
+    <div class="context-menu-item" id="flipHorizontal" title="Flip Horizontal">
+        <i class="fas fa-arrows-alt-h icon"></i>
+    </div>
+    <div class="context-menu-item" id="flipVertical" title="Flip Vertical">
+        <i class="fas fa-arrows-alt-v icon"></i>
+    </div>
+    <div class="context-menu-item" id="rotateLayer" title="Rotate">
+        <i class="fas fa-undo-alt icon"></i>
+    </div>
+</div>
+
+
+  
+  
+  
+  <div class="context-menu-group">
+        <div class="context-menu-item" id="alignMenu" title="Change Alignment">
+             <b>Align :- </b>
+        </div>
+       
+        <div class="context-menu-item" id="alignLeft" title="Align Left">
+            <i class="fas fa-align-left icon"></i>
+        </div>
+        <div class="context-menu-item" id="alignCenter" title="Align Center">
+            <i class="fas fa-align-center icon"></i>
+        </div>
+        <div class="context-menu-item" id="alignRight" title="Align Right">
+            <i class="fas fa-align-right icon"></i>
+        </div>
+        <div class="context-menu-item" id="resetTransform" title="Reset Alignment">
+            <i class="fa fa-refresh"></i>
+             <!-- Changed icon for clarity -->
+        </div>
+    </div>
+  
+  <div class="context-menu-item" id="setAsBackground" title="Set as Background">
+    <i class="fas fa-image icon"></i>
+    <span>Set as Background</span>
+  </div>
+  <div class="context-menu-item" id="detachBackground" style="display:none" title="Detach Background">
+    <i class="fas fa-object-group icon"></i>
+    <span>Detach Background</span>
+  </div>
+
+  
+
+  <div class="context-menu-item" id="filtersMenu">Filters
+    <div class="submenu" id="submenu">
+      <div class="submenu-item" id="grayscaleFilter">
+        <i class="fas fa-paint-brush icon"></i>
+        <span>Grayscale</span>
+      </div>
+      <div class="submenu-item">
+        <i class="fas fa-sun icon"></i>
+        <span>Brightness</span>
+        <input type="range" id="brightnessFilter" min="-50" max="50" value="0">
+      </div>
+      <div class="submenu-item">
+        <i class="fas fa-adjust icon"></i>
+        <span>Contrast</span>
+        <input type="range" id="contrastFilter" min="-50" max="50" value="0">
+      </div>
+      <div class="submenu-item">
+        <i class="fas fa-paint-brush icon"></i>
+        <span>Saturation</span>
+        <input type="range" id="saturationFilter" min="-100" max="100" value="0">
+      </div>
+      <div class="submenu-item">
+        <i class="fas fa-brush icon"></i>
+        <span>Blur</span>
+        <input type="range" id="blurFilter" min="0" max="1" step="0.01" value="0">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Canvas Container -->
+<div class="canvas-container" id="canvasContainer">
+  <canvas id="imageCanvas" width="800" height="418"></canvas>
+</div>
+
+
+<script>
+    
+    (() => {
+  // Initialize Fabric.js canvas with object stacking enabled
+  const canvas = new fabric.Canvas('imageCanvas', {
+    preserveObjectStacking: true
+  });
+
+  // Global Variables
+  let isCropping = false, cropCircle, cropRect;
+  let history = [];
+  let historyIndex = -1;
+  let backgroundImage = null;
+
+  // ---------------------------
+  // History Management
+  // ---------------------------
+  function addHistory() {
+    if (historyIndex < history.length - 1) {
+      history = history.slice(0, historyIndex + 1);
+    }
+    const currentState = canvas.getObjects().map(obj => fabric.util.object.clone(obj));
+    history.push(currentState);
+    historyIndex++;
+    if (history.length > 50) {
+      history.shift();
+      historyIndex--;
+    }
+  }
+
+  function restoreCanvasState(state) {
+    canvas.clear();
+    fabric.util.enlivenObjects(state, (enlivedObjects) => {
+      enlivedObjects.forEach(obj => canvas.add(obj));
+      canvas.renderAll();
+    });
+  }
+
+  // ---------------------------
+  // Image Loading & Upload
+  // ---------------------------
+  function loadImage(img) {
+    const imgInstance = new fabric.Image(img);
+    // Calculate scale factor to fit the canvas
+    const canvasAspect = canvas.width / canvas.height;
+    const imgAspect = img.width / img.height;
+    const scaleFactor = (canvasAspect > imgAspect) ? canvas.height / img.height : canvas.width / img.width;
+    imgInstance.set({
+      left: (canvas.width - img.width * scaleFactor) / 2,
+      top: (canvas.height - img.height * scaleFactor) / 2,
+      scaleX: scaleFactor,
+      scaleY: scaleFactor,
+      hasControls: true,
+      hasBorders: true,
+      selectable: true,
+    });
+    canvas.add(imgInstance).setActiveObject(imgInstance);
+    canvas.renderAll();
+    addHistory();
+  }
+  
+  document.getElementById('pasteImage').addEventListener('click', function() {
+        navigator.clipboard.read().then(items => {
+          for (const item of items) {
+            if (item.types.includes('image/png')) {
+              item.getType('image/png').then(blob => {
+                const img = new Image();
+                img.src = URL.createObjectURL(blob);
+                img.onload = function() {
+                  loadImage(img); // Assuming loadImage function is already handling adding image to canvas
+                };
+              });
+            }
+          }
+        });
+        contextMenu.style.display = 'none'; // Hide context menu after action
+      });
+
+  document.getElementById('uploadImage').addEventListener('change', async (e) => {
+    if (!e.target.files.length) {
+      alert('Please select an image file.');
+      return;
+    }
+    try {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          try {
+            loadImage(img);
+          } catch (error) {
+            console.error('Error adding image:', error);
+            alert('Failed to add image. Try again.');
+          }
+        };
+        img.onerror = () => {
+          console.error('Image failed to load');
+          alert('Unsupported or corrupted image.');
+        };
+      };
+      reader.onerror = () => {
+        console.error('Error reading file');
+        alert('Failed to read the file.');
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('An unexpected error occurred.');
+    }
+  });
+
+  // ---------------------------
+  // Drag & Drop
+  // ---------------------------
+  const canvasContainer = document.getElementById('canvasContainer');
+  canvasContainer.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+  canvasContainer.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => loadImage(img);
+      };
+      reader.readAsDataURL(files[0]);
+    } else {
+      alert('Please drop a valid image file.');
+    }
+  });
+
+  // ---------------------------
+  // Context Menu & Layer Options
+  // ---------------------------
+  const contextMenu = document.getElementById('contextMenu');
+  document.addEventListener('click', () => {
+    contextMenu.style.display = 'none';
+  });
+  canvasContainer.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    const activeObject = canvas.getActiveObject();
+    const canvasHasObjects = canvas.getObjects().length > 0;
+    const hasBackground = !!canvas.backgroundImage;
+    // Show or hide options based on state
+    document.getElementById('pasteImage').style.display = (!canvasHasObjects ? 'block' : 'block');
+    document.getElementById('setAsBackground').style.display = (activeObject && activeObject.type === 'image' ? 'block' : 'none');
+    document.getElementById('detachBackground').style.display = (hasBackground ? 'block' : 'none');
+    document.getElementById('layersMenu').style.display = (activeObject && activeObject.type === 'image' ? 'block' : 'none');
+    document.getElementById('flipMenu').style.display = (activeObject && activeObject.type === 'image' ? 'block' : 'none');
+    document.getElementById('rotateLayer').style.display = (activeObject && activeObject.type === 'image' ? 'block' : 'none');
+    document.getElementById('resetTransform').style.display = (activeObject && activeObject.type === 'image' ? 'block' : 'none');
+    document.getElementById('alignMenu').style.display = (activeObject && activeObject.type === 'image' ? 'block' : 'none');
+    document.getElementById('filtersMenu').style.display = (activeObject && activeObject.type === 'image' ? 'block' : 'none');
+    document.getElementById('circularCropButton').style.display = (activeObject && activeObject.type === 'image' ? 'block' : 'none');
+
+    contextMenu.style.left = `${e.clientX}px`;
+    contextMenu.style.top = `${e.clientY}px`;
+    contextMenu.style.display = 'block';
+  });
+
+  // Duplicate layer
+  document.getElementById('duplicateLayer').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      const clone = fabric.util.object.clone(activeObject);
+      clone.set({
+        left: activeObject.left + 10,
+        top: activeObject.top + 10,
+        selectable: true,
+      });
+      canvas.add(clone);
+      addHistory();
+    }
+    contextMenu.style.display = 'none';
+  });
+
+  // Delete layer from context menu
+  document.getElementById('deleteLayerContext').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      canvas.remove(activeObject);
+      addHistory();
+    }
+    contextMenu.style.display = 'none';
+  });
+
+  // Bring to front & Send to back
+  document.getElementById('bringToFront').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      canvas.bringToFront(activeObject);
+      addHistory();
+    }
+    contextMenu.style.display = 'none';
+  });
+  document.getElementById('sendToBack').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      canvas.sendToBack(activeObject);
+      addHistory();
+    }
+    contextMenu.style.display = 'none';
+  });
+
+  // ---------------------------
+  // Crop Functions
+  // ---------------------------
+  // Rectangular Crop (double-click)
+  canvas.on('mouse:dblclick', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === 'image') {
+      enterCropMode(activeObject);
+    }
+  });
+
+  function enterCropMode(image) {
+    if (isCropping) return;
+    isCropping = true;
+    cropRect = new fabric.Rect({
+      left: image.left,
+      top: image.top,
+      width: image.width * image.scaleX,
+      height: image.height * image.scaleY,
+      fill: 'rgba(0,0,0,0.3)',
+      hasBorders: true,
+      hasControls: true,
+      selectable: true,
+    });
+    canvas.add(cropRect);
+    canvas.setActiveObject(cropRect);
+    canvas.renderAll();
+
+    const cropButton = document.createElement('button');
+    cropButton.innerText = 'Crop';
+    cropButton.style.position = 'absolute';
+    cropButton.style.top = '10px';
+    cropButton.style.right = '10px';
+    document.body.appendChild(cropButton);
+    cropButton.addEventListener('click', () => {
+      cropImage(image);
+      document.body.removeChild(cropButton);
+    });
+  }
+
+  function cropImage(image) {
+    if (!cropRect) return;
+    const croppedLeft = cropRect.left - image.left;
+    const croppedTop = cropRect.top - image.top;
+    const croppedWidth = cropRect.width * cropRect.scaleX;
+    const croppedHeight = cropRect.height * cropRect.scaleY;
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = croppedWidth;
+    croppedCanvas.height = croppedHeight;
+    const croppedCtx = croppedCanvas.getContext('2d');
+    croppedCtx.drawImage(
+      image._element,
+      croppedLeft / image.scaleX,
+      croppedTop / image.scaleY,
+      croppedWidth / image.scaleX,
+      croppedHeight / image.scaleY,
+      0,
+      0,
+      croppedWidth,
+      croppedHeight
+    );
+    const croppedImg = new Image();
+    croppedImg.src = croppedCanvas.toDataURL();
+    croppedImg.onload = () => {
+      const newImage = new fabric.Image(croppedImg);
+      newImage.set({
+        left: image.left,
+        top: image.top,
+        scaleX: image.scaleX,
+        scaleY: image.scaleY,
+        hasControls: true,
+        hasBorders: true,
+      });
+      canvas.remove(image);
+      canvas.add(newImage);
+      canvas.setActiveObject(newImage);
+      canvas.renderAll();
+      addHistory();
+    };
+    canvas.remove(cropRect);
+    isCropping = false;
+    cropRect = null;
+  }
+
+  // Circular Crop
+  document.getElementById('circularCropButton').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === 'image') {
+      enterCircularCropMode(activeObject);
+    }
+  });
+
+  function enterCircularCropMode(image) {
+    if (isCropping) return;
+    isCropping = true;
+    const centerX = image.left + (image.width * image.scaleX) / 2;
+    const centerY = image.top + (image.height * image.scaleY) / 2;
+    const radius = Math.min(image.width * image.scaleX, image.height * image.scaleY) / 2;
+    cropCircle = new fabric.Circle({
+      left: centerX - radius,
+      top: centerY - radius,
+      radius: radius,
+      fill: 'rgba(0,0,0,0.3)',
+      hasBorders: true,
+      hasControls: true,
+      selectable: true,
+    });
+    canvas.add(cropCircle);
+    canvas.setActiveObject(cropCircle);
+    canvas.renderAll();
+
+    const cropButton = document.createElement('button');
+    cropButton.innerText = 'Crop';
+    cropButton.style.position = 'absolute';
+    cropButton.style.top = '10px';
+    cropButton.style.right = '10px';
+    document.body.appendChild(cropButton);
+    cropButton.addEventListener('click', () => {
+      cropCircleImage(image);
+      document.body.removeChild(cropButton);
+    });
+  }
+
+  function cropCircleImage(image) {
+    if (!cropCircle) return;
+    const cropRadius = cropCircle.radius * cropCircle.scaleX;
+    const circleCenterX = cropCircle.left + cropRadius;
+    const circleCenterY = cropCircle.top + cropRadius;
+    const diameter = cropRadius * 2;
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = diameter;
+    croppedCanvas.height = diameter;
+    const croppedCtx = croppedCanvas.getContext('2d');
+    croppedCtx.beginPath();
+    croppedCtx.arc(cropRadius, cropRadius, cropRadius, 0, Math.PI * 2, false);
+    croppedCtx.clip();
+    const imageLeftOffset = (circleCenterX - cropRadius - image.left) / image.scaleX;
+    const imageTopOffset = (circleCenterY - cropRadius - image.top) / image.scaleY;
+    croppedCtx.drawImage(
+      image._element,
+      imageLeftOffset,
+      imageTopOffset,
+      diameter / image.scaleX,
+      diameter / image.scaleY,
+      0,
+      0,
+      diameter,
+      diameter
+    );
+    const croppedImg = new Image();
+    croppedImg.src = croppedCanvas.toDataURL();
+    croppedImg.onload = () => {
+      const newImage = new fabric.Image(croppedImg, {
+        left: image.left + (circleCenterX - cropRadius - image.left),
+        top: image.top + (circleCenterY - cropRadius - image.top),
+        hasControls: true,
+        hasBorders: true,
+        selectable: true
+      });
+      canvas.remove(image);
+      canvas.add(newImage);
+      canvas.setActiveObject(newImage);
+      canvas.renderAll();
+      addHistory();
+    };
+    canvas.remove(cropCircle);
+    cropCircle = null;
+    isCropping = false;
+  }
+
+  // ---------------------------
+  // Undo / Redo Functionality
+  // ---------------------------
+  document.getElementById('undoButton').addEventListener('click', () => {
+    if (historyIndex > 0) {
+      historyIndex--;
+      restoreCanvasState(history[historyIndex]);
+    }
+  });
+  document.getElementById('redoButton').addEventListener('click', () => {
+    if (historyIndex < history.length - 1) {
+      historyIndex++;
+      restoreCanvasState(history[historyIndex]);
+    }
+  });
+
+  // ---------------------------
+  // Transformations: Flip, Rotate, Align, Reset
+  // ---------------------------
+  document.getElementById('flipHorizontal').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      activeObject.set({ scaleX: -activeObject.scaleX });
+      activeObject.setCoords();
+      canvas.renderAll();
+      addHistory();
+    }
+    contextMenu.style.display = 'none';
+  });
+  document.getElementById('flipVertical').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      activeObject.set({ scaleY: -activeObject.scaleY });
+      activeObject.setCoords();
+      canvas.renderAll();
+      addHistory();
+    }
+    contextMenu.style.display = 'none';
+  });
+  document.getElementById('rotateLayer').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      activeObject.angle = (activeObject.angle + 90) % 360;
+      canvas.renderAll();
+      addHistory();
+    }
+    contextMenu.style.display = 'none';
+  });
+  document.getElementById('resetTransform').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      activeObject.set({ scaleX: 1, scaleY: 1, angle: 0, left: 0, top: 0 });
+      addHistory();
+      canvas.renderAll();
+    }
+  });
+  document.getElementById('alignLeft').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      activeObject.set('left', 0);
+      canvas.renderAll();
+      addHistory();
+    }
+  });
+  document.getElementById('alignCenter').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      activeObject.set('left', (canvas.width - activeObject.width) / 2);
+      canvas.renderAll();
+      addHistory();
+    }
+  });
+  document.getElementById('alignRight').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      activeObject.set('left', canvas.width - activeObject.width);
+      canvas.renderAll();
+      addHistory();
+    }
+  });
+
+  // ---------------------------
+  // Download: Caption, Watermark, Compression
+  // ---------------------------
+  function addCaption(ctx, canvasElem, caption) {
+    ctx.font = "500 22px Arial";
+    ctx.fillStyle = "black";
+    ctx.globalAlpha = 0.7;
+    const textMetrics = ctx.measureText(caption);
+    const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10, 15);
+    } else {
+      ctx.rect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10);
+    }
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(caption, canvasElem.width / 2, canvasElem.height - (textHeight / 2 + 5));
+  }
+
+  function addWatermark(ctx, canvasElem) {
+    const padding = 5;
+    ctx.font = "700 24px Arial";
+    ctx.fillStyle = "#010642";
+    ctx.globalAlpha = 0.77;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(canvasElem.width - 150 - padding, padding, 150, 36, 50);
+    } else {
+      ctx.rect(canvasElem.width - 150 - padding, padding, 150, 36);
+    }
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("VvipTimes", canvasElem.width - 75 - padding, padding + 18);
+  }
+
+  function createWorker() {
+    const workerScript = `
+      self.onmessage = async function(e) {
+        const { dataUrl } = e.data;
+        try {
+          const response = await fetch(dataUrl);
+          const blob = await response.blob();
+          postMessage({ size: blob.size });
+        } catch (error) {
+          postMessage({ error: error.message });
+        }
+      };
+    `;
+    const blob = new Blob([workerScript], { type: "application/javascript" });
+    return new Worker(URL.createObjectURL(blob));
+  }
+
+  async function adaptiveBinarySearch(canvasElem, maxFileSize, minQuality = 0.1, maxQuality = 1.0) {
+    let lower = minQuality, upper = maxQuality, resultQuality = minQuality;
+    while (upper - lower > 0.01) {
+      const midQuality = (lower + upper) / 2;
+      const dataUrl = canvasElem.toDataURL("image/webp", midQuality);
+      const size = await new Promise((resolve, reject) => {
+        const worker = createWorker();
+        worker.onmessage = (e) => {
+          if (e.data.error) reject(new Error(e.data.error));
+          else resolve(e.data.size);
+          worker.terminate();
+        };
+        worker.onerror = (error) => reject(error);
+        worker.postMessage({ dataUrl });
+      }).catch(() => 0);
+      if (size <= maxFileSize) {
+        resultQuality = midQuality;
+        lower = midQuality;
+      } else {
+        upper = midQuality;
+      }
+    }
+    return resultQuality;
+  }
+
+  async function compressImage(canvasElem, maxFileSize = 75 * 1024) {
+    const optimalQuality = await adaptiveBinarySearch(canvasElem, maxFileSize);
+    return canvasElem.toDataURL("image/webp", optimalQuality);
+  }
+
+  document.getElementById('downloadImage').addEventListener('click', async () => {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = 1200;
+    tempCanvas.height = 628;
+    const ctx = tempCanvas.getContext('2d');
+    const imageData = canvas.toDataURL("image/png", 1.0);
+    const img = new Image();
+    img.onload = async () => {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+      const caption = document.getElementById('captionInput').value;
+      if (document.getElementById('captionCheckbox').checked && caption) {
+        addCaption(ctx, tempCanvas, caption);
+      }
+      if (document.getElementById('watermarkCheckbox').checked) {
+        addWatermark(ctx, tempCanvas);
+      }
+      const downloadDataUrl = await compressImage(tempCanvas, 50 * 1024);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = downloadDataUrl;
+      downloadLink.download = `VvipTimes_${caption.replace(/\s+/g, '_')}.webp`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    };
+    img.src = imageData;
+  });
+
+  // ---------------------------
+  // Background Setting & Detachment
+  // ---------------------------
+  document.getElementById('setAsBackground').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject && activeObject.type === 'image') {
+      const img = new Image();
+      img.src = activeObject.toDataURL();
+      img.onload = () => {
+        const canvasWidth = 800, canvasHeight = 418;
+        const outputWidth = 1200, outputHeight = 628;
+        const imgRatio = img.width / img.height;
+        const outputRatio = outputWidth / outputHeight;
+        let drawWidth, drawHeight;
+        if (imgRatio > outputRatio) {
+          drawWidth = outputWidth;
+          drawHeight = outputWidth / imgRatio;
+        } else {
+          drawHeight = outputHeight;
+          drawWidth = outputHeight * imgRatio;
+        }
+        canvas.setDimensions({ width: canvasWidth, height: canvasHeight });
+        canvas.setBackgroundImage(img.src, canvas.renderAll.bind(canvas), {
+          originX: 'left',
+          originY: 'top',
+          left: (canvasWidth - drawWidth) / 2,
+          top: (canvasHeight - drawHeight) / 2,
+          scaleX: drawWidth / img.width,
+          scaleY: drawHeight / img.height
+        });
+        backgroundImage = activeObject;
+        canvas.remove(activeObject);
+        document.getElementById('setAsBackground').style.display = 'none';
+        document.getElementById('detachBackground').style.display = 'block';
+        addHistory();
+      };
+    }
+    contextMenu.style.display = 'none';
+  });
+
+  document.getElementById('detachBackground').addEventListener('click', () => {
+    if (backgroundImage) {
+      canvas.setBackgroundImage(null, canvas.renderAll.bind(canvas));
+      const originalImg = new Image();
+      originalImg.src = backgroundImage.toDataURL();
+      originalImg.onload = () => {
+        const imgInstance = new fabric.Image(originalImg, {
+          left: (canvas.width - originalImg.width) / 2,
+          top: (canvas.height - originalImg.height) / 2,
+          selectable: true,
+          hasControls: true,
+          hasBorders: true
+        });
+        canvas.add(imgInstance);
+        canvas.setActiveObject(imgInstance);
+        canvas.renderAll();
+        backgroundImage = null;
+        document.getElementById('setAsBackground').style.display = 'block';
+        document.getElementById('detachBackground').style.display = 'none';
+        addHistory();
+      };
+    }
+    contextMenu.style.display = 'none';
+  });
+
+  // ---------------------------
+  // Robust Filter Functions (with Blur!)
+  // ---------------------------
+  const brightnessSlider = document.getElementById('brightnessFilter');
+  const contrastSlider = document.getElementById('contrastFilter');
+  const saturationSlider = document.getElementById('saturationFilter');
+  const blurSlider = document.getElementById('blurFilter'); // Ensure this exists in your HTML!
+  const grayscaleButton = document.getElementById('grayscaleFilter');
+
+  function applyFilters() {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      activeObject.filters = [];
+      const brightnessValue = parseFloat(brightnessSlider.value) / 100;
+      activeObject.filters.push(new fabric.Image.filters.Brightness({ brightness: brightnessValue }));
+      const contrastValue = parseFloat(contrastSlider.value) / 100;
+      activeObject.filters.push(new fabric.Image.filters.Contrast({ contrast: contrastValue }));
+      const saturationValue = parseFloat(saturationSlider.value) / 100;
+      activeObject.filters.push(new fabric.Image.filters.Saturation({ saturation: saturationValue }));
+      if (blurSlider && parseFloat(blurSlider.value) > 0) {
+        activeObject.filters.push(new fabric.Image.filters.Blur({ blur: parseFloat(blurSlider.value) }));
+      }
+      activeObject.applyFilters();
+      canvas.renderAll();
+      addHistory();
+    }
+  }
+
+  brightnessSlider.addEventListener('input', applyFilters);
+  contrastSlider.addEventListener('input', applyFilters);
+  saturationSlider.addEventListener('input', applyFilters);
+  if (blurSlider) {
+    blurSlider.addEventListener('input', applyFilters);
+  }
+  grayscaleButton.addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      activeObject.filters = [];
+      activeObject.filters.push(new fabric.Image.filters.Grayscale());
+      activeObject.applyFilters();
+      canvas.renderAll();
+      addHistory();
+    }
+  });
+
+  // ---------------------------
+  // Fixed Backspace/Delete Handler (avoid deleting while typing)
+  // ---------------------------
+  document.addEventListener('keydown', (event) => {
+    const tag = event.target.tagName.toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+      event.preventDefault();
+      const activeObject = canvas.getActiveObject();
+      if (activeObject) {
+        canvas.remove(activeObject);
+        addHistory();
+        canvas.renderAll();
+      }
+    }
+  });
+
+  // ---------------------------
+  // Visual Enhancements & Selection Styles
+  // ---------------------------
+  const CORNER_COLOR = 'rgba(75, 0, 130, 0.9)';
+  const CORNER_STROKE_COLOR = 'indigo';
+  const CORNER_STYLE = 'circle';
+  const CORNER_STROKE_WIDTH = 2;
+  const CORNER_SIZE = 20;
+  const SHADOW_COLOR = 'rgba(75, 0, 130, 0.9)';
+  const SHADOW_BLUR = 30;
+  const SHADOW_OFFSET_X = 5;
+  const SHADOW_OFFSET_Y = 5;
+  const DASHED_BORDER = [6, 8];
+
+  fabric.Object.prototype.cornerColor = CORNER_COLOR;
+  fabric.Object.prototype.cornerStrokeColor = CORNER_STROKE_COLOR;
+  fabric.Object.prototype.cornerStyle = CORNER_STYLE;
+  fabric.Object.prototype.cornerStrokeWidth = CORNER_STROKE_WIDTH;
+  fabric.Object.prototype.corners = {
+    tl: { x: -12, y: -12 },
+    tr: { x: 12, y: -12 },
+    bl: { x: -12, y: 12 },
+    br: { x: 12, y: 12 }
+  };
+  fabric.Object.prototype._renderCorners = function(ctx) {
+    ctx.save();
+    ctx.fillStyle = this.cornerColor;
+    ctx.strokeStyle = this.cornerStrokeColor;
+    ctx.lineWidth = this.cornerStrokeWidth;
+    Object.entries(this.corners).forEach(([key, { x, y }]) => {
+      ctx.beginPath();
+      ctx.arc(this.left + x + this.width / 2, this.top + y + this.height / 2, CORNER_SIZE, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.closePath();
+    });
+    ctx.restore();
+  };
+
+  function setImageStyles(obj, styles) {
+    if (!obj || obj.type !== 'image') return;
+    obj.set({
+      borderColor: styles.borderColor || '',
+      borderDashArray: styles.borderDashArray || null,
+      cornerColor: styles.cornerColor || '',
+      cornerStrokeColor: styles.cornerStrokeColor || '',
+      shadow: styles.shadow || null,
+      opacity: styles.opacity !== undefined ? styles.opacity : 1,
+      selectable: true,
+      evented: true,
+      padding: 3,
+    });
+  }
+
+  function enhanceSelectedImages() {
+    const activeObjects = canvas.getActiveObjects();
+    activeObjects.forEach(obj => {
+      if (obj.type === 'image') {
+        setImageStyles(obj, {
+          borderColor: 'rgba(75, 0, 130, 0.9)',
+          borderDashArray: DASHED_BORDER,
+          cornerColor: 'rgba(75, 0, 130, 1)',
+          shadow: new fabric.Shadow({
+            color: SHADOW_COLOR,
+            blur: SHADOW_BLUR,
+            offsetX: SHADOW_OFFSET_X,
+            offsetY: SHADOW_OFFSET_Y
+          })
+        });
+      }
+    });
+    canvas.renderAll();
+  }
+
+  canvas.on('selection:created', enhanceSelectedImages);
+  canvas.on('selection:updated', enhanceSelectedImages);
+  canvas.on('selection:cleared', () => {
+    canvas.getObjects().forEach(obj => {
+      if (obj.type === 'image') {
+        setImageStyles(obj, {
+          borderColor: '',
+          borderDashArray: null,
+          cornerColor: '',
+          cornerStrokeColor: '',
+          shadow: null,
+          opacity: 1,
+        });
+      }
+    });
+    canvas.renderAll();
+  });
+
+  canvas.on('mouse:over', (event) => {
+    if (event.target && event.target.type === 'image') {
+      event.target.set('shadow', new fabric.Shadow({
+        color: SHADOW_COLOR,
+        blur: 25,
+        offsetX: 0,
+        offsetY: 0,
+      }));
+      canvas.renderAll();
+    }
+  });
+  canvas.on('mouse:out', (event) => {
+    if (event.target && event.target.type === 'image') {
+      event.target.set('shadow', null);
+      canvas.renderAll();
+    }
+  });
+
+  // ---------------------------
+  // Zoom Functionality
+  // ---------------------------
+  function zoomCanvas(scale) {
+    const container = document.getElementById('canvasContainer');
+    container.style.transform = `scale(${scale})`;
+    container.style.transformOrigin = 'top left';
+  }
+
+  document.getElementById('zoomSlider').addEventListener('input', (event) => {
+    zoomCanvas(event.target.value);
+  });
+})();
+
+    
+</script>
