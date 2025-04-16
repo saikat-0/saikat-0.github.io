@@ -1142,7 +1142,7 @@
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("VvipTimes", canvasElem.width - 75 - padding, padding + 18);
+    ctx.fillText("Top K-News", canvasElem.width - 75 - padding, padding + 18);
   }
 
   function createWorker() {
@@ -1210,10 +1210,10 @@
       if (document.getElementById('watermarkCheckbox').checked) {
         addWatermark(ctx, tempCanvas);
       }
-      const downloadDataUrl = await compressImage(tempCanvas, 50 * 1024);
+      const downloadDataUrl = await compressImage(tempCanvas, 40 * 1024);
       const downloadLink = document.createElement('a');
       downloadLink.href = downloadDataUrl;
-      downloadLink.download = `VvipTimes_${caption.replace(/\s+/g, '_')}.webp`;
+      downloadLink.download = `TopKnews_${caption.replace(/\s+/g, '_')}.webp`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
