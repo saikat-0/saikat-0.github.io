@@ -423,7 +423,7 @@
       addCaption(ctx, canvas, captionInput.value);
     }
 
-    const dataUrl = await compressImage(canvas, 50 * 1024, "image/webp");
+    const dataUrl = await compressImage(canvas, 40 * 1024, "image/webp");
     downloadImage(dataUrl);
   } catch (error) {
     console.error("Error creating collage:", error);
@@ -901,7 +901,7 @@ compressImages(canvases).then((compressedImages) => {
         function downloadImage(dataUrl) {
           const link = document.createElement("a");
           link.href = dataUrl;
-          link.download = `VvipTimes_${captionInput.value.replace(/\s+/g, '_')}.webp`;
+          link.download = `${captionInput.value.replace(/\s+/g, '_')}.webp`;
           link.click();
         }
       });
