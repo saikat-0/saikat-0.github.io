@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Vvip Times Multi Image Creator Pro ++ (Enhanced)</title>
+    <title>Multi Image Creator Pro ++ (Enhanced)</title>
     <style>
       body {
         font-family: 'Segoe UI', sans-serif;
@@ -237,8 +237,8 @@
         caption: '',
         loading: false,
         notification: '',
-        showWatermark: true,  // Add this line
-        showCaption: true,   
+        showWatermark: false,  // Add this line
+        showCaption: false,   
       };
 
       const reducer = (state, action) => {
@@ -412,7 +412,7 @@ case 'TOGGLE_CAPTION':
 
     const link = document.createElement('a');
     link.href = canvas.toDataURL('image/webp');
-    link.download = `VvipTimes_.webp`;
+    link.download = `${captionInput.value.replace(/\s+/g, '_')}.webp`;
     link.click();
   } catch (error) {
     showNotification('Error generating image.', 'error');
