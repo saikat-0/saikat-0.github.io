@@ -375,7 +375,7 @@
 
     const link = document.createElement('a');
     link.href = canvas.toDataURL('image/webp');
-    link.download = `VvipTimes_.webp`;
+    link.download = `${captionInput.value.replace(/\s+/g, '_')}.webp`;
     link.click();
   } catch (error) {
     showNotification('Error generating image.', 'error');
