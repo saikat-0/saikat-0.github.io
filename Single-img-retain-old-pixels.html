@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vvip Single Image Converter Ultimate</title>
+    <title> Single Image Converter Ultimate</title>
     <style>
       body {
         font-family: "Segoe UI", sans-serif;
@@ -455,7 +455,7 @@
             }
 
             async function compressAndDownloadImage(canvas) {
-                const maxFileSize = 50 * 1024; // 50 KB
+                const maxFileSize = 40 * 1024; // 50 KB
                 let quality = 1.0; // Start with high quality
                 const minQuality = 0.5;
                 let blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", quality));
@@ -466,7 +466,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = "image.webp";
+                a.download = `${captionInput.value.replace(/\s+/g, '_')}.webp`;
                 a.click();
                 URL.revokeObjectURL(url);
                 showNotification("Image downloaded successfully!", "success");
