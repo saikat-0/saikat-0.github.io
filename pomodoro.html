@@ -19,6 +19,7 @@
             --sougata: #f8961e;
             --work-timer: #4aad52;
             --break-timer: #f94144;
+            --failed: #e63946;
         }
         
         * {
@@ -384,14 +385,17 @@
             transition: all 0.3s;
         }
         
+        .task-item.completed {
+            border-left-color: var(--work-timer);
+        }
+        
+        .task-item.failed {
+            border-left-color: var(--failed);
+        }
+        
         .task-item:hover {
             background: rgba(29, 53, 87, 0.9);
             transform: translateX(5px);
-        }
-        
-        .task-item.completed {
-            border-left-color: var(--work-timer);
-            opacity: 0.7;
         }
         
         .task-check {
@@ -608,6 +612,184 @@
             from { width: 100%; }
             to { width: 0; }
         }
+        
+        /* Pomodoro History */
+        .pomodoro-history {
+            margin-top: 15px;
+        }
+        
+        .history-item {
+            background: rgba(29, 53, 87, 0.6);
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-date {
+            font-weight: 500;
+            min-width: 100px;
+        }
+        
+        .history-stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .work-stat, .break-stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .work-stat i {
+            color: var(--work-timer);
+        }
+        
+        .break-stat i {
+            color: var(--break-timer);
+        }
+        
+        /* Analytics Section */
+        .analytics-section {
+            margin-top: 30px;
+            padding: 0 30px 30px;
+        }
+        
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 992px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .analytics-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(67, 97, 238, 0.2);
+        }
+        
+        .analytics-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(76, 201, 240, 0.3);
+        }
+        
+        .analytics-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .analytics-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .task-analytics {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .task-stat {
+            text-align: center;
+        }
+        
+        .task-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .completed-stat {
+            color: var(--work-timer);
+        }
+        
+        .failed-stat {
+            color: var(--failed);
+        }
+        
+        .pending-stat {
+            color: var(--primary);
+        }
+        
+        .chart-container {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 20px 0;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: var(--primary);
+            border-radius: 5px 5px 0 0;
+            position: relative;
+        }
+        
+        .chart-label {
+            text-align: center;
+            font-size: 0.85rem;
+            padding-top: 5px;
+        }
+        
+        .work-bar {
+            background: linear-gradient(to top, var(--work-timer), #2a9d8f);
+        }
+        
+        .break-bar {
+            background: linear-gradient(to top, var(--break-timer), #e63946);
+        }
+        
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .history-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .clear-history {
+            background: rgba(247, 37, 133, 0.2);
+            border: 1px solid var(--warning);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        
+        .clear-history:hover {
+            background: var(--warning);
+        }
     </style>
 </head>
 <body>
@@ -781,6 +963,18 @@
                     </div>
                 </div>
                 
+                <!-- Pomodoro History -->
+                <div class="panel">
+                    <div class="history-header">
+                        <h2 class="history-title"><i class="fas fa-history"></i> Pomodoro History</h2>
+                        <button class="clear-history" id="clearHistoryBtn">Clear</button>
+                    </div>
+                    
+                    <div class="pomodoro-history" id="pomodoroHistory">
+                        <!-- History items will be added here dynamically -->
+                    </div>
+                </div>
+                
                 <!-- Notification Panel -->
                 <div class="panel">
                     <div class="panel-header">
@@ -788,47 +982,67 @@
                     </div>
                     
                     <div class="task-list" id="notificationList">
-                        <div class="task-item">
-                            <div class="task-content">
-                                <div class="task-title">
-                                    <i class="fas fa-check-circle" style="color: #4aad52;"></i>
-                                    Break Time Completed
-                                    <span class="task-category">Pomodoro</span>
-                                </div>
-                                <div class="task-info">
-                                    <span><i class="far fa-clock"></i> 2:15 PM</span>
-                                    <span>Your break session has ended</span>
-                                </div>
+                        <!-- Notifications will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics Section -->
+        <div class="analytics-section">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fas fa-chart-pie"></i> Productivity Analytics</h2>
+                </div>
+                
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <div class="analytics-header">
+                            <i class="fas fa-tasks" style="color: var(--success);"></i>
+                            <h3 class="analytics-title">Task Completion</h3>
+                        </div>
+                        <div class="task-analytics">
+                            <div class="task-stat">
+                                <div class="task-stat-value completed-stat" id="completedTasks">0</div>
+                                <div>Completed</div>
+                            </div>
+                            <div class="task-stat">
+                                <div class="task-stat-value failed-stat" id="failedTasks">0</div>
+                                <div>Failed</div>
+                            </div>
+                            <div class="task-stat">
+                                <div class="task-stat-value pending-stat" id="pendingTasks">0</div>
+                                <div>Pending</div>
                             </div>
                         </div>
-                        
-                        <div class="task-item">
-                            <div class="task-content">
-                                <div class="task-title">
-                                    <i class="fas fa-exclamation-circle" style="color: #f8961e;"></i>
-                                    Shift 2 Starting Soon
-                                    <span class="task-category">Schedule</span>
-                                </div>
-                                <div class="task-info">
-                                    <span><i class="far fa-clock"></i> 2:45 PM</span>
-                                    <span>Shift 2 begins at 3:00 PM</span>
-                                </div>
-                            </div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <div class="analytics-header">
+                            <i class="fas fa-clock" style="color: var(--work-timer);"></i>
+                            <h3 class="analytics-title">Focus Time</h3>
                         </div>
-                        
-                        <div class="task-item">
-                            <div class="task-content">
-                                <div class="task-title">
-                                    <i class="fas fa-check-circle" style="color: #4aad52;"></i>
-                                    Article Drafted
-                                    <span class="task-category">K-pop</span>
-                                </div>
-                                <div class="task-info">
-                                    <span><i class="far fa-clock"></i> 1:30 PM</span>
-                                    <span>"BTS Announces New Album" completed</span>
-                                </div>
-                            </div>
+                        <div class="analytics-value" id="totalFocusTime">0h 0m</div>
+                        <div class="stat-label">Today's Work Time</div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <div class="analytics-header">
+                            <i class="fas fa-coffee" style="color: var(--break-timer);"></i>
+                            <h3 class="analytics-title">Break Time</h3>
                         </div>
+                        <div class="analytics-value" id="totalBreakTime">0h 0m</div>
+                        <div class="stat-label">Today's Break Time</div>
+                    </div>
+                </div>
+                
+                <div class="analytics-card mt-4">
+                    <div class="analytics-header">
+                        <i class="fas fa-chart-bar" style="color: var(--primary);"></i>
+                        <h3 class="analytics-title">Weekly Focus Trend</h3>
+                    </div>
+                    <div class="chart-container" id="focusChart">
+                        <!-- Chart bars will be added here dynamically -->
                     </div>
                 </div>
             </div>
@@ -850,653 +1064,1043 @@
     
     <script>
         // DOM Elements
-const loginScreen = document.getElementById('loginScreen');
-const dashboard = document.getElementById('dashboard');
-const userButtons = document.querySelectorAll('.user-btn');
-const confirmBtn = document.getElementById('confirmBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-const userBadge = document.getElementById('userBadge');
-const taskList = document.getElementById('taskList');
-const notificationList = document.getElementById('notificationList');
-const notificationToast = document.getElementById('notificationToast');
-const notificationTitle = document.getElementById('notificationTitle');
-const notificationMessage = document.getElementById('notificationMessage');
-const closeNotification = document.querySelector('.close-notification');
+        const loginScreen = document.getElementById('loginScreen');
+        const dashboard = document.getElementById('dashboard');
+        const userButtons = document.querySelectorAll('.user-btn');
+        const confirmBtn = document.getElementById('confirmBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userBadge = document.getElementById('userBadge');
+        const taskList = document.getElementById('taskList');
+        const notificationList = document.getElementById('notificationList');
+        const notificationToast = document.getElementById('notificationToast');
+        const notificationTitle = document.getElementById('notificationTitle');
+        const notificationMessage = document.getElementById('notificationMessage');
+        const closeNotification = document.querySelector('.close-notification');
+        const pomodoroHistory = document.getElementById('pomodoroHistory');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const completedTasks = document.getElementById('completedTasks');
+        const failedTasks = document.getElementById('failedTasks');
+        const pendingTasks = document.getElementById('pendingTasks');
+        const totalFocusTime = document.getElementById('totalFocusTime');
+        const totalBreakTime = document.getElementById('totalBreakTime');
+        const focusChart = document.getElementById('focusChart');
 
-// Pomodoro Elements
-const timer = document.getElementById('timer');
-const timerMode = document.getElementById('timerMode');
-const startBtn = document.getElementById('startBtn');
-const pauseBtn = document.getElementById('pauseBtn');
-const resetBtn = document.getElementById('resetBtn');
-const workDuration = document.getElementById('workDuration');
-const breakDuration = document.getElementById('breakDuration');
+        // Pomodoro Elements
+        const timer = document.getElementById('timer');
+        const timerMode = document.getElementById('timerMode');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const workDuration = document.getElementById('workDuration');
+        const breakDuration = document.getElementById('breakDuration');
 
-// Global Variables
-let currentUser = null;
-let timerInterval = null;
-let isTimerRunning = false;
-let isWorkSession = true;
-let timeLeft = 25 * 60; // 25 minutes in seconds
-let audioContext = null;
-let scheduledNotifications = [];
-let currentShift = null;
+        // Global Variables
+        let currentUser = null;
+        let timerInterval = null;
+        let isTimerRunning = false;
+        let isWorkSession = true;
+        let timeLeft = 25 * 60; // 25 minutes in seconds
+        let audioContext = null;
+        let scheduledNotifications = [];
+        let currentShift = null;
+        let todayWorkTime = 0;
+        let todayBreakTime = 0;
+        let pomodoroEvents = [];
 
-// User-specific data
-const userData = {
-    saikat: {
-        name: "Saikat",
-        role: "Drafter",
-        dailyTarget: 60,
-        avgTime: "7.5",
-        schedule: [
-            { start: 11, end: 14, name: "Shift 1", articles: 24, focus: "K-pop/K-drama (14), Hollywood (7), Bollywood (3)", pace: "7.5 min/article", isBreak: false },
-            { start: 14, end: 15, name: "Lunch Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
-            { start: 15, end: 17, name: "Shift 2", articles: 16, focus: "K-drama (10), Hollywood (6)", pace: "7.5 min/article", isBreak: false },
-            { start: 17, end: 19, name: "Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
-            { start: 19, end: 22, name: "Shift 3", articles: 20, focus: "Hollywood (7), K-pop (10), South Indian (3)", pace: "9 min/article", isBreak: false }
-        ],
-        tasks: generateHourlyTasks('saikat')
-    },
-    sougata: {
-        name: "Sougata",
-        role: "Publisher",
-        dailyTarget: 60,
-        avgTime: "6",
-        schedule: [
-            { start: 13, end: 14, name: "Prep", articles: 16, focus: "Publish Shift 1 drafts", pace: "3.75 min/article", isBreak: false },
-            { start: 14, end: 15, name: "Sync", articles: 8, focus: "Publish remaining Shift 1", pace: "3.75 min/article", isBreak: false },
-            { start: 15, end: 15.25, name: "Short Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
-            { start: 15.25, end: 17, name: "Core", articles: 16, focus: "Publish Shift 2 drafts", pace: "5.6 min/article", isBreak: false },
-            { start: 17, end: 19, name: "Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
-            { start: 19, end: 22, name: "Closing", articles: 20, focus: "Publish Shift 3 drafts", pace: "6 min/article", isBreak: false }
-        ],
-        tasks: generateHourlyTasks('sougata')
-    }
-};
-
-// Generate hourly tasks based on user's schedule
-function generateHourlyTasks(user) {
-    const tasks = [];
-    const now = new Date();
-    const currentHour = now.getHours();
-    
-    if (user === 'saikat') {
-        // Saikat's hourly tasks (Drafter)
-        for (let hour = 11; hour <= 22; hour++) {
-            if (hour >= 11 && hour < 14) { // Shift 1
-                tasks.push({
-                    id: hour,
-                    title: `Draft ${hour === 11 ? 8 : hour === 12 ? 8 : 8} articles`,
-                    category: hour === 11 ? "K-pop/K-drama (3), Hollywood (4), Bollywood (1)" : 
-                             hour === 12 ? "K-pop/K-drama (5), Hollywood (2), Bollywood (1)" : 
-                                          "K-pop/K-drama (6), Hollywood (1), Bollywood (1)",
-                    time: `${hour}:00 - ${hour+1}:00`,
-                    completed: hour < currentHour
-                });
-            } else if (hour === 14) { // Lunch
-                tasks.push({
-                    id: hour,
-                    title: "Lunch Break",
-                    category: "Rest",
-                    time: "2:00 - 3:00 PM",
-                    completed: hour < currentHour
-                });
-            } else if (hour >= 15 && hour < 17) { // Shift 2
-                tasks.push({
-                    id: hour,
-                    title: `Draft ${hour === 15 ? 8 : 8} articles`,
-                    category: hour === 15 ? "K-drama (5), Hollywood (3)" : "K-drama (5), Hollywood (3)",
-                    time: `${hour}:00 - ${hour+1}:00`,
-                    completed: hour < currentHour
-                });
-            } else if (hour >= 17 && hour < 19) { // Break
-                tasks.push({
-                    id: hour,
-                    title: "Evening Break",
-                    category: "Rest",
-                    time: `${hour}:00 - ${hour+1}:00`,
-                    completed: hour < currentHour
-                });
-            } else if (hour >= 19 && hour < 22) { // Shift 3
-                tasks.push({
-                    id: hour,
-                    title: `Draft ${hour === 19 ? 7 : hour === 20 ? 7 : 6} articles`,
-                    category: hour === 19 ? "Hollywood (3), K-pop (3), South Indian (1)" : 
-                             hour === 20 ? "Hollywood (2), K-pop (4), South Indian (1)" : 
-                                          "Hollywood (2), K-pop (3), South Indian (1)",
-                    time: `${hour}:00 - ${hour+1}:00`,
-                    completed: hour < currentHour
-                });
+        // User-specific data
+        const userData = {
+            saikat: {
+                name: "Saikat",
+                role: "Drafter",
+                dailyTarget: 60,
+                avgTime: "7.5",
+                schedule: [
+                    { start: 11, end: 14, name: "Shift 1", articles: 24, focus: "K-pop/K-drama (14), Hollywood (7), Bollywood (3)", pace: "7.5 min/article", isBreak: false },
+                    { start: 14, end: 15, name: "Lunch Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
+                    { start: 15, end: 17, name: "Shift 2", articles: 16, focus: "K-drama (10), Hollywood (6)", pace: "7.5 min/article", isBreak: false },
+                    { start: 17, end: 19, name: "Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
+                    { start: 19, end: 22, name: "Shift 3", articles: 20, focus: "Hollywood (7), K-pop (10), South Indian (3)", pace: "9 min/article", isBreak: false }
+                ],
+                tasks: generateHourlyTasks('saikat')
+            },
+            sougata: {
+                name: "Sougata",
+                role: "Publisher",
+                dailyTarget: 60,
+                avgTime: "6",
+                schedule: [
+                    { start: 13, end: 14, name: "Prep", articles: 16, focus: "Publish Shift 1 drafts", pace: "3.75 min/article", isBreak: false },
+                    { start: 14, end: 15, name: "Sync", articles: 8, focus: "Publish remaining Shift 1", pace: "3.75 min/article", isBreak: false },
+                    { start: 15, end: 15.25, name: "Short Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
+                    { start: 15.25, end: 17, name: "Core", articles: 16, focus: "Publish Shift 2 drafts", pace: "5.6 min/article", isBreak: false },
+                    { start: 17, end: 19, name: "Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
+                    { start: 19, end: 22, name: "Closing", articles: 20, focus: "Publish Shift 3 drafts", pace: "6 min/article", isBreak: false }
+                ],
+                tasks: generateHourlyTasks('sougata')
             }
-        }
-    } else {
-        // Sougata's hourly tasks (Publisher) - 8 articles/hour
-        for (let hour = 13; hour <= 22; hour++) {
-            if (hour === 13) { // Prep
-                tasks.push({
-                    id: hour,
-                    title: "Publish 16 Shift 1 drafts",
-                    category: "K-pop/K-drama (10), Hollywood (5), Bollywood (1)",
-                    time: "1:00 - 2:00 PM",
-                    completed: hour < currentHour
-                });
-            } else if (hour === 14) { // Sync
-                tasks.push({
-                    id: hour,
-                    title: "Publish remaining 8 Shift 1 drafts",
-                    category: "K-pop/K-drama (4), Hollywood (3), Bollywood (1)",
-                    time: "2:00 - 3:00 PM",
-                    completed: hour < currentHour
-                });
-            } else if (hour === 15) { // Core
-                tasks.push({
-                    id: hour,
-                    title: "Publish 8 Shift 2 drafts",
-                    category: "K-drama (5), Hollywood (3)",
-                    time: "3:00 - 4:00 PM",
-                    completed: hour < currentHour
-                });
-                tasks.push({
-                    id: hour + 0.5,
-                    title: "Short Break",
-                    category: "Rest",
-                    time: "3:15 - 3:30 PM",
-                    completed: hour < currentHour
-                });
-                tasks.push({
-                    id: hour + 0.75,
-                    title: "Publish remaining 8 Shift 2 drafts",
-                    category: "K-drama (5), Hollywood (3)",
-                    time: "3:30 - 4:00 PM",
-                    completed: hour < currentHour
-                });
-            } else if (hour >= 16 && hour < 17) { // Core continued
-                tasks.push({
-                    id: hour,
-                    title: "Publish 8 Shift 2 drafts",
-                    category: "K-drama (5), Hollywood (3)",
-                    time: "4:00 - 5:00 PM",
-                    completed: hour < currentHour
-                });
-            } else if (hour >= 17 && hour < 19) { // Break
-                tasks.push({
-                    id: hour,
-                    title: "Evening Break",
-                    category: "Rest",
-                    time: `${hour}:00 - ${hour+1}:00`,
-                    completed: hour < currentHour
-                });
-            } else if (hour >= 19 && hour < 22) { // Closing
-                tasks.push({
-                    id: hour,
-                    title: "Publish 8 Shift 3 drafts",
-                    category: hour === 19 ? "Hollywood (3), K-pop (4), South Indian (1)" : 
-                             hour === 20 ? "Hollywood (2), K-pop (5), South Indian (1)" : 
-                                          "Hollywood (2), K-pop (4), South Indian (2)",
-                    time: `${hour}:00 - ${hour+1}:00`,
-                    completed: hour < currentHour
-                });
+        };
+
+        // Generate hourly tasks based on user's schedule
+        function generateHourlyTasks(user) {
+            const tasks = [];
+            const now = new Date();
+            const currentHour = now.getHours();
+            
+            if (user === 'saikat') {
+                // Saikat's hourly tasks (Drafter)
+                for (let hour = 11; hour <= 22; hour++) {
+                    if (hour >= 11 && hour < 14) { // Shift 1
+                        tasks.push({
+                            id: hour,
+                            title: `Draft ${hour === 11 ? 8 : hour === 12 ? 8 : 8} articles`,
+                            category: hour === 11 ? "K-pop/K-drama (3), Hollywood (4), Bollywood (1)" : 
+                                     hour === 12 ? "K-pop/K-drama (5), Hollywood (2), Bollywood (1)" : 
+                                                  "K-pop/K-drama (6), Hollywood (1), Bollywood (1)",
+                            time: `${hour}:00 - ${hour+1}:00`,
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    } else if (hour === 14) { // Lunch
+                        tasks.push({
+                            id: hour,
+                            title: "Lunch Break",
+                            category: "Rest",
+                            time: "2:00 - 3:00 PM",
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    } else if (hour >= 15 && hour < 17) { // Shift 2
+                        tasks.push({
+                            id: hour,
+                            title: `Draft ${hour === 15 ? 8 : 8} articles`,
+                            category: hour === 15 ? "K-drama (5), Hollywood (3)" : "K-drama (5), Hollywood (3)",
+                            time: `${hour}:00 - ${hour+1}:00`,
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    } else if (hour >= 17 && hour < 19) { // Break
+                        tasks.push({
+                            id: hour,
+                            title: "Evening Break",
+                            category: "Rest",
+                            time: `${hour}:00 - ${hour+1}:00`,
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    } else if (hour >= 19 && hour < 22) { // Shift 3
+                        tasks.push({
+                            id: hour,
+                            title: `Draft ${hour === 19 ? 7 : hour === 20 ? 7 : 6} articles`,
+                            category: hour === 19 ? "Hollywood (3), K-pop (3), South Indian (1)" : 
+                                     hour === 20 ? "Hollywood (2), K-pop (4), South Indian (1)" : 
+                                                  "Hollywood (2), K-pop (3), South Indian (1)",
+                            time: `${hour}:00 - ${hour+1}:00`,
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    }
+                }
+            } else {
+                // Sougata's hourly tasks (Publisher) - 8 articles/hour
+                for (let hour = 13; hour <= 22; hour++) {
+                    if (hour === 13) { // Prep
+                        tasks.push({
+                            id: hour,
+                            title: "Publish 16 Shift 1 drafts",
+                            category: "K-pop/K-drama (10), Hollywood (5), Bollywood (1)",
+                            time: "1:00 - 2:00 PM",
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    } else if (hour === 14) { // Sync
+                        tasks.push({
+                            id: hour,
+                            title: "Publish remaining 8 Shift 1 drafts",
+                            category: "K-pop/K-drama (4), Hollywood (3), Bollywood (1)",
+                            time: "2:00 - 3:00 PM",
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    } else if (hour === 15) { // Core
+                        tasks.push({
+                            id: hour,
+                            title: "Publish 8 Shift 2 drafts",
+                            category: "K-drama (5), Hollywood (3)",
+                            time: "3:00 - 4:00 PM",
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                        tasks.push({
+                            id: hour + 0.5,
+                            title: "Short Break",
+                            category: "Rest",
+                            time: "3:15 - 3:30 PM",
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                        tasks.push({
+                            id: hour + 0.75,
+                            title: "Publish remaining 8 Shift 2 drafts",
+                            category: "K-drama (5), Hollywood (3)",
+                            time: "3:30 - 4:00 PM",
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    } else if (hour >= 16 && hour < 17) { // Core continued
+                        tasks.push({
+                            id: hour,
+                            title: "Publish 8 Shift 2 drafts",
+                            category: "K-drama (5), Hollywood (3)",
+                            time: "4:00 - 5:00 PM",
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    } else if (hour >= 17 && hour < 19) { // Break
+                        tasks.push({
+                            id: hour,
+                            title: "Evening Break",
+                            category: "Rest",
+                            time: `${hour}:00 - ${hour+1}:00`,
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    } else if (hour >= 19 && hour < 22) { // Closing
+                        tasks.push({
+                            id: hour,
+                            title: "Publish 8 Shift 3 drafts",
+                            category: hour === 19 ? "Hollywood (3), K-pop (4), South Indian (1)" : 
+                                     hour === 20 ? "Hollywood (2), K-pop (5), South Indian (1)" : 
+                                                  "Hollywood (2), K-pop (4), South Indian (2)",
+                            time: `${hour}:00 - ${hour+1}:00`,
+                            status: hour < currentHour ? "completed" : "pending"
+                        });
+                    }
+                }
             }
+            
+            return tasks;
         }
-    }
-    
-    return tasks;
-}
 
-// Initialize scheduled notifications
-function initScheduledNotifications(user) {
-    scheduledNotifications = [];
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinutes = now.getMinutes();
-    
-    userData[user].schedule.forEach(shift => {
-        // Notification 15 minutes before shift starts
-        if (shift.start > currentHour || (shift.start === currentHour && currentMinutes < 45)) {
-            scheduledNotifications.push({
-                time: { hour: shift.start - 0.25 }, // 15 minutes before
-                title: `${shift.name} Starting Soon`,
-                message: `Your ${shift.name} starts in 15 minutes at ${formatHour(shift.start)}:00`,
-                shift: shift.name
+        // Initialize scheduled notifications
+        function initScheduledNotifications(user) {
+            scheduledNotifications = [];
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinutes = now.getMinutes();
+            
+            userData[user].schedule.forEach(shift => {
+                // Notification 15 minutes before shift starts
+                if (shift.start > currentHour || (shift.start === currentHour && currentMinutes < 45)) {
+                    scheduledNotifications.push({
+                        time: { hour: shift.start - 0.25 }, // 15 minutes before
+                        title: `${shift.name} Starting Soon`,
+                        message: `Your ${shift.name} starts in 15 minutes at ${formatHour(shift.start)}:00`,
+                        shift: shift.name
+                    });
+                }
+                
+                // Notification at shift start
+                if (shift.start > currentHour || (shift.start === currentHour && currentMinutes < 60)) {
+                    scheduledNotifications.push({
+                        time: { hour: shift.start },
+                        title: `${shift.name} Started`,
+                        message: `Your ${shift.name} has begun! ${shift.isBreak ? 'Enjoy your break!' : 'Time to work!'}`,
+                        shift: shift.name
+                    });
+                }
+                
+                // Notification 15 minutes before shift ends
+                if (!shift.isBreak && (shift.end > currentHour || (shift.end === currentHour && currentMinutes < 45))) {
+                    scheduledNotifications.push({
+                        time: { hour: shift.end - 0.25 }, // 15 minutes before end
+                        title: `${shift.name} Ending Soon`,
+                        message: `Your ${shift.name} ends in 15 minutes at ${formatHour(shift.end)}:00`,
+                        shift: shift.name
+                    });
+                }
             });
         }
-        
-        // Notification at shift start
-        if (shift.start > currentHour || (shift.start === currentHour && currentMinutes < 60)) {
-            scheduledNotifications.push({
-                time: { hour: shift.start },
-                title: `${shift.name} Started`,
-                message: `Your ${shift.name} has begun! ${shift.isBreak ? 'Enjoy your break!' : 'Time to work!'}`,
-                shift: shift.name
+
+        // Format hour for display
+        function formatHour(hour) {
+            const h = Math.floor(hour);
+            const m = hour % 1 === 0.25 ? 15 : hour % 1 === 0.5 ? 30 : hour % 1 === 0.75 ? 45 : 0;
+            const period = h >= 12 ? 'PM' : 'AM';
+            const displayHour = h % 12 === 0 ? 12 : h % 12;
+            return `${displayHour}:${m.toString().padStart(2, '0')} ${period}`;
+        }
+
+        // User Selection
+        userButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                userButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                currentUser = button.getAttribute('data-user');
             });
-        }
-        
-        // Notification 15 minutes before shift ends
-        if (!shift.isBreak && (shift.end > currentHour || (shift.end === currentHour && currentMinutes < 45))) {
-            scheduledNotifications.push({
-                time: { hour: shift.end - 0.25 }, // 15 minutes before end
-                title: `${shift.name} Ending Soon`,
-                message: `Your ${shift.name} ends in 15 minutes at ${formatHour(shift.end)}:00`,
-                shift: shift.name
-            });
-        }
-    });
-}
-
-// Format hour for display
-function formatHour(hour) {
-    const h = Math.floor(hour);
-    const m = hour % 1 === 0.25 ? 15 : hour % 1 === 0.5 ? 30 : hour % 1 === 0.75 ? 45 : 0;
-    const period = h >= 12 ? 'PM' : 'AM';
-    const displayHour = h % 12 === 0 ? 12 : h % 12;
-    return `${displayHour}:${m.toString().padStart(2, '0')} ${period}`;
-}
-
-// User Selection
-userButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        userButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        currentUser = button.getAttribute('data-user');
-    });
-});
-
-// Confirm User
-confirmBtn.addEventListener('click', () => {
-    if (!currentUser) {
-        showNotification('Error', 'Please select a user first');
-        return;
-    }
-    
-    // Hide login, show dashboard
-    loginScreen.style.display = 'none';
-    dashboard.style.display = 'block';
-    
-    // Update UI based on user
-    updateDashboardForUser(currentUser);
-    
-    // Initialize notifications
-    initScheduledNotifications(currentUser);
-    
-    // Start checking for scheduled notifications
-    checkScheduledNotifications();
-    setInterval(checkScheduledNotifications, 60000); // Check every minute
-    
-    // Check current shift
-    checkCurrentShift();
-    setInterval(checkCurrentShift, 60000); // Check every minute
-});
-
-// Logout
-logoutBtn.addEventListener('click', () => {
-    dashboard.style.display = 'none';
-    loginScreen.style.display = 'block';
-    resetTimer();
-    currentUser = null;
-    scheduledNotifications = [];
-    currentShift = null;
-    
-    // Reset user selection
-    userButtons.forEach(btn => btn.classList.remove('active'));
-});
-
-// Close notification
-closeNotification.addEventListener('click', () => {
-    notificationToast.classList.remove('show');
-});
-
-// Pomodoro Timer Controls
-startBtn.addEventListener('click', startTimer);
-pauseBtn.addEventListener('click', pauseTimer);
-resetBtn.addEventListener('click', resetTimer);
-
-// Update work and break durations
-workDuration.addEventListener('change', () => {
-    if (!isTimerRunning) {
-        timeLeft = parseInt(workDuration.value) * 60;
-        updateTimerDisplay();
-    }
-});
-
-breakDuration.addEventListener('change', () => {
-    // Only update if we're not in a session
-    if (!isTimerRunning && !isWorkSession) {
-        timeLeft = parseInt(breakDuration.value) * 60;
-        updateTimerDisplay();
-    }
-});
-
-// Functions
-function updateDashboardForUser(user) {
-    const userInfo = userData[user];
-    
-    // Update user badge
-    userBadge.className = `user-badge ${user === 'saikat' ? 'saikat-badge' : 'sougata-badge'}`;
-    userBadge.innerHTML = `<i class="fas fa-user"></i> ${userInfo.name} - ${userInfo.role}`;
-    
-    // Update stats
-    document.getElementById('totalArticles').textContent = userInfo.dailyTarget;
-    document.getElementById('avgTime').textContent = userInfo.avgTime;
-    
-    // Render schedule
-    renderSchedule(user);
-    
-    // Render tasks
-    renderTasks(user);
-}
-
-function renderSchedule(user) {
-    const scheduleBody = document.querySelector('.schedule-table tbody');
-    scheduleBody.innerHTML = '';
-    
-    userData[user].schedule.forEach(shift => {
-        const row = document.createElement('tr');
-        if (shift.isBreak) {
-            row.className = 'break-row';
-        }
-        
-        row.innerHTML = `
-            <td>${formatHour(shift.start)} - ${formatHour(shift.end)}</td>
-            <td>${shift.name}</td>
-            <td>${shift.articles || '-'}</td>
-            <td>${shift.isBreak ? shift.focus : `<span class="focus-badge">${shift.focus}</span>`}</td>
-        `;
-        
-        scheduleBody.appendChild(row);
-    });
-}
-
-function renderTasks(user) {
-    taskList.innerHTML = '';
-    
-    userData[user].tasks.forEach(task => {
-        const taskElement = document.createElement('div');
-        taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
-        taskElement.innerHTML = `
-            <div class="task-check">
-                <i class="fas ${task.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
-            </div>
-            <div class="task-content">
-                <div class="task-title">
-                    ${task.title}
-                    <span class="task-category">${task.category}</span>
-                </div>
-                <div class="task-info">
-                    <span><i class="far fa-clock"></i> ${task.time}</span>
-                    <span>${task.completed ? 'Completed' : 'Pending'}</span>
-                </div>
-            </div>
-            <div class="task-actions">
-                <div class="task-btn" onclick="toggleTaskCompletion('${user}', ${task.id})">
-                    <i class="fas ${task.completed ? 'fa-undo' : 'fa-check'}"></i>
-                </div>
-                <div class="task-btn" onclick="showTaskReminder('${task.title}', '${task.time}')">
-                    <i class="fas fa-bell"></i>
-                </div>
-            </div>
-        `;
-        taskList.appendChild(taskElement);
-    });
-}
-
-function toggleTaskCompletion(user, taskId) {
-    const taskIndex = userData[user].tasks.findIndex(t => t.id === taskId);
-    if (taskIndex !== -1) {
-        const task = userData[user].tasks[taskIndex];
-        task.completed = !task.completed;
-        renderTasks(user);
-        
-        // Show notification
-        showNotification(
-            task.completed ? 'Task Completed' : 'Task Reopened',
-            `${task.title} has been ${task.completed ? 'completed' : 'reopened'}`,
-            task.completed ? 'success' : 'warning'
-        );
-        
-        // Save to localStorage
-        localStorage.setItem(`task_${user}_${taskId}`, task.completed);
-    }
-}
-
-function showTaskReminder(title, time) {
-    showNotification('Reminder Set', `You'll be reminded about "${title}" at ${time}`, 'info');
-    // In a real app, you would set up an actual reminder here
-}
-
-function showNotification(title, message, type = 'info') {
-    // Update toast notification
-    notificationTitle.textContent = title;
-    notificationMessage.textContent = message;
-    
-    // Set icon based on type
-    let icon = 'fa-bell';
-    if (type === 'success') icon = 'fa-check-circle';
-    if (type === 'warning') icon = 'fa-exclamation-circle';
-    if (type === 'error') icon = 'fa-times-circle';
-    
-    document.querySelector('.notification-icon').className = `fas ${icon} notification-icon`;
-    
-    // Reset animation
-    const progressBar = document.querySelector('.progress-bar');
-    progressBar.style.animation = 'none';
-    void progressBar.offsetWidth; // Trigger reflow
-    progressBar.style.animation = 'progress 5s linear forwards';
-    
-    // Show notification
-    notificationToast.classList.add('show');
-    
-    // Auto hide after 5 seconds
-    setTimeout(() => {
-        notificationToast.classList.remove('show');
-    }, 5000);
-    
-    // Show desktop notification if permission is granted
-    if (Notification.permission === 'granted') {
-        new Notification(title, { 
-            body: message,
-            icon: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/bell.svg'
         });
-    }
-}
 
-function checkScheduledNotifications() {
-    if (!currentUser) return;
-    
-    const now = new Date();
-    const currentHour = now.getHours() + (now.getMinutes() / 60);
-    
-    // Check if any notifications are due
-    scheduledNotifications.forEach(notification => {
-        if (!notification.triggered && 
-            currentHour >= notification.time.hour && 
-            currentHour < notification.time.hour + 0.016) { // ~1 minute window
+        // Confirm User
+        confirmBtn.addEventListener('click', () => {
+            if (!currentUser) {
+                showNotification('Error', 'Please select a user first');
+                return;
+            }
             
-            showNotification(notification.title, notification.message);
-            notification.triggered = true;
+            // Hide login, show dashboard
+            loginScreen.style.display = 'none';
+            dashboard.style.display = 'block';
             
-            // Play sound for important notifications
-            if (notification.title.includes('Started') || notification.title.includes('Ending')) {
-                playNotificationSound();
+            // Update UI based on user
+            updateDashboardForUser(currentUser);
+            
+            // Initialize notifications
+            initScheduledNotifications(currentUser);
+            
+            // Start checking for scheduled notifications
+            checkScheduledNotifications();
+            setInterval(checkScheduledNotifications, 60000); // Check every minute
+            
+            // Check current shift
+            checkCurrentShift();
+            setInterval(checkCurrentShift, 60000); // Check every minute
+            
+            // Load pomodoro history
+            loadPomodoroHistory();
+            
+            // Load pomodoro events
+            loadPomodoroEvents();
+            
+            // Render analytics
+            updateAnalytics();
+        });
+
+        // Logout
+        logoutBtn.addEventListener('click', () => {
+            dashboard.style.display = 'none';
+            loginScreen.style.display = 'block';
+            resetTimer();
+            currentUser = null;
+            scheduledNotifications = [];
+            currentShift = null;
+            
+            // Reset user selection
+            userButtons.forEach(btn => btn.classList.remove('active'));
+        });
+
+        // Close notification
+        closeNotification.addEventListener('click', () => {
+            notificationToast.classList.remove('show');
+        });
+
+        // Clear history
+        clearHistoryBtn.addEventListener('click', () => {
+            if (currentUser) {
+                localStorage.removeItem(`pomodoroHistory_${currentUser}`);
+                localStorage.removeItem(`pomodoroEvents_${currentUser}`);
+                pomodoroHistory.innerHTML = '';
+                pomodoroEvents = [];
+                updateAnalytics();
+                showNotification('History Cleared', 'Pomodoro history has been cleared', 'info');
+            }
+        });
+
+        // Pomodoro Timer Controls
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        // Update work and break durations
+        workDuration.addEventListener('change', () => {
+            if (!isTimerRunning) {
+                timeLeft = parseInt(workDuration.value) * 60;
+                updateTimerDisplay();
+            }
+        });
+
+        breakDuration.addEventListener('change', () => {
+            // Only update if we're not in a session
+            if (!isTimerRunning && !isWorkSession) {
+                timeLeft = parseInt(breakDuration.value) * 60;
+                updateTimerDisplay();
+            }
+        });
+
+        // Functions
+        function updateDashboardForUser(user) {
+            const userInfo = userData[user];
+            
+            // Update user badge
+            userBadge.className = `user-badge ${user === 'saikat' ? 'saikat-badge' : 'sougata-badge'}`;
+            userBadge.innerHTML = `<i class="fas fa-user"></i> ${userInfo.name} - ${userInfo.role}`;
+            
+            // Update stats
+            document.getElementById('totalArticles').textContent = userInfo.dailyTarget;
+            document.getElementById('avgTime').textContent = userInfo.avgTime;
+            
+            // Render schedule
+            renderSchedule(user);
+            
+            // Render tasks
+            renderTasks(user);
+            
+            // Render notifications
+            renderNotifications();
+        }
+
+        function renderSchedule(user) {
+            const scheduleBody = document.querySelector('.schedule-table tbody');
+            scheduleBody.innerHTML = '';
+            
+            userData[user].schedule.forEach(shift => {
+                const row = document.createElement('tr');
+                if (shift.isBreak) {
+                    row.className = 'break-row';
+                }
+                
+                row.innerHTML = `
+                    <td>${formatHour(shift.start)} - ${formatHour(shift.end)}</td>
+                    <td>${shift.name}</td>
+                    <td>${shift.articles || '-'}</td>
+                    <td>${shift.isBreak ? shift.focus : `<span class="focus-badge">${shift.focus}</span>`}</td>
+                `;
+                
+                scheduleBody.appendChild(row);
+            });
+        }
+
+        function renderTasks(user) {
+            taskList.innerHTML = '';
+            
+            userData[user].tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                let icon = 'fa-circle';
+                let statusClass = '';
+                
+                if (task.status === 'completed') {
+                    icon = 'fa-check-circle';
+                    statusClass = 'completed';
+                } else if (task.status === 'failed') {
+                    icon = 'fa-times-circle';
+                    statusClass = 'failed';
+                }
+                
+                taskElement.className = `task-item ${statusClass}`;
+                taskElement.innerHTML = `
+                    <div class="task-check">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="task-content">
+                        <div class="task-title">
+                            ${task.title}
+                            <span class="task-category">${task.category}</span>
+                        </div>
+                        <div class="task-info">
+                            <span><i class="far fa-clock"></i> ${task.time}</span>
+                            <span>${task.status.charAt(0).toUpperCase() + task.status.slice(1)}</span>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <div class="task-btn" onclick="toggleTaskStatus('${user}', ${task.id})">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <div class="task-btn" onclick="showTaskReminder('${task.title}', '${task.time}')">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                    </div>
+                `;
+                taskList.appendChild(taskElement);
+            });
+            
+            // Update analytics
+            updateAnalytics();
+        }
+
+        function toggleTaskStatus(user, taskId) {
+            const taskIndex = userData[user].tasks.findIndex(t => t.id === taskId);
+            if (taskIndex !== -1) {
+                const task = userData[user].tasks[taskIndex];
+                
+                // Cycle through statuses: pending -> completed -> failed -> pending
+                if (task.status === 'pending') {
+                    task.status = 'completed';
+                } else if (task.status === 'completed') {
+                    task.status = 'failed';
+                } else {
+                    task.status = 'pending';
+                }
+                
+                renderTasks(user);
+                
+                // Save to localStorage
+                localStorage.setItem(`task_${user}_${taskId}`, task.status);
+                
+                // Show notification
+                showNotification(
+                    'Task Updated',
+                    `${task.title} marked as ${task.status}`,
+                    task.status === 'completed' ? 'success' : task.status === 'failed' ? 'error' : 'info'
+                );
             }
         }
-    });
-}
 
-function checkCurrentShift() {
-    if (!currentUser) return;
-    
-    const now = new Date();
-    const currentHour = now.getHours() + (now.getMinutes() / 60);
-    let currentShiftFound = null;
-    
-    // Find current shift
-    userData[currentUser].schedule.forEach(shift => {
-        if (currentHour >= shift.start && currentHour < shift.end) {
-            currentShiftFound = shift;
+        function showTaskReminder(title, time) {
+            showNotification('Reminder Set', `You'll be reminded about "${title}" at ${time}`, 'info');
+            // In a real app, you would set up an actual reminder here
         }
-    });
-    
-    // Update UI if shift changed
-    if (currentShiftFound && (!currentShift || currentShift.name !== currentShiftFound.name)) {
-        currentShift = currentShiftFound;
-        document.getElementById('currentShift').textContent = currentShift.name;
-        
-        if (!currentShift.isBreak) {
-            showNotification(
-                `${currentShift.name} Active`,
-                `Focus: ${currentShift.focus}\nTarget: ${currentShift.articles} articles`,
-                'info'
-            );
-        }
-    }
-}
 
-// Pomodoro Timer Functions
-function startTimer() {
-    if (isTimerRunning) return;
-    
-    isTimerRunning = true;
-    startBtn.disabled = true;
-    pauseBtn.disabled = false;
-    
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        
-        if (timeLeft <= 0) {
-            // Timer completed
-            clearInterval(timerInterval);
-            isTimerRunning = false;
+        function renderNotifications() {
+            notificationList.innerHTML = '';
             
-            // Play notification sound
-            playNotificationSound();
+            // Get the last 5 events
+            const recentEvents = [...pomodoroEvents].reverse().slice(0, 5);
+            
+            if (recentEvents.length === 0) {
+                notificationList.innerHTML = '<div class="text-center py-3">No recent notifications</div>';
+                return;
+            }
+            
+            recentEvents.forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'task-item';
+                eventElement.innerHTML = `
+                    <div class="task-content">
+                        <div class="task-title">
+                            <i class="fas ${event.icon}" style="color: ${event.color};"></i>
+                            ${event.title}
+                            <span class="task-category">${event.type}</span>
+                        </div>
+                        <div class="task-info">
+                            <span><i class="far fa-clock"></i> ${event.time}</span>
+                            <span>${event.message}</span>
+                        </div>
+                    </div>
+                `;
+                notificationList.appendChild(eventElement);
+            });
+        }
+
+        function addPomodoroEvent(title, message, type) {
+            if (!currentUser) return;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            let icon = 'fa-bell';
+            let color = '#4cc9f0';
+            
+            if (type === 'start') {
+                icon = 'fa-play';
+                color = '#4aad52';
+            } else if (type === 'pause') {
+                icon = 'fa-pause';
+                color = '#f8961e';
+            } else if (type === 'reset') {
+                icon = 'fa-redo';
+                color = '#f72585';
+            } else if (type === 'complete') {
+                icon = 'fa-check-circle';
+                color = '#4aad52';
+            }
+            
+            const event = {
+                title,
+                message,
+                type: type.charAt(0).toUpperCase() + type.slice(1),
+                time: timeString,
+                icon,
+                color,
+                timestamp: now.getTime()
+            };
+            
+            pomodoroEvents.push(event);
+            
+            // Save to localStorage
+            localStorage.setItem(`pomodoroEvents_${currentUser}`, JSON.stringify(pomodoroEvents));
+            
+            // Update notifications display
+            renderNotifications();
+        }
+
+        function showNotification(title, message, type = 'info') {
+            // Update toast notification
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+            
+            // Set icon based on type
+            let icon = 'fa-bell';
+            if (type === 'success') icon = 'fa-check-circle';
+            if (type === 'warning') icon = 'fa-exclamation-circle';
+            if (type === 'error') icon = 'fa-times-circle';
+            if (type === 'info') icon = 'fa-info-circle';
+            
+            document.querySelector('.notification-icon').className = `fas ${icon} notification-icon`;
+            
+            // Reset animation
+            const progressBar = document.querySelector('.progress-bar');
+            progressBar.style.animation = 'none';
+            void progressBar.offsetWidth; // Trigger reflow
+            progressBar.style.animation = 'progress 5s linear forwards';
             
             // Show notification
-            if (isWorkSession) {
-                showNotification(
-                    'Work Session Complete!', 
-                    'Time to take a break. Start your break timer when ready.',
-                    'success'
-                );
-                timerMode.textContent = 'Break Time!';
-                timerMode.style.color = 'var(--break-timer)';
-                timer.className = 'timer-display break-timer';
-                timeLeft = parseInt(breakDuration.value) * 60;
-            } else {
-                showNotification(
-                    'Break Time Complete!', 
-                    'Ready to get back to work? Start your next work session.',
-                    'info'
-                );
-                timerMode.textContent = 'Work Session';
-                timerMode.style.color = 'var(--success)';
-                timer.className = 'timer-display work-timer';
-                timeLeft = parseInt(workDuration.value) * 60;
+            notificationToast.classList.add('show');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                notificationToast.classList.remove('show');
+            }, 5000);
+            
+            // Show desktop notification if permission is granted
+            if (Notification.permission === 'granted') {
+                new Notification(title, { 
+                    body: message,
+                    icon: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/bell.svg'
+                });
             }
             
-            isWorkSession = !isWorkSession;
+            // Add to pomodoro events
+            addPomodoroEvent(title, message, type === 'info' ? 'info' : type);
+        }
+
+        function checkScheduledNotifications() {
+            if (!currentUser) return;
+            
+            const now = new Date();
+            const currentHour = now.getHours() + (now.getMinutes() / 60);
+            
+            // Check if any notifications are due
+            scheduledNotifications.forEach(notification => {
+                if (!notification.triggered && 
+                    currentHour >= notification.time.hour && 
+                    currentHour < notification.time.hour + 0.016) { // ~1 minute window
+                    
+                    showNotification(notification.title, notification.message);
+                    notification.triggered = true;
+                    
+                    // Play sound for important notifications
+                    if (notification.title.includes('Started') || notification.title.includes('Ending')) {
+                        playNotificationSound();
+                    }
+                }
+            });
+        }
+
+        function checkCurrentShift() {
+            if (!currentUser) return;
+            
+            const now = new Date();
+            const currentHour = now.getHours() + (now.getMinutes() / 60);
+            let currentShiftFound = null;
+            
+            // Find current shift
+            userData[currentUser].schedule.forEach(shift => {
+                if (currentHour >= shift.start && currentHour < shift.end) {
+                    currentShiftFound = shift;
+                }
+            });
+            
+            // Update UI if shift changed
+            if (currentShiftFound && (!currentShift || currentShift.name !== currentShiftFound.name)) {
+                currentShift = currentShiftFound;
+                
+                if (!currentShift.isBreak) {
+                    showNotification(
+                        `${currentShift.name} Active`,
+                        `Focus: ${currentShift.focus}\nTarget: ${currentShift.articles} articles`,
+                        'info'
+                    );
+                }
+            }
+        }
+
+        // Pomodoro Timer Functions
+        function startTimer() {
+            if (isTimerRunning) return;
+            
+            isTimerRunning = true;
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            
+            // Add notification
+            showNotification('Timer Started', 'Work session started. Focus time!', 'info');
+            addPomodoroEvent('Timer Started', 'Work session started', 'start');
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                
+                // Update today's focus time
+                if (isWorkSession) {
+                    todayWorkTime++;
+                } else {
+                    todayBreakTime++;
+                }
+                
+                // Update analytics display
+                updateFocusAnalytics();
+                
+                if (timeLeft <= 0) {
+                    // Timer completed
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    
+                    // Play notification sound
+                    playNotificationSound();
+                    
+                    // Show notification
+                    if (isWorkSession) {
+                        showNotification(
+                            'Work Session Complete!', 
+                            'Time to take a break. Start your break timer when ready.',
+                            'success'
+                        );
+                        addPomodoroEvent('Work Completed', 'Work session completed', 'complete');
+                        
+                        // Update pomodoro history
+                        updatePomodoroHistory('work', parseInt(workDuration.value) * 60);
+                        
+                        timerMode.textContent = 'Break Time!';
+                        timerMode.style.color = 'var(--break-timer)';
+                        timer.className = 'timer-display break-timer';
+                        timeLeft = parseInt(breakDuration.value) * 60;
+                    } else {
+                        showNotification(
+                            'Break Time Complete!', 
+                            'Ready to get back to work? Start your next work session.',
+                            'info'
+                        );
+                        addPomodoroEvent('Break Completed', 'Break session completed', 'complete');
+                        
+                        // Update pomodoro history
+                        updatePomodoroHistory('break', parseInt(breakDuration.value) * 60);
+                        
+                        timerMode.textContent = 'Work Session';
+                        timerMode.style.color = 'var(--success)';
+                        timer.className = 'timer-display work-timer';
+                        timeLeft = parseInt(workDuration.value) * 60;
+                    }
+                    
+                    isWorkSession = !isWorkSession;
+                    startBtn.disabled = false;
+                    pauseBtn.disabled = true;
+                    return;
+                }
+                
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isTimerRunning) return;
+            
+            clearInterval(timerInterval);
+            isTimerRunning = false;
             startBtn.disabled = false;
             pauseBtn.disabled = true;
-            return;
+            
+            // Add notification
+            showNotification('Timer Paused', 'Your timer has been paused.', 'warning');
+            addPomodoroEvent('Timer Paused', 'Timer paused', 'pause');
         }
-        
-        updateTimerDisplay();
-    }, 1000);
-}
 
-function pauseTimer() {
-    if (!isTimerRunning) return;
-    
-    clearInterval(timerInterval);
-    isTimerRunning = false;
-    startBtn.disabled = false;
-    pauseBtn.disabled = true;
-}
-
-function resetTimer() {
-    clearInterval(timerInterval);
-    isTimerRunning = false;
-    isWorkSession = true;
-    timeLeft = parseInt(workDuration.value) * 60;
-    startBtn.disabled = false;
-    pauseBtn.disabled = true;
-    timerMode.textContent = 'Work Session';
-    timerMode.style.color = 'var(--success)';
-    timer.className = 'timer-display work-timer';
-    updateTimerDisplay();
-}
-
-function updateTimerDisplay() {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
-
-function playNotificationSound() {
-    try {
-        // Create audio context if not already created
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            isWorkSession = true;
+            timeLeft = parseInt(workDuration.value) * 60;
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            timerMode.textContent = 'Work Session';
+            timerMode.style.color = 'var(--success)';
+            timer.className = 'timer-display work-timer';
+            updateTimerDisplay();
+            
+            // Add notification
+            showNotification('Timer Reset', 'Timer has been reset to initial state.', 'info');
+            addPomodoroEvent('Timer Reset', 'Timer reset', 'reset');
         }
-        
-        // Create oscillator
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        // Configure sound
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
-        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime + 0.1); // C5
-        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.2); // E5
-        
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-        
-        // Play and stop
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.5);
-    } catch (e) {
-        console.error('Audio context not supported:', e);
-    }
-}
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if browser supports notifications
-    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-        Notification.requestPermission().then(permission => {
-            console.log('Notification permission:', permission);
-        });
-    }
-    
-    // Initialize timer display
-    updateTimerDisplay();
-    pauseBtn.disabled = true;
-    
-    // Load completed tasks from localStorage
-    Object.keys(userData).forEach(user => {
-        userData[user].tasks.forEach(task => {
-            const completed = localStorage.getItem(`task_${user}_${task.id}`);
-            if (completed !== null) {
-                task.completed = completed === 'true';
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function playNotificationSound() {
+            try {
+                // Create audio context if not already created
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                // Create oscillator
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Configure sound
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime + 0.1); // C5
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.2); // E5
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                // Play and stop
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.error('Audio context not supported:', e);
             }
-        });
-    });
-});
-
-// Error handling for audio context (Safari requires user interaction)
-document.addEventListener('click', () => {
-    if (!audioContext) {
-        try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (e) {
-            console.error('Audio context initialization failed:', e);
         }
-    }
-}, { once: true });
+
+        function updatePomodoroHistory(sessionType, seconds) {
+            if (!currentUser) return;
+            
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            
+            // Get existing history
+            const key = `pomodoroHistory_${currentUser}`;
+            let history = JSON.parse(localStorage.getItem(key)) || [];
+            
+            // Find today's entry
+            let todayEntry = history.find(entry => entry.date === dateString);
+            if (!todayEntry) {
+                // Keep only the last 7 days
+                if (history.length >= 7) {
+                    history.shift();
+                }
+                todayEntry = {
+                    date: dateString,
+                    workTime: 0,
+                    breakTime: 0
+                };
+                history.push(todayEntry);
+            }
+            
+            // Update the time
+            if (sessionType === 'work') {
+                todayEntry.workTime += seconds;
+            } else {
+                todayEntry.breakTime += seconds;
+            }
+            
+            // Save back to localStorage
+            localStorage.setItem(key, JSON.stringify(history));
+            
+            // Update display
+            renderPomodoroHistory();
+            updateAnalytics();
+        }
+
+        function loadPomodoroHistory() {
+            if (!currentUser) return;
+            
+            const key = `pomodoroHistory_${currentUser}`;
+            const history = JSON.parse(localStorage.getItem(key)) || [];
+            renderPomodoroHistory(history);
+        }
+
+        function renderPomodoroHistory() {
+            if (!currentUser) return;
+            
+            const key = `pomodoroHistory_${currentUser}`;
+            const history = JSON.parse(localStorage.getItem(key)) || [];
+            
+            // Sort by date (newest first)
+            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            pomodoroHistory.innerHTML = '';
+            
+            if (history.length === 0) {
+                pomodoroHistory.innerHTML = '<div class="text-center py-3">No pomodoro history available</div>';
+                return;
+            }
+            
+            history.forEach(entry => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                const date = new Date(entry.date);
+                const dateString = date.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                historyItem.innerHTML = `
+                    <div class="history-date">${dateString}</div>
+                    <div class="history-stats">
+                        <div class="work-stat">
+                            <i class="fas fa-briefcase"></i>
+                            ${Math.floor(entry.workTime / 60)}m
+                        </div>
+                        <div class="break-stat">
+                            <i class="fas fa-coffee"></i>
+                            ${Math.floor(entry.breakTime / 60)}m
+                        </div>
+                    </div>
+                `;
+                
+                pomodoroHistory.appendChild(historyItem);
+            });
+        }
+
+        function loadPomodoroEvents() {
+            if (!currentUser) return;
+            
+            const key = `pomodoroEvents_${currentUser}`;
+            pomodoroEvents = JSON.parse(localStorage.getItem(key)) || [];
+            renderNotifications();
+        }
+
+        function updateFocusAnalytics() {
+            // Format work time
+            const workHours = Math.floor(todayWorkTime / 3600);
+            const workMinutes = Math.floor((todayWorkTime % 3600) / 60);
+            totalFocusTime.textContent = `${workHours}h ${workMinutes}m`;
+            
+            // Format break time
+            const breakHours = Math.floor(todayBreakTime / 3600);
+            const breakMinutes = Math.floor((todayBreakTime % 3600) / 60);
+            totalBreakTime.textContent = `${breakHours}h ${breakMinutes}m`;
+        }
+
+        function updateAnalytics() {
+            if (!currentUser) return;
+            
+            // Task analytics
+            const tasks = userData[currentUser].tasks;
+            const completed = tasks.filter(t => t.status === 'completed').length;
+            const failed = tasks.filter(t => t.status === 'failed').length;
+            const pending = tasks.filter(t => t.status === 'pending').length;
+            
+            completedTasks.textContent = completed;
+            failedTasks.textContent = failed;
+            pendingTasks.textContent = pending;
+            
+            // Focus analytics
+            updateFocusAnalytics();
+            
+            // Load history for chart
+            const key = `pomodoroHistory_${currentUser}`;
+            const history = JSON.parse(localStorage.getItem(key)) || [];
+            
+            // Sort by date (oldest first)
+            const sortedHistory = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Get the last 7 days
+            const last7Days = sortedHistory.slice(-7);
+            
+            // Render chart
+            renderFocusChart(last7Days);
+        }
+
+        function renderFocusChart(history) {
+            focusChart.innerHTML = '';
+            
+            if (history.length === 0) {
+                focusChart.innerHTML = '<div class="text-center py-3">No data available for chart</div>';
+                return;
+            }
+            
+            // Find max value for scaling
+            let maxValue = 0;
+            history.forEach(day => {
+                const total = day.workTime + day.breakTime;
+                if (total > maxValue) maxValue = total;
+            });
+            
+            // Add 20% padding
+            maxValue = maxValue * 1.2;
+            
+            history.forEach(day => {
+                const date = new Date(day.date);
+                const dayLabel = date.toLocaleDateString('en-US', { weekday: 'short' });
+                
+                const workHeight = (day.workTime / maxValue) * 100;
+                const breakHeight = (day.breakTime / maxValue) * 100;
+                
+                const chartGroup = document.createElement('div');
+                chartGroup.className = 'chart-bar-group';
+                chartGroup.style.display = 'flex';
+                chartGroup.style.flexDirection = 'column';
+                chartGroup.style.alignItems = 'center';
+                chartGroup.style.width = '100%';
+                
+                const barContainer = document.createElement('div');
+                barContainer.style.display = 'flex';
+                barContainer.style.alignItems = 'flex-end';
+                barContainer.style.gap = '5px';
+                barContainer.style.height = '100%';
+                barContainer.style.width = '100%';
+                
+                // Work bar
+                const workBar = document.createElement('div');
+                workBar.className = 'chart-bar work-bar';
+                workBar.style.height = `${workHeight}%`;
+                workBar.style.position = 'relative';
+                workBar.style.width = '45%';
+                
+                const workValue = document.createElement('div');
+                workValue.className = 'bar-value';
+                workValue.textContent = `${Math.floor(day.workTime / 60)}m`;
+                workBar.appendChild(workValue);
+                
+                // Break bar
+                const breakBar = document.createElement('div');
+                breakBar.className = 'chart-bar break-bar';
+                breakBar.style.height = `${breakHeight}%`;
+                breakBar.style.position = 'relative';
+                breakBar.style.width = '45%';
+                
+                const breakValue = document.createElement('div');
+                breakValue.className = 'bar-value';
+                breakValue.textContent = `${Math.floor(day.breakTime / 60)}m`;
+                breakBar.appendChild(breakValue);
+                
+                barContainer.appendChild(workBar);
+                barContainer.appendChild(breakBar);
+                
+                const label = document.createElement('div');
+                label.className = 'chart-label';
+                label.textContent = dayLabel;
+                
+                chartGroup.appendChild(barContainer);
+                chartGroup.appendChild(label);
+                
+                focusChart.appendChild(chartGroup);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if browser supports notifications
+            if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    console.log('Notification permission:', permission);
+                });
+            }
+            
+            // Initialize timer display
+            updateTimerDisplay();
+            pauseBtn.disabled = true;
+            
+            // Load completed tasks from localStorage
+            Object.keys(userData).forEach(user => {
+                userData[user].tasks.forEach(task => {
+                    const status = localStorage.getItem(`task_${user}_${task.id}`);
+                    if (status !== null) {
+                        task.status = status;
+                    }
+                });
+            });
+        });
+
+        // Error handling for audio context (Safari requires user interaction)
+        document.addEventListener('click', () => {
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.error('Audio context initialization failed:', e);
+                }
+            }
+        }, { once: true });
+        
+        // Make functions available globally for HTML onclick
+        window.toggleTaskStatus = toggleTaskStatus;
+        window.showTaskReminder = showTaskReminder;
     </script>
 </body>
 </html>
