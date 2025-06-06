@@ -850,348 +850,653 @@
     
     <script>
         // DOM Elements
-        const loginScreen = document.getElementById('loginScreen');
-        const dashboard = document.getElementById('dashboard');
-        const userButtons = document.querySelectorAll('.user-btn');
-        const confirmBtn = document.getElementById('confirmBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const userBadge = document.getElementById('userBadge');
-        const taskList = document.getElementById('taskList');
-        const notificationList = document.getElementById('notificationList');
-        const notificationToast = document.getElementById('notificationToast');
-        const notificationTitle = document.getElementById('notificationTitle');
-        const notificationMessage = document.getElementById('notificationMessage');
-        const closeNotification = document.querySelector('.close-notification');
-        
-        // Pomodoro Elements
-        const timer = document.getElementById('timer');
-        const timerMode = document.getElementById('timerMode');
-        const startBtn = document.getElementById('startBtn');
-        const pauseBtn = document.getElementById('pauseBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const workDuration = document.getElementById('workDuration');
-        const breakDuration = document.getElementById('breakDuration');
-        
-        // Global Variables
-        let currentUser = null;
-        let timerInterval = null;
-        let isTimerRunning = false;
-        let isWorkSession = true;
-        let timeLeft = 25 * 60; // 25 minutes in seconds
-        let audioContext = null;
-        
-        // Sample tasks data
-        const tasks = {
-            saikat: [
-                { id: 1, title: "Draft K-pop news article", category: "K-pop", time: "11:00 AM", completed: true },
-                { id: 2, title: "Research new K-drama releases", category: "K-drama", time: "11:45 AM", completed: true },
-                { id: 3, title: "Write Hollywood celebrity update", category: "Hollywood", time: "12:30 PM", completed: false },
-                { id: 4, title: "Prepare Bollywood weekend report", category: "Bollywood", time: "1:15 PM", completed: false },
-                { id: 5, title: "Draft article on new K-pop group debut", category: "K-pop", time: "3:15 PM", completed: false },
-                { id: 6, title: "Write analysis of K-drama ratings", category: "K-drama", time: "4:00 PM", completed: false },
-                { id: 7, title: "Prepare Hollywood movie review", category: "Hollywood", time: "7:30 PM", completed: false }
-            ],
-            sougata: [
-                { id: 1, title: "Publish K-pop articles from Shift 1", category: "K-pop", time: "1:00 PM", completed: true },
-                { id: 2, title: "Format and schedule social media posts", category: "Social Media", time: "2:30 PM", completed: true },
-                { id: 3, title: "Edit and publish K-drama articles", category: "K-drama", time: "3:30 PM", completed: false },
-                { id: 4, title: "Update website with new content", category: "Website", time: "4:15 PM", completed: false },
-                { id: 5, title: "Publish Hollywood entertainment news", category: "Hollywood", time: "7:45 PM", completed: false },
-                { id: 6, title: "Engage with audience comments", category: "Engagement", time: "8:30 PM", completed: false },
-                { id: 7, title: "Schedule posts for next morning", category: "Scheduling", time: "9:45 PM", completed: false }
-            ]
-        };
-        
-        // User Selection
-        userButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                userButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                currentUser = button.getAttribute('data-user');
+const loginScreen = document.getElementById('loginScreen');
+const dashboard = document.getElementById('dashboard');
+const userButtons = document.querySelectorAll('.user-btn');
+const confirmBtn = document.getElementById('confirmBtn');
+const logoutBtn = document.getElementById('logoutBtn');
+const userBadge = document.getElementById('userBadge');
+const taskList = document.getElementById('taskList');
+const notificationList = document.getElementById('notificationList');
+const notificationToast = document.getElementById('notificationToast');
+const notificationTitle = document.getElementById('notificationTitle');
+const notificationMessage = document.getElementById('notificationMessage');
+const closeNotification = document.querySelector('.close-notification');
+
+// Pomodoro Elements
+const timer = document.getElementById('timer');
+const timerMode = document.getElementById('timerMode');
+const startBtn = document.getElementById('startBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const resetBtn = document.getElementById('resetBtn');
+const workDuration = document.getElementById('workDuration');
+const breakDuration = document.getElementById('breakDuration');
+
+// Global Variables
+let currentUser = null;
+let timerInterval = null;
+let isTimerRunning = false;
+let isWorkSession = true;
+let timeLeft = 25 * 60; // 25 minutes in seconds
+let audioContext = null;
+let scheduledNotifications = [];
+let currentShift = null;
+
+// User-specific data
+const userData = {
+    saikat: {
+        name: "Saikat",
+        role: "Drafter",
+        dailyTarget: 60,
+        avgTime: "7.5",
+        schedule: [
+            { start: 11, end: 14, name: "Shift 1", articles: 24, focus: "K-pop/K-drama (14), Hollywood (7), Bollywood (3)", pace: "7.5 min/article", isBreak: false },
+            { start: 14, end: 15, name: "Lunch Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
+            { start: 15, end: 17, name: "Shift 2", articles: 16, focus: "K-drama (10), Hollywood (6)", pace: "7.5 min/article", isBreak: false },
+            { start: 17, end: 19, name: "Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
+            { start: 19, end: 22, name: "Shift 3", articles: 20, focus: "Hollywood (7), K-pop (10), South Indian (3)", pace: "9 min/article", isBreak: false }
+        ],
+        tasks: generateHourlyTasks('saikat')
+    },
+    sougata: {
+        name: "Sougata",
+        role: "Publisher",
+        dailyTarget: 60,
+        avgTime: "6",
+        schedule: [
+            { start: 13, end: 14, name: "Prep", articles: 16, focus: "Publish Shift 1 drafts", pace: "3.75 min/article", isBreak: false },
+            { start: 14, end: 15, name: "Sync", articles: 8, focus: "Publish remaining Shift 1", pace: "3.75 min/article", isBreak: false },
+            { start: 15, end: 15.25, name: "Short Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
+            { start: 15.25, end: 17, name: "Core", articles: 16, focus: "Publish Shift 2 drafts", pace: "5.6 min/article", isBreak: false },
+            { start: 17, end: 19, name: "Break", articles: 0, focus: "Rest", pace: "-", isBreak: true },
+            { start: 19, end: 22, name: "Closing", articles: 20, focus: "Publish Shift 3 drafts", pace: "6 min/article", isBreak: false }
+        ],
+        tasks: generateHourlyTasks('sougata')
+    }
+};
+
+// Generate hourly tasks based on user's schedule
+function generateHourlyTasks(user) {
+    const tasks = [];
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    if (user === 'saikat') {
+        // Saikat's hourly tasks (Drafter)
+        for (let hour = 11; hour <= 22; hour++) {
+            if (hour >= 11 && hour < 14) { // Shift 1
+                tasks.push({
+                    id: hour,
+                    title: `Draft ${hour === 11 ? 8 : hour === 12 ? 8 : 8} articles`,
+                    category: hour === 11 ? "K-pop/K-drama (3), Hollywood (4), Bollywood (1)" : 
+                             hour === 12 ? "K-pop/K-drama (5), Hollywood (2), Bollywood (1)" : 
+                                          "K-pop/K-drama (6), Hollywood (1), Bollywood (1)",
+                    time: `${hour}:00 - ${hour+1}:00`,
+                    completed: hour < currentHour
+                });
+            } else if (hour === 14) { // Lunch
+                tasks.push({
+                    id: hour,
+                    title: "Lunch Break",
+                    category: "Rest",
+                    time: "2:00 - 3:00 PM",
+                    completed: hour < currentHour
+                });
+            } else if (hour >= 15 && hour < 17) { // Shift 2
+                tasks.push({
+                    id: hour,
+                    title: `Draft ${hour === 15 ? 8 : 8} articles`,
+                    category: hour === 15 ? "K-drama (5), Hollywood (3)" : "K-drama (5), Hollywood (3)",
+                    time: `${hour}:00 - ${hour+1}:00`,
+                    completed: hour < currentHour
+                });
+            } else if (hour >= 17 && hour < 19) { // Break
+                tasks.push({
+                    id: hour,
+                    title: "Evening Break",
+                    category: "Rest",
+                    time: `${hour}:00 - ${hour+1}:00`,
+                    completed: hour < currentHour
+                });
+            } else if (hour >= 19 && hour < 22) { // Shift 3
+                tasks.push({
+                    id: hour,
+                    title: `Draft ${hour === 19 ? 7 : hour === 20 ? 7 : 6} articles`,
+                    category: hour === 19 ? "Hollywood (3), K-pop (3), South Indian (1)" : 
+                             hour === 20 ? "Hollywood (2), K-pop (4), South Indian (1)" : 
+                                          "Hollywood (2), K-pop (3), South Indian (1)",
+                    time: `${hour}:00 - ${hour+1}:00`,
+                    completed: hour < currentHour
+                });
+            }
+        }
+    } else {
+        // Sougata's hourly tasks (Publisher) - 8 articles/hour
+        for (let hour = 13; hour <= 22; hour++) {
+            if (hour === 13) { // Prep
+                tasks.push({
+                    id: hour,
+                    title: "Publish 16 Shift 1 drafts",
+                    category: "K-pop/K-drama (10), Hollywood (5), Bollywood (1)",
+                    time: "1:00 - 2:00 PM",
+                    completed: hour < currentHour
+                });
+            } else if (hour === 14) { // Sync
+                tasks.push({
+                    id: hour,
+                    title: "Publish remaining 8 Shift 1 drafts",
+                    category: "K-pop/K-drama (4), Hollywood (3), Bollywood (1)",
+                    time: "2:00 - 3:00 PM",
+                    completed: hour < currentHour
+                });
+            } else if (hour === 15) { // Core
+                tasks.push({
+                    id: hour,
+                    title: "Publish 8 Shift 2 drafts",
+                    category: "K-drama (5), Hollywood (3)",
+                    time: "3:00 - 4:00 PM",
+                    completed: hour < currentHour
+                });
+                tasks.push({
+                    id: hour + 0.5,
+                    title: "Short Break",
+                    category: "Rest",
+                    time: "3:15 - 3:30 PM",
+                    completed: hour < currentHour
+                });
+                tasks.push({
+                    id: hour + 0.75,
+                    title: "Publish remaining 8 Shift 2 drafts",
+                    category: "K-drama (5), Hollywood (3)",
+                    time: "3:30 - 4:00 PM",
+                    completed: hour < currentHour
+                });
+            } else if (hour >= 16 && hour < 17) { // Core continued
+                tasks.push({
+                    id: hour,
+                    title: "Publish 8 Shift 2 drafts",
+                    category: "K-drama (5), Hollywood (3)",
+                    time: "4:00 - 5:00 PM",
+                    completed: hour < currentHour
+                });
+            } else if (hour >= 17 && hour < 19) { // Break
+                tasks.push({
+                    id: hour,
+                    title: "Evening Break",
+                    category: "Rest",
+                    time: `${hour}:00 - ${hour+1}:00`,
+                    completed: hour < currentHour
+                });
+            } else if (hour >= 19 && hour < 22) { // Closing
+                tasks.push({
+                    id: hour,
+                    title: "Publish 8 Shift 3 drafts",
+                    category: hour === 19 ? "Hollywood (3), K-pop (4), South Indian (1)" : 
+                             hour === 20 ? "Hollywood (2), K-pop (5), South Indian (1)" : 
+                                          "Hollywood (2), K-pop (4), South Indian (2)",
+                    time: `${hour}:00 - ${hour+1}:00`,
+                    completed: hour < currentHour
+                });
+            }
+        }
+    }
+    
+    return tasks;
+}
+
+// Initialize scheduled notifications
+function initScheduledNotifications(user) {
+    scheduledNotifications = [];
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinutes = now.getMinutes();
+    
+    userData[user].schedule.forEach(shift => {
+        // Notification 15 minutes before shift starts
+        if (shift.start > currentHour || (shift.start === currentHour && currentMinutes < 45)) {
+            scheduledNotifications.push({
+                time: { hour: shift.start - 0.25 }, // 15 minutes before
+                title: `${shift.name} Starting Soon`,
+                message: `Your ${shift.name} starts in 15 minutes at ${formatHour(shift.start)}:00`,
+                shift: shift.name
             });
-        });
-        
-        // Confirm User
-        confirmBtn.addEventListener('click', () => {
-            if (!currentUser) {
-                alert('Please select a user first');
-                return;
-            }
-            
-            // Hide login, show dashboard
-            loginScreen.style.display = 'none';
-            dashboard.style.display = 'block';
-            
-            // Update UI based on user
-            updateDashboardForUser(currentUser);
-            
-            // Start checking for scheduled notifications
-            setInterval(checkScheduledNotifications, 60000); // Check every minute
-        });
-        
-        // Logout
-        logoutBtn.addEventListener('click', () => {
-            dashboard.style.display = 'none';
-            loginScreen.style.display = 'block';
-            resetTimer();
-            currentUser = null;
-            
-            // Reset user selection
-            userButtons.forEach(btn => btn.classList.remove('active'));
-        });
-        
-        // Close notification
-        closeNotification.addEventListener('click', () => {
-            notificationToast.classList.remove('show');
-        });
-        
-        // Pomodoro Timer Controls
-        startBtn.addEventListener('click', startTimer);
-        pauseBtn.addEventListener('click', pauseTimer);
-        resetBtn.addEventListener('click', resetTimer);
-        
-        // Update work and break durations
-        workDuration.addEventListener('change', () => {
-            if (!isTimerRunning) {
-                timeLeft = parseInt(workDuration.value) * 60;
-                updateTimerDisplay();
-            }
-        });
-        
-        breakDuration.addEventListener('change', () => {
-            // Only update if we're not in a session
-            if (!isTimerRunning) {
-                // No need to change timeLeft here
-            }
-        });
-        
-        // Functions
-        function updateDashboardForUser(user) {
-            // Update user badge
-            if (user === 'saikat') {
-                userBadge.className = 'user-badge saikat-badge';
-                userBadge.innerHTML = '<i class="fas fa-user"></i> Saikat - Drafter';
-                document.getElementById('totalArticles').textContent = '60';
-                document.getElementById('avgTime').textContent = '7.5';
-            } else {
-                userBadge.className = 'user-badge sougata-badge';
-                userBadge.innerHTML = '<i class="fas fa-user"></i> Sougata - Publisher';
-                document.getElementById('totalArticles').textContent = '60';
-                document.getElementById('avgTime').textContent = '5.6';
-            }
-            
-            // Render tasks
-            renderTasks(user);
         }
         
-        function renderTasks(user) {
-            taskList.innerHTML = '';
-            
-            tasks[user].forEach(task => {
-                const taskElement = document.createElement('div');
-                taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
-                taskElement.innerHTML = `
-                    <div class="task-check">
-                        <i class="fas ${task.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
-                    </div>
-                    <div class="task-content">
-                        <div class="task-title">
-                            ${task.title}
-                            <span class="task-category">${task.category}</span>
-                        </div>
-                        <div class="task-info">
-                            <span><i class="far fa-clock"></i> ${task.time}</span>
-                            <span>${task.completed ? 'Completed' : 'Pending'}</span>
-                        </div>
-                    </div>
-                    <div class="task-actions">
-                        <div class="task-btn" onclick="toggleTaskCompletion(${task.id})">
-                            <i class="fas ${task.completed ? 'fa-undo' : 'fa-check'}"></i>
-                        </div>
-                        <div class="task-btn">
-                            <i class="fas fa-bell"></i>
-                        </div>
-                    </div>
-                `;
-                taskList.appendChild(taskElement);
+        // Notification at shift start
+        if (shift.start > currentHour || (shift.start === currentHour && currentMinutes < 60)) {
+            scheduledNotifications.push({
+                time: { hour: shift.start },
+                title: `${shift.name} Started`,
+                message: `Your ${shift.name} has begun! ${shift.isBreak ? 'Enjoy your break!' : 'Time to work!'}`,
+                shift: shift.name
             });
         }
         
-        function toggleTaskCompletion(taskId) {
-            const task = tasks[currentUser].find(t => t.id === taskId);
-            if (task) {
-                task.completed = !task.completed;
-                renderTasks(currentUser);
-                
-                // Show notification
-                showNotification(
-                    task.completed ? 'Task Completed' : 'Task Reopened',
-                    `${task.title} has been ${task.completed ? 'completed' : 'reopened'}`
-                );
-            }
+        // Notification 15 minutes before shift ends
+        if (!shift.isBreak && (shift.end > currentHour || (shift.end === currentHour && currentMinutes < 45))) {
+            scheduledNotifications.push({
+                time: { hour: shift.end - 0.25 }, // 15 minutes before end
+                title: `${shift.name} Ending Soon`,
+                message: `Your ${shift.name} ends in 15 minutes at ${formatHour(shift.end)}:00`,
+                shift: shift.name
+            });
+        }
+    });
+}
+
+// Format hour for display
+function formatHour(hour) {
+    const h = Math.floor(hour);
+    const m = hour % 1 === 0.25 ? 15 : hour % 1 === 0.5 ? 30 : hour % 1 === 0.75 ? 45 : 0;
+    const period = h >= 12 ? 'PM' : 'AM';
+    const displayHour = h % 12 === 0 ? 12 : h % 12;
+    return `${displayHour}:${m.toString().padStart(2, '0')} ${period}`;
+}
+
+// User Selection
+userButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        userButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        currentUser = button.getAttribute('data-user');
+    });
+});
+
+// Confirm User
+confirmBtn.addEventListener('click', () => {
+    if (!currentUser) {
+        showNotification('Error', 'Please select a user first');
+        return;
+    }
+    
+    // Hide login, show dashboard
+    loginScreen.style.display = 'none';
+    dashboard.style.display = 'block';
+    
+    // Update UI based on user
+    updateDashboardForUser(currentUser);
+    
+    // Initialize notifications
+    initScheduledNotifications(currentUser);
+    
+    // Start checking for scheduled notifications
+    checkScheduledNotifications();
+    setInterval(checkScheduledNotifications, 60000); // Check every minute
+    
+    // Check current shift
+    checkCurrentShift();
+    setInterval(checkCurrentShift, 60000); // Check every minute
+});
+
+// Logout
+logoutBtn.addEventListener('click', () => {
+    dashboard.style.display = 'none';
+    loginScreen.style.display = 'block';
+    resetTimer();
+    currentUser = null;
+    scheduledNotifications = [];
+    currentShift = null;
+    
+    // Reset user selection
+    userButtons.forEach(btn => btn.classList.remove('active'));
+});
+
+// Close notification
+closeNotification.addEventListener('click', () => {
+    notificationToast.classList.remove('show');
+});
+
+// Pomodoro Timer Controls
+startBtn.addEventListener('click', startTimer);
+pauseBtn.addEventListener('click', pauseTimer);
+resetBtn.addEventListener('click', resetTimer);
+
+// Update work and break durations
+workDuration.addEventListener('change', () => {
+    if (!isTimerRunning) {
+        timeLeft = parseInt(workDuration.value) * 60;
+        updateTimerDisplay();
+    }
+});
+
+breakDuration.addEventListener('change', () => {
+    // Only update if we're not in a session
+    if (!isTimerRunning && !isWorkSession) {
+        timeLeft = parseInt(breakDuration.value) * 60;
+        updateTimerDisplay();
+    }
+});
+
+// Functions
+function updateDashboardForUser(user) {
+    const userInfo = userData[user];
+    
+    // Update user badge
+    userBadge.className = `user-badge ${user === 'saikat' ? 'saikat-badge' : 'sougata-badge'}`;
+    userBadge.innerHTML = `<i class="fas fa-user"></i> ${userInfo.name} - ${userInfo.role}`;
+    
+    // Update stats
+    document.getElementById('totalArticles').textContent = userInfo.dailyTarget;
+    document.getElementById('avgTime').textContent = userInfo.avgTime;
+    
+    // Render schedule
+    renderSchedule(user);
+    
+    // Render tasks
+    renderTasks(user);
+}
+
+function renderSchedule(user) {
+    const scheduleBody = document.querySelector('.schedule-table tbody');
+    scheduleBody.innerHTML = '';
+    
+    userData[user].schedule.forEach(shift => {
+        const row = document.createElement('tr');
+        if (shift.isBreak) {
+            row.className = 'break-row';
         }
         
-        function showNotification(title, message) {
-            notificationTitle.textContent = title;
-            notificationMessage.textContent = message;
+        row.innerHTML = `
+            <td>${formatHour(shift.start)} - ${formatHour(shift.end)}</td>
+            <td>${shift.name}</td>
+            <td>${shift.articles || '-'}</td>
+            <td>${shift.isBreak ? shift.focus : `<span class="focus-badge">${shift.focus}</span>`}</td>
+        `;
+        
+        scheduleBody.appendChild(row);
+    });
+}
+
+function renderTasks(user) {
+    taskList.innerHTML = '';
+    
+    userData[user].tasks.forEach(task => {
+        const taskElement = document.createElement('div');
+        taskElement.className = `task-item ${task.completed ? 'completed' : ''}`;
+        taskElement.innerHTML = `
+            <div class="task-check">
+                <i class="fas ${task.completed ? 'fa-check-circle' : 'fa-circle'}"></i>
+            </div>
+            <div class="task-content">
+                <div class="task-title">
+                    ${task.title}
+                    <span class="task-category">${task.category}</span>
+                </div>
+                <div class="task-info">
+                    <span><i class="far fa-clock"></i> ${task.time}</span>
+                    <span>${task.completed ? 'Completed' : 'Pending'}</span>
+                </div>
+            </div>
+            <div class="task-actions">
+                <div class="task-btn" onclick="toggleTaskCompletion('${user}', ${task.id})">
+                    <i class="fas ${task.completed ? 'fa-undo' : 'fa-check'}"></i>
+                </div>
+                <div class="task-btn" onclick="showTaskReminder('${task.title}', '${task.time}')">
+                    <i class="fas fa-bell"></i>
+                </div>
+            </div>
+        `;
+        taskList.appendChild(taskElement);
+    });
+}
+
+function toggleTaskCompletion(user, taskId) {
+    const taskIndex = userData[user].tasks.findIndex(t => t.id === taskId);
+    if (taskIndex !== -1) {
+        const task = userData[user].tasks[taskIndex];
+        task.completed = !task.completed;
+        renderTasks(user);
+        
+        // Show notification
+        showNotification(
+            task.completed ? 'Task Completed' : 'Task Reopened',
+            `${task.title} has been ${task.completed ? 'completed' : 'reopened'}`,
+            task.completed ? 'success' : 'warning'
+        );
+        
+        // Save to localStorage
+        localStorage.setItem(`task_${user}_${taskId}`, task.completed);
+    }
+}
+
+function showTaskReminder(title, time) {
+    showNotification('Reminder Set', `You'll be reminded about "${title}" at ${time}`, 'info');
+    // In a real app, you would set up an actual reminder here
+}
+
+function showNotification(title, message, type = 'info') {
+    // Update toast notification
+    notificationTitle.textContent = title;
+    notificationMessage.textContent = message;
+    
+    // Set icon based on type
+    let icon = 'fa-bell';
+    if (type === 'success') icon = 'fa-check-circle';
+    if (type === 'warning') icon = 'fa-exclamation-circle';
+    if (type === 'error') icon = 'fa-times-circle';
+    
+    document.querySelector('.notification-icon').className = `fas ${icon} notification-icon`;
+    
+    // Reset animation
+    const progressBar = document.querySelector('.progress-bar');
+    progressBar.style.animation = 'none';
+    void progressBar.offsetWidth; // Trigger reflow
+    progressBar.style.animation = 'progress 5s linear forwards';
+    
+    // Show notification
+    notificationToast.classList.add('show');
+    
+    // Auto hide after 5 seconds
+    setTimeout(() => {
+        notificationToast.classList.remove('show');
+    }, 5000);
+    
+    // Show desktop notification if permission is granted
+    if (Notification.permission === 'granted') {
+        new Notification(title, { 
+            body: message,
+            icon: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/bell.svg'
+        });
+    }
+}
+
+function checkScheduledNotifications() {
+    if (!currentUser) return;
+    
+    const now = new Date();
+    const currentHour = now.getHours() + (now.getMinutes() / 60);
+    
+    // Check if any notifications are due
+    scheduledNotifications.forEach(notification => {
+        if (!notification.triggered && 
+            currentHour >= notification.time.hour && 
+            currentHour < notification.time.hour + 0.016) { // ~1 minute window
             
-            // Reset animation
-            const progressBar = document.querySelector('.progress-bar');
-            progressBar.style.animation = 'none';
-            void progressBar.offsetWidth; // Trigger reflow
-            progressBar.style.animation = 'progress 5s linear forwards';
+            showNotification(notification.title, notification.message);
+            notification.triggered = true;
+            
+            // Play sound for important notifications
+            if (notification.title.includes('Started') || notification.title.includes('Ending')) {
+                playNotificationSound();
+            }
+        }
+    });
+}
+
+function checkCurrentShift() {
+    if (!currentUser) return;
+    
+    const now = new Date();
+    const currentHour = now.getHours() + (now.getMinutes() / 60);
+    let currentShiftFound = null;
+    
+    // Find current shift
+    userData[currentUser].schedule.forEach(shift => {
+        if (currentHour >= shift.start && currentHour < shift.end) {
+            currentShiftFound = shift;
+        }
+    });
+    
+    // Update UI if shift changed
+    if (currentShiftFound && (!currentShift || currentShift.name !== currentShiftFound.name)) {
+        currentShift = currentShiftFound;
+        document.getElementById('currentShift').textContent = currentShift.name;
+        
+        if (!currentShift.isBreak) {
+            showNotification(
+                `${currentShift.name} Active`,
+                `Focus: ${currentShift.focus}\nTarget: ${currentShift.articles} articles`,
+                'info'
+            );
+        }
+    }
+}
+
+// Pomodoro Timer Functions
+function startTimer() {
+    if (isTimerRunning) return;
+    
+    isTimerRunning = true;
+    startBtn.disabled = true;
+    pauseBtn.disabled = false;
+    
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        
+        if (timeLeft <= 0) {
+            // Timer completed
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            
+            // Play notification sound
+            playNotificationSound();
             
             // Show notification
-            notificationToast.classList.add('show');
-            
-            // Auto hide after 5 seconds
-            setTimeout(() => {
-                notificationToast.classList.remove('show');
-            }, 5000);
-        }
-        
-        function checkScheduledNotifications() {
-            // In a real app, this would check actual scheduled times
-            // For this demo, we'll just simulate some notifications
-            
-            const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-            
-            // Simulate shift notifications
-            if (hours === 14 && minutes === 50) {
+            if (isWorkSession) {
                 showNotification(
-                    'Shift 2 Starting Soon', 
-                    'Your next shift begins in 10 minutes at 3:00 PM'
+                    'Work Session Complete!', 
+                    'Time to take a break. Start your break timer when ready.',
+                    'success'
                 );
-            }
-            
-            // Simulate break time notifications
-            if (hours === 16 && minutes === 50) {
+                timerMode.textContent = 'Break Time!';
+                timerMode.style.color = 'var(--break-timer)';
+                timer.className = 'timer-display break-timer';
+                timeLeft = parseInt(breakDuration.value) * 60;
+            } else {
                 showNotification(
-                    'Break Time Approaching', 
-                    'Your break starts in 10 minutes at 5:00 PM'
+                    'Break Time Complete!', 
+                    'Ready to get back to work? Start your next work session.',
+                    'info'
                 );
+                timerMode.textContent = 'Work Session';
+                timerMode.style.color = 'var(--success)';
+                timer.className = 'timer-display work-timer';
+                timeLeft = parseInt(workDuration.value) * 60;
             }
-        }
-        
-        // Pomodoro Timer Functions
-        function startTimer() {
-            if (isTimerRunning) return;
             
-            isTimerRunning = true;
-            startBtn.disabled = true;
-            
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                
-                if (timeLeft <= 0) {
-                    // Timer completed
-                    clearInterval(timerInterval);
-                    isTimerRunning = false;
-                    
-                    // Play notification sound
-                    playNotificationSound();
-                    
-                    // Show notification
-                    if (isWorkSession) {
-                        showNotification(
-                            'Work Session Complete!', 
-                            'Time to take a break. Start your break timer when ready.'
-                        );
-                        timerMode.textContent = 'Break Time!';
-                        timerMode.style.color = 'var(--break-timer)';
-                        timer.className = 'timer-display break-timer';
-                        timeLeft = parseInt(breakDuration.value) * 60;
-                    } else {
-                        showNotification(
-                            'Break Time Complete!', 
-                            'Ready to get back to work? Start your next work session.'
-                        );
-                        timerMode.textContent = 'Work Session';
-                        timerMode.style.color = 'var(--success)';
-                        timer.className = 'timer-display work-timer';
-                        timeLeft = parseInt(workDuration.value) * 60;
-                    }
-                    
-                    isWorkSession = !isWorkSession;
-                    startBtn.disabled = false;
-                    return;
-                }
-                
-                updateTimerDisplay();
-            }, 1000);
-        }
-        
-        function pauseTimer() {
-            if (!isTimerRunning) return;
-            
-            clearInterval(timerInterval);
-            isTimerRunning = false;
+            isWorkSession = !isWorkSession;
             startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            return;
         }
         
-        function resetTimer() {
-            clearInterval(timerInterval);
-            isTimerRunning = false;
-            isWorkSession = true;
-            timeLeft = parseInt(workDuration.value) * 60;
-            startBtn.disabled = false;
-            timerMode.textContent = 'Work Session';
-            timerMode.style.color = 'var(--success)';
-            timer.className = 'timer-display work-timer';
-            updateTimerDisplay();
+        updateTimerDisplay();
+    }, 1000);
+}
+
+function pauseTimer() {
+    if (!isTimerRunning) return;
+    
+    clearInterval(timerInterval);
+    isTimerRunning = false;
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+}
+
+function resetTimer() {
+    clearInterval(timerInterval);
+    isTimerRunning = false;
+    isWorkSession = true;
+    timeLeft = parseInt(workDuration.value) * 60;
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    timerMode.textContent = 'Work Session';
+    timerMode.style.color = 'var(--success)';
+    timer.className = 'timer-display work-timer';
+    updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function playNotificationSound() {
+    try {
+        // Create audio context if not already created
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
         
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
+        // Create oscillator
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
         
-        function playNotificationSound() {
-            try {
-                // Create audio context if not already created
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                
-                // Create oscillator
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                // Configure sound
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
-                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime + 0.1); // C5
-                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.2); // E5
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                
-                // Play and stop
-                oscillator.start();
-                oscillator.stop(audioContext.currentTime + 0.5);
-            } catch (e) {
-                console.error('Audio context not supported:', e);
-            }
-        }
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
         
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check if browser supports notifications
-            if (!('Notification' in window)) {
-                console.log('This browser does not support desktop notification');
-            } else if (Notification.permission !== 'denied') {
-                Notification.requestPermission();
-            }
-            
-            // Initialize timer display
-            updateTimerDisplay();
+        // Configure sound
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // A4
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime + 0.1); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.2); // E5
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        // Play and stop
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+        console.error('Audio context not supported:', e);
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if browser supports notifications
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+            console.log('Notification permission:', permission);
         });
+    }
+    
+    // Initialize timer display
+    updateTimerDisplay();
+    pauseBtn.disabled = true;
+    
+    // Load completed tasks from localStorage
+    Object.keys(userData).forEach(user => {
+        userData[user].tasks.forEach(task => {
+            const completed = localStorage.getItem(`task_${user}_${task.id}`);
+            if (completed !== null) {
+                task.completed = completed === 'true';
+            }
+        });
+    });
+});
+
+// Error handling for audio context (Safari requires user interaction)
+document.addEventListener('click', () => {
+    if (!audioContext) {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.error('Audio context initialization failed:', e);
+        }
+    }
+}, { once: true });
     </script>
 </body>
 </html>
