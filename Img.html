@@ -1,4 +1,4 @@
-
+<style>
   /* Root CSS Variables for Modern Theme */
   :root {
     --background-color: #1a1b1e;
@@ -347,104 +347,104 @@
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
   }
+</style>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+<div class="toolbar">
+  <div class="toolbar-section">
+    <label for="uploadImage"><i class="fas fa-upload icon"></i><span class="tooltip">Upload Image</span></label>
+    <input type="file" id="uploadImage" style="display: none;" accept="image/*">
+  </div>
+  <div class="toolbar-section">
+    <button id="downloadImage"><i class="fas fa-download icon"></i><span class="tooltip">Download Image</span></button>
+  </div>
+  <div class="toolbar-section">
+    <button id="undoButton"><i class="fas fa-undo icon"></i><span class="tooltip">Undo (Ctrl+Z)</span></button>
+  </div>
+  <div class="toolbar-section">
+    <button id="redoButton"><i class="fas fa-redo icon"></i><span class="tooltip">Redo (Ctrl+Y)</span></button>
+  </div>
+  <div class="toolbar-section">
+    <button id="clearCanvas"><i class="fas fa-trash icon"></i><span class="tooltip">Clear Canvas</span></button>
+  </div>
+  <div class="toolbar-section" style="display: flex; flex-direction: row; align-items: center; gap: 4px; flex-grow: 1;">
+    <input type="text" id="captionInput" placeholder="Enter caption..." class="input-field" aria-label="Caption input">
+    <label><input type="checkbox" id="captionCheckbox" class="checkbox" aria-label="Toggle caption"><i class="fas fa-comment icon"></i><span class="tooltip">Toggle Caption</span></label>
+    <label><input type="checkbox" id="watermarkCheckbox" class="checkbox" aria-label="Toggle watermark"><i class="fas fa-stamp icon"></i><span class="tooltip">Toggle Watermark</span></label>
+  </div>
+</div>
 
+<div id="contextMenu" class="context-menu">
+  <div class="context-menu-group">
+    <div class="context-menu-item" id="pasteImage">
+      <i class="fas fa-clipboard icon"></i>
+      <span class="tooltip">Paste Image</span>
+    </div>
+    <div class="context-menu-item" id="deleteLayerContext">
+      <i class="fas fa-trash icon"></i>
+      <span class="tooltip">Delete Layer</span>
+    </div>
+    <div class="context-menu-item" id="duplicateLayer">
+      <i class="fas fa-copy icon"></i>
+      <span class="tooltip">Duplicate Layer</span>
+    </div>
+  </div>
+  <div class="context-menu-group">
+    <div class="context-menu-item" id="circularCropButton">
+      <i class="fas fa-circle-notch icon"></i>
+      <span class="tooltip">Circular Crop</span>
+    </div>
+    <div class="context-menu-item" id="cropButton">
+      <i class="fas fa-crop icon"></i>
+      <span class="tooltip">Rectangular Crop</span>
+    </div>
+  </div>
+  <div class="context-menu-group">
+    <div class="context-menu-item" id="filtersMenu">
+      <i class="fas fa-paint-brush icon"></i>
+      <span class="tooltip">Filters</span>
+      <div class="submenu" id="submenu">
+        <div class="submenu-item" id="grayscaleFilter"><i class="fas fa-paint-brush icon"></i> Grayscale</div>
+        <div class="submenu-item">
+          <i class="fas fa-sun icon"></i> Brightness
+          <input type="range" id="brightnessFilter" min="-50" max="50" step="0.5" value="0" aria-label="Brightness filter">
+        </div>
+        <div class="submenu-item">
+          <i class="fas fa-adjust icon"></i> Contrast
+          <input type="range" id="contrastFilter" min="-50" max="50" step="0.5" value="0" aria-label="Contrast filter">
+        </div>
+        <div class="submenu-item">
+          <i class="fas fa-paint-brush icon"></i> Saturation
+          <input type="range" id="saturationFilter" min="-50" max="50" step="0.5" value="0" aria-label="Saturation filter">
+        </div>
+        <div class="submenu-item">
+          <i class="fas fa-brush icon"></i> Blur
+          <input type="range" id="blurFilter" min="0" max="0.5" step="0.005" value="0" aria-label="Blur filter">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="context-menu-group">
+    <div class="context-menu-item" id="flipHorizontal">
+      <i class="fas fa-arrows-alt-h icon"></i>
+      <span class="tooltip">Flip Horizontal</span>
+    </div>
+    <div class="context-menu-item" id="flipVertical">
+      <i class="fas fa-arrows-alt-v icon"></i>
+      <span class="tooltip">Flip Vertical</span>
+    </div>
+  </div>
+</div>
 
+<div class="canvas-container" id="canvasContainer">
+  <canvas id="imageCanvas" width="1000" height="524"></canvas>
+</div>
 
+<div id="errorAlert" class="error-alert"></div>
 
-  
-    Upload Image
-    
-  
-  
-    Download Image
-  
-  
-    Undo (Ctrl+Z)
-  
-  
-    Redo (Ctrl+Y)
-  
-  
-    Clear Canvas
-  
-  
-    
-    Toggle Caption
-    Toggle Watermark
-  
-
-
-
-  
-    
-      
-      Paste Image
-    
-    
-      
-      Delete Layer
-    
-    
-      
-      Duplicate Layer
-    
-  
-  
-    
-      
-      Circular Crop
-    
-    
-      
-      Rectangular Crop
-    
-  
-  
-    
-      
-      Filters
-      
-         Grayscale
-        
-           Brightness
-          
-        
-        
-           Contrast
-          
-        
-        
-           Saturation
-          
-        
-        
-           Blur
-          
-        
-      
-    
-  
-  
-    
-      
-      Flip Horizontal
-    
-    
-      
-      Flip Vertical
-    
-  
-
-
-
-  
-
-
-
-
-
+<script>
 (() => {
   // Initialize Fabric.js canvas
   const canvas = new fabric.Canvas('imageCanvas', {
@@ -1145,3 +1145,4 @@
   // Initialize
   canvas.renderAll();
 })();
+</script>
