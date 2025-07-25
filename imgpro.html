@@ -436,6 +436,16 @@
       <span class="tooltip">Flip Vertical</span>
     </div>
   </div>
+  <div class="context-menu-group">
+    <div class="context-menu-item" id="moveToFront">
+      <i class="fas fa-arrow-up icon"></i>
+      <span class="tooltip">Move to Front</span>
+    </div>
+    <div class="context-menu-item" id="moveToBack">
+      <i class="fas fa-arrow-down icon"></i>
+      <span class="tooltip">Move to Back</span>
+    </div>
+  </div>
 </div>
 
 <div class="canvas-container" id="canvasContainer">
@@ -487,7 +497,7 @@
     if (historyIndex < history.length - 1) {
       history = history.slice(0, historyIndex + 1);
     }
-    const currentState = JSON.stringify(canvas.toJSON(['selectable', 'hasControls', 'hasBorders', 'filters', 'lockUniScaling']));
+    const currentState = JSON.stringify(canvas.toJSON(['selectable', 'hasControls', 'hasBorders', 'filters', 'scaleX', 'scaleY']));
     history.push(currentState);
     historyIndex++;
     if (history.length > 50) {
@@ -507,6 +517,20 @@
     }
   }
 
+  // Enforce Aspect Ratio During Scaling
+  canvas.on('object:scaling', (e) => {
+    const obj = e.target;
+    if (obj && obj.type === 'image') {
+      const scale = Math.max(Math.abs(obj.scaleX), Math.abs(obj.scaleY));
+      obj.set({
+        scaleX: scale * (obj.scaleX < 0 ? -1 : 1),
+        scaleY: scale * (obj.scaleY < 0 ? -1 : 1)
+      });
+      obj.setCoords();
+      canvas.renderAll();
+    }
+  });
+
   // Image Loading
   function loadImage(img) {
     try {
@@ -521,8 +545,7 @@
         scaleY: scaleFactor,
         hasControls: true,
         hasBorders: true,
-        selectable: true,
-        lockUniScaling: true
+        selectable: true
       });
       canvas.add(imgInstance).setActiveObject(imgInstance);
       canvas.renderAll();
@@ -611,10 +634,12 @@
     document.getElementById('filtersMenu').style.display = activeObject ? 'block' : 'none';
     document.getElementById('flipHorizontal').style.display = activeObject ? 'block' : 'none';
     document.getElementById('flipVertical').style.display = activeObject ? 'block' : 'none';
+    document.getElementById('moveToFront').style.display = activeObject ? 'block' : 'none';
+    document.getElementById('moveToBack').style.display = activeObject ? 'block' : 'none';
     
     // Ensure context menu stays within viewport
     const menuWidth = 200; // Approximate width of context menu
-    const menuHeight = 300; // Approximate height of context menu
+    const menuHeight = 350; // Adjusted for new group
     let left = e.clientX;
     let top = e.clientY;
     
@@ -648,8 +673,7 @@
       const clone = fabric.util.object.clone(activeObject);
       clone.set({ 
         left: activeObject.left + 10, 
-        top: activeObject.top + 10,
-        lockUniScaling: true 
+        top: activeObject.top + 10
       });
       canvas.add(clone);
       canvas.setActiveObject(clone);
@@ -662,6 +686,26 @@
     const activeObject = canvas.getActiveObject();
     if (activeObject) {
       canvas.remove(activeObject);
+      addHistory();
+    }
+    contextMenu.style.display = 'none';
+  });
+
+  document.getElementById('moveToFront').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      canvas.bringToFront(activeObject);
+      canvas.renderAll();
+      addHistory();
+    }
+    contextMenu.style.display = 'none';
+  });
+
+  document.getElementById('moveToBack').addEventListener('click', () => {
+    const activeObject = canvas.getActiveObject();
+    if (activeObject) {
+      canvas.sendToBack(activeObject);
+      canvas.renderAll();
       addHistory();
     }
     contextMenu.style.display = 'none';
@@ -751,7 +795,7 @@
           scaleY: image.scaleY / 2,
           hasControls: true,
           hasBorders: true,
-          lockUniScaling: true
+          selectable: true
         });
         canvas.remove(image);
         canvas.add(newImage);
@@ -856,8 +900,7 @@
           scaleY: 0.5,
           hasControls: true,
           hasBorders: true,
-          selectable: true,
-          lockUniScaling: true
+          selectable: true
         });
         canvas.remove(image);
         canvas.add(newImage);
