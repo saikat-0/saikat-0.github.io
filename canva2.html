@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Canva Tool</title>
+    <title>Enhanced Image Editor</title>
     <style>
         /* Root CSS Variables for Modern Theme */
         :root {
@@ -308,77 +308,6 @@
             background: #c82333;
         }
 
-        /* Mobile Download Button */
-        .mobile-download-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            margin: 15px 0;
-            width: 90%;
-            max-width: 300px;
-        }
-
-        .mobile-download-button {
-            background: var(--button-hover-bg);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 15px 25px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            transition: all var(--transition-duration);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .mobile-download-button:hover {
-            background: #3d8b40;
-            transform: scale(1.03);
-        }
-
-        .mobile-download-text {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #ccc;
-            text-align: center;
-        }
-
-        /* Mobile Context Menu Button */
-        .mobile-context-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            margin: 10px 0;
-            width: 90%;
-            max-width: 300px;
-        }
-
-        .mobile-context-button {
-            background: var(--button-bg);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            transition: all var(--transition-duration);
-        }
-
-        .mobile-context-button:hover {
-            background: #4a4d55;
-            transform: scale(1.03);
-        }
-
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.95); }
@@ -392,23 +321,59 @@
         }
 
         /* Mobile-specific styles */
-        .mobile-context-trigger {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
+        .mobile-buttons-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            width: 100%;
+            max-width: 500px;
+            padding: 0 10px;
+        }
+
+        .mobile-context-button {
+            width: 100%;
+            padding: 12px;
             background: var(--button-bg);
             color: #fff;
             border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: none;
+            border-radius: var(--radius);
+            font-size: 16px;
+            display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            z-index: 999;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            touch-action: manipulation;
+            gap: 8px;
+            cursor: pointer;
+            transition: all var(--transition-duration);
+        }
+
+        .mobile-context-button:hover {
+            background: var(--button-hover-bg);
+        }
+
+        .mobile-download-button {
+            width: 100%;
+            padding: 16px;
+            background: var(--label-bg);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all var(--transition-duration);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-download-button:hover {
+            background: var(--label-hover-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
         }
 
         /* Responsive Design */
@@ -437,7 +402,7 @@
             .context-menu {
                 transform: scale(0.9);
             }
-            .mobile-context-trigger {
+            .mobile-buttons-container {
                 display: flex;
             }
             .canvas-container {
@@ -457,12 +422,6 @@
             .crop-button, .cancel-crop-button {
                 padding: 10px 18px;
                 font-size: 16px;
-            }
-            
-            /* Show mobile buttons on mobile */
-            .mobile-download-container,
-            .mobile-context-container {
-                display: flex;
             }
         }
 
@@ -492,15 +451,9 @@
             .submenu {
                 min-width: 180px;
             }
-            
             .mobile-download-button {
-                padding: 12px 20px;
+                padding: 14px;
                 font-size: 16px;
-            }
-            
-            .mobile-context-button {
-                padding: 10px 18px;
-                font-size: 14px;
             }
         }
 
@@ -526,6 +479,7 @@
             to { transform: translateX(0); opacity: 1; }
         }
     </style>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
@@ -628,26 +582,17 @@
 
     <div class="canvas-container" id="canvasContainer">
         <canvas id="imageCanvas" width="1000" height="524"></canvas>
-        <button class="mobile-context-trigger" id="mobileContextTrigger">
-            <i class="fas fa-ellipsis-v"></i>
-        </button>
     </div>
-    
-    <!-- Mobile Context Menu Button -->
-    <div class="mobile-context-container">
+
+    <div class="mobile-buttons-container">
         <button class="mobile-context-button" id="mobileContextButton">
-            <i class="fas fa-ellipsis-h"></i> Options Menu
+            <i class="fas fa-ellipsis-v"></i>
+            Options
         </button>
-    </div>
-    
-    <!-- Mobile Download Button -->
-    <div class="mobile-download-container">
         <button class="mobile-download-button" id="mobileDownloadButton">
-            <i class="fas fa-download"></i> Download Image
+            <i class="fas fa-download"></i>
+            Download Image
         </button>
-        <div class="mobile-download-text">
-            Save your edited image to your device
-        </div>
     </div>
 
     <div id="errorAlert" class="error-alert"></div>
@@ -665,7 +610,6 @@
             let isCropping = false, cropCircle, cropRect;
             let history = [];
             let historyIndex = -1;
-            let longPressTimer = null;
             let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
             // Helper Functions
@@ -788,7 +732,7 @@
                 } catch (error) {
                     showError('Failed to paste image.');
                 }
-                document.getElementById('contextMenu').style.display = 'none';
+                hideContextMenu();
             });
 
             // Drag & Drop
@@ -864,28 +808,23 @@
                 }
             });
 
+            // Desktop context menu
             canvasContainer.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                showContextMenu(e.clientX, e.clientY);
+                if (!isMobile) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showContextMenu(e.clientX, e.clientY);
+                }
             });
 
-            // Mobile Context Menu Button
+            // Mobile Context Button
             document.getElementById('mobileContextButton').addEventListener('click', (e) => {
                 e.stopPropagation();
-                const rect = canvasContainer.getBoundingClientRect();
-                showContextMenu(rect.left + 20, rect.bottom + 10);
-            });
-
-            // Mobile Touch Events for Context Menu
-            if (isMobile) {
-                // Mobile context trigger button
-                document.getElementById('mobileContextTrigger').addEventListener('click', (e) => {
-                    e.stopPropagation();
+                if (isMobile) {
                     const rect = canvasContainer.getBoundingClientRect();
-                    showContextMenu(rect.right - 50, rect.bottom - 50);
-                });
-            }
+                    showContextMenu(rect.left + 10, rect.bottom + 10);
+                }
+            });
 
             // Keyboard Navigation
             document.addEventListener('keydown', (e) => {
@@ -919,13 +858,13 @@
                 hideContextMenu();
             });
 
-            // Layer Ordering
+            // Layer Ordering Functions
             document.getElementById('bringForward').addEventListener('click', () => {
                 const activeObject = canvas.getActiveObject();
                 if (activeObject) {
                     canvas.bringForward(activeObject);
-                    addHistory();
                     canvas.renderAll();
+                    addHistory();
                 }
                 hideContextMenu();
             });
@@ -934,8 +873,8 @@
                 const activeObject = canvas.getActiveObject();
                 if (activeObject) {
                     canvas.sendBackwards(activeObject);
-                    addHistory();
                     canvas.renderAll();
+                    addHistory();
                 }
                 hideContextMenu();
             });
@@ -1309,8 +1248,6 @@
             }
 
             document.getElementById('downloadImage').addEventListener('click', downloadImage);
-            
-            // Mobile Download Button
             document.getElementById('mobileDownloadButton').addEventListener('click', downloadImage);
 
             // Filters
