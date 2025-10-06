@@ -1,1385 +1,1389 @@
-<style>
-  /* Root CSS Variables for Modern Theme */
-  :root {
-    --background-color: #1a1b1e;
-    --toolbar-bg: #2a2c31;
-    --button-bg: #3b3e46;
-    --button-hover-bg: #4caf50;
-    --label-bg: #007bff;
-    --label-hover-bg: #0056b3;
-    --canvas-border: #555;
-    --canvas-shadow: rgba(0, 0, 0, 0.5);
-    --context-menu-bg: rgba(42, 44, 49, 0.95);
-    --context-menu-border: rgba(255, 255, 255, 0.1);
-    --context-menu-hover: rgba(255, 255, 255, 0.2);
-    --transition-duration: 0.2s;
-    --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
-    --radius: 5px;
-    --glow: 0 0 6px rgba(76, 175, 80, 0.5);
-  }
-
-  /* Global Reset & Styling */
-  body {
-    font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
-    margin: 0;
-    padding: 0 0 0 6px; /* Added left padding */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: var(--background-color);
-    color: #fff;
-    overflow-x: hidden;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
-    box-sizing: border-box;
-  }
-
-  /* Toolbar Styling */
-  .toolbar {
-    height: 40px;
-    padding: 2px 4px;
-    background: var(--toolbar-bg);
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: nowrap;
-    width: 100%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(8px);
-    touch-action: manipulation;
-    box-sizing: border-box;
-  }
-
-  /* Button & Label Styling */
-  button, label {
-    padding: 9px;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    background: var(--button-bg);
-    color: #fff;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-duration) var(--transition-ease);
-    position: relative;
-    touch-action: manipulation;
-  }
-
-  label {
-    background: var(--label-bg);
-  }
-
-  button:hover, label:hover {
-    background: var(--button-hover-bg);
-    transform: scale(1.05);
-    box-shadow: var(--glow);
-  }
-
-  .toolbar-section .tooltip {
-    visibility: hidden;
-    background: #333;
-    color: #fff;
-    text-align: center;
-    border-radius: 3px;
-    padding: 3px 6px;
-    position: absolute;
-    z-index: 1000;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity var(--transition-duration);
-    font-size: 12px;
-  }
-
-  button:hover .tooltip, label:hover .tooltip {
-    visibility: visible;
-    opacity: 1;
-  }
-
-  /* Input Field Styling */
-  .input-field {
-    padding: 2px;
-    border: 1px solid var(--canvas-border);
-    border-radius: var(--radius);
-    font-size: 18px;
-    background: #2a2c31;
-    color: #fff;
-    transition: border-color var(--transition-duration);
-    flex-grow: 1;
-    min-width: 80px;
-    height: 35px;
-    touch-action: manipulation;
-  }
-
-  .input-field:focus {
-    border-color: var(--label-bg);
-    outline: none;
-  }
-
-  /* Checkbox Styling */
-  .checkbox {
-    margin-right: 2px;
-    transform: scale(0.8);
-  }
-
-  /* Canvas Container */
-  .canvas-container {
-    margin: 6px 10px 6px 10px; /* Added left margin */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    transition: all var(--transition-duration);
-    touch-action: manipulation;
-    box-sizing: border-box;
-  }
-
-  /* Canvas Styling */
-  #imageCanvas {
-    border: 2px solid var(--canvas-border);
-    background: #fff;
-    cursor: crosshair;
-    box-shadow: var(--canvas-shadow);
-    border-radius: var(--radius);
-    transition: box-shadow var(--transition-duration);
-    touch-action: manipulation;
-  }
-
-  #imageCanvas:hover {
-    box-shadow: var(--glow);
-  }
-
-  /* Selected Image Styling */
-  .selected-image {
-    animation: pulseGlow 1.5s ease-in-out infinite;
-  }
-
-  /* Context Menu Styling */
-  .context-menu {
-    position: absolute;
-    z-index: 1000;
-    background: var(--context-menu-bg);
-    border: 1px solid var(--context-menu-border);
-    border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
-    padding: 8px;
-    transition: all var(--transition-duration);
-  }
-
-  .context-menu.active {
-    display: flex;
-    animation: fadeIn 0.2s var(--transition-ease);
-  }
-
-  .context-menu-group {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-    padding: 4px;
-    border: 1px dashed var(--context-menu-border);
-    border-radius: var(--radius);
-  }
-
-  .context-menu-item {
-    padding: 8px;
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all var(--transition-duration);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    color: #fff;
-    position: relative;
-    touch-action: manipulation;
-  }
-
-  .context-menu-item:hover {
-    background: var(--context-menu-hover);
-    transform: scale(1.05);
-  }
-
-  .context-menu-item .icon {
-    font-size: 18px;
-  }
-
-  .context-menu-item .tooltip {
-    visibility: hidden;
-    background: #333;
-    color: #fff;
-    border-radius: 4px;
-    padding: 5px 10px;
-    position: absolute;
-    z-index: 1001;
-    top: 50%;
-    left: 110%;
-    transform: translateY(-50%);
-    white-space: nowrap;
-    opacity: 0;
-    transition: opacity var(--transition-duration);
-  }
-
-  .context-menu-item:hover .tooltip {
-    visibility: visible;
-    opacity: 1;
-  }
-
-  /* Submenu Styling */
-  .submenu {
-    display: none;
-    position: absolute;
-    left: 100%;
-    top: 0;
-    background: var(--context-menu-bg);
-    border: 1px solid var(--context-menu-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    z-index: 1002;
-    border-radius: var(--radius);
-    padding: 8px;
-    min-width: 180px;
-  }
-
-  .context-menu-item:hover .submenu {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .submenu-item {
-    padding: 8px 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #fff;
-    transition: all var(--transition-duration);
-  }
-
-  .submenu-item:hover {
-    background: var(--context-menu-hover);
-  }
-
-  .submenu-item input[type="range"] {
-    width: 100px;
-  }
-
-  /* Crop Button Styling */
-  .crop-button, .cancel-crop-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-    padding: 8px 16px;
-    border-radius: var(--radius);
-    background: var(--button-bg);
-    color: #fff;
-    cursor: pointer;
-    transition: all var(--transition-duration);
-    touch-action: manipulation;
-  }
-
-  .cancel-crop-button {
-    right: 100px;
-    background: #dc3545;
-  }
-
-  .crop-button:hover {
-    background: var(--button-hover-bg);
-    transform: scale(1.05);
-  }
-
-  .cancel-crop-button:hover {
-    background: #c82333;
-  }
-
-  /* Animations */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  @keyframes pulseGlow {
-    0% { box-shadow: 0 0 6px rgba(76, 175, 80, 0.5); }
-    50% { box-shadow: 0 0 12px rgba(76, 175, 80, 0.8); }
-    100% { box-shadow: 0 0 6px rgba(76, 175, 80, 0.5); }
-  }
-
-  /* Mobile-specific styles */
-  .mobile-context-trigger {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    background: var(--button-bg);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    z-index: 999;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    touch-action: manipulation;
-  }
-
-  /* Mobile context menu button in toolbar */
-  .mobile-toolbar-context {
-    display: none;
-    background: var(--button-bg);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all var(--transition-duration);
-  }
-
-  .mobile-toolbar-context:hover {
-    background: var(--button-hover-bg);
-    transform: scale(1.05);
-  }
-
-  /* Mobile download button */
-  .mobile-download-container {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    margin: 15px 0;
-    width: 100%;
-  }
-
-  .mobile-download-button {
-    padding: 15px 25px;
-    font-size: 18px;
-    background: var(--button-bg);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all var(--transition-duration);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    width: 90%;
-    max-width: 300px;
-    justify-content: center;
-  }
-
-  .mobile-download-button:hover {
-    background: var(--button-hover-bg);
-    transform: scale(1.05);
-    box-shadow: var(--glow);
-  }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .toolbar {
-      padding: 2px 4px;
-      gap: 2px;
-      height: auto;
-      flex-wrap: wrap;
-    }
-    .input-field {
-      min-width: 60px;
-      font-size: 14px;
-      height: 28px;
-      padding: 1px;
-    }
-    button, label {
-      font-size: 14px;
-      padding: 6px;
-      height: 28px;
-      min-width: 28px;
-    }
-    .checkbox {
-      transform: scale(0.7);
-    }
-    .context-menu {
-      transform: scale(0.9);
-    }
-    .mobile-context-trigger {
-      display: flex;
-    }
-    .mobile-toolbar-context {
-      display: flex;
-    }
-    .mobile-download-container {
-      display: flex;
-    }
-    .canvas-container {
-      margin: 10px 0;
-    }
-    #imageCanvas {
-      max-width: 95vw;
-      max-height: 60vh;
-    }
-    .context-menu-item {
-      width: 40px;
-      height: 40px;
-    }
-    .submenu {
-      min-width: 200px;
-    }
-    .crop-button, .cancel-crop-button {
-      padding: 10px 18px;
-      font-size: 16px;
-    }
-    
-    /* Larger icons for mobile context menu */
-    .context-menu.mobile-active .context-menu-item .icon {
-      font-size: 24px;
-    }
-    .context-menu.mobile-active .context-menu-item {
-      width: 50px;
-      height: 50px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .toolbar {
-      padding: 2px;
-      gap: 1px;
-    }
-    .input-field {
-      min-width: 50px;
-      font-size: 12px;
-      height: 24px;
-    }
-    button, label {
-      font-size: 12px;
-      padding: 4px;
-      height: 24px;
-      min-width: 24px;
-    }
-    .context-menu {
-      transform: scale(0.85);
-    }
-    .context-menu-item {
-      width: 36px;
-      height: 36px;
-    }
-    .submenu {
-      min-width: 180px;
-    }
-    .mobile-download-button {
-      padding: 12px 20px;
-      font-size: 16px;
-    }
-  }
-
-  /* Error Alert Styling */
-  .error-alert {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: #dc3545;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    z-index: 2000;
-    animation: slideInRight 0.3s var(--transition-ease);
-    display: none;
-    max-width: 80vw;
-    word-wrap: break-word;
-  }
-
-  @keyframes slideInRight {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-</style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-<div class="toolbar">
-  <div class="toolbar-section">
-    <label for="uploadImage"><i class="fas fa-upload icon"></i><span class="tooltip">Upload Image</span></label>
-    <input type="file" id="uploadImage" style="display: none;" accept="image/*">
-  </div>
-  <div class="toolbar-section">
-    <button id="downloadImage"><i class="fas fa-download icon"></i><span class="tooltip">Download Image</span></button>
-  </div>
-  <div class="toolbar-section">
-    <button id="undoButton"><i class="fas fa-undo icon"></i><span class="tooltip">Undo (Ctrl+Z)</span></button>
-  </div>
-  <div class="toolbar-section">
-    <button id="redoButton"><i class="fas fa-redo icon"></i><span class="tooltip">Redo (Ctrl+Y)</span></button>
-  </div>
-  <div class="toolbar-section">
-    <button id="clearCanvas"><i class="fas fa-trash icon"></i><span class="tooltip">Clear Canvas</span></button>
-  </div>
-  <div class="toolbar-section" style="display: flex; flex-direction: row; align-items: center; gap: 4px; flex-grow: 1;">
-    <input type="text" id="captionInput" placeholder="Enter caption..." class="input-field" aria-label="Caption input">
-    <label><input type="checkbox" id="captionCheckbox" class="checkbox" aria-label="Toggle caption"><i class="fas fa-comment icon"></i><span class="tooltip">Toggle Caption</span></label>
-    <label><input type="checkbox" id="watermarkCheckbox" class="checkbox" aria-label="Toggle watermark"><i class="fas fa-stamp icon"></i><span class="tooltip">Toggle Watermark</span></label>
-  </div>
-  <div class="toolbar-section">
-    <button class="mobile-toolbar-context" id="mobileToolbarContext">
-      <i class="fas fa-ellipsis-v"></i>
-      <span class="tooltip">Menu</span>
-    </button>
-  </div>
-</div>
-
-<div id="contextMenu" class="context-menu">
-  <div class="context-menu-group">
-    <div class="context-menu-item" id="pasteImage">
-      <i class="fas fa-clipboard icon"></i>
-      <span class="tooltip">Paste Image</span>
-    </div>
-    <div class="context-menu-item" id="deleteLayerContext">
-      <i class="fas fa-trash icon"></i>
-      <span class="tooltip">Delete Layer</span>
-    </div>
-    <div class="context-menu-item" id="duplicateLayer">
-      <i class="fas fa-copy icon"></i>
-      <span class="tooltip">Duplicate Layer</span>
-    </div>
-  </div>
-  <div class="context-menu-group">
-    <div class="context-menu-item" id="circularCropButton">
-      <i class="fas fa-circle-notch icon"></i>
-      <span class="tooltip">Circular Crop</span>
-    </div>
-    <div class="context-menu-item" id="cropButton">
-      <i class="fas fa-crop icon"></i>
-      <span class="tooltip">Rectangular Crop</span>
-    </div>
-  </div>
-  <div class="context-menu-group">
-    <div class="context-menu-item" id="filtersMenu">
-      <i class="fas fa-paint-brush icon"></i>
-      <span class="tooltip">Filters</span>
-      <div class="submenu" id="submenu">
-        <div class="submenu-item" id="grayscaleFilter"><i class="fas fa-paint-brush icon"></i> Grayscale</div>
-        <div class="submenu-item">
-          <i class="fas fa-sun icon"></i> Brightness
-          <input type="range" id="brightnessFilter" min="-50" max="50" step="0.5" value="0" aria-label="Brightness filter">
-        </div>
-        <div class="submenu-item">
-          <i class="fas fa-adjust icon"></i> Contrast
-          <input type="range" id="contrastFilter" min="-50" max="50" step="0.5" value="0" aria-label="Contrast filter">
-        </div>
-        <div class="submenu-item">
-          <i class="fas fa-paint-brush icon"></i> Saturation
-          <input type="range" id="saturationFilter" min="-50" max="50" step="0.5" value="0" aria-label="Saturation filter">
-        </div>
-        <div class="submenu-item">
-          <i class="fas fa-brush icon"></i> Blur
-          <input type="range" id="blurFilter" min="0" max="0.5" step="0.005" value="0" aria-label="Blur filter">
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="context-menu-group">
-    <div class="context-menu-item" id="flipHorizontal">
-      <i class="fas fa-arrows-alt-h icon"></i>
-      <span class="tooltip">Flip Horizontal</span>
-    </div>
-    <div class="context-menu-item" id="flipVertical">
-      <i class="fas fa-arrows-alt-v icon"></i>
-      <span class="tooltip">Flip Vertical</span>
-    </div>
-  </div>
-</div>
-
-<div class="canvas-container" id="canvasContainer">
-  <canvas id="imageCanvas" width="1000" height="524"></canvas>
-  <button class="mobile-context-trigger" id="mobileContextTrigger">
-    <i class="fas fa-ellipsis-v"></i>
-  </button>
-</div>
-
-<div class="mobile-download-container">
-  <button class="mobile-download-button" id="mobileDownloadButton">
-    <i class="fas fa-download icon"></i> Download Image
-  </button>
-</div>
-
-<div id="errorAlert" class="error-alert"></div>
-
-<script>
-(() => {
-  // Initialize Fabric.js canvas
-  const canvas = new fabric.Canvas('imageCanvas', {
-    preserveObjectStacking: true,
-    selection: true,
-    uniformScaling: false
-  });
-
-  // Global Variables
-  let isCropping = false, cropCircle, cropRect;
-  let history = [];
-  let historyIndex = -1;
-  let longPressTimer = null;
-  let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-  // Helper Functions
-  function showError(message) {
-    const alert = document.getElementById('errorAlert');
-    alert.textContent = message;
-    alert.style.display = 'block';
-    setTimeout(() => {
-      alert.style.display = 'none';
-    }, 3000);
-    console.error(message);
-  }
-
-  // Debounce Utility
-  function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
-
-  // History Management
-  function addHistory() {
-    if (historyIndex < history.length - 1) {
-      history = history.slice(0, historyIndex + 1);
-    }
-    const currentState = JSON.stringify(canvas.toJSON(['selectable', 'hasControls', 'hasBorders', 'filters', 'scaleX', 'scaleY']));
-    history.push(currentState);
-    historyIndex++;
-    if (history.length > 50) {
-      history.shift();
-      historyIndex--;
-    }
-  }
-
-  function restoreCanvasState(state) {
-    try {
-      canvas.clear();
-      canvas.loadFromJSON(state, () => {
-        canvas.renderAll();
-      });
-    } catch (error) {
-      showError('Failed to restore canvas state.');
-    }
-  }
-
-  // Enforce Aspect Ratio During Scaling
-  canvas.on('object:scaling', (e) => {
-    const obj = e.target;
-    if (obj && obj.type === 'image') {
-      const scale = Math.max(Math.abs(obj.scaleX), Math.abs(obj.scaleY));
-      obj.set({
-        scaleX: scale * (obj.scaleX < 0 ? -1 : 1),
-        scaleY: scale * (obj.scaleY < 0 ? -1 : 1)
-      });
-      obj.setCoords();
-      canvas.renderAll();
-    }
-  });
-
-  // Image Loading
-  function loadImage(img) {
-    try {
-      const imgInstance = new fabric.Image(img);
-      const canvasAspect = canvas.width / canvas.height;
-      const imgAspect = img.width / img.height;
-      const scaleFactor = (canvasAspect > imgAspect) ? canvas.height / img.height : canvas.width / img.width;
-      imgInstance.set({
-        left: (canvas.width - img.width * scaleFactor) / 2,
-        top: (canvas.height - img.height * scaleFactor) / 2,
-        scaleX: scaleFactor,
-        scaleY: scaleFactor,
-        hasControls: true,
-        hasBorders: true,
-        selectable: true
-      });
-      canvas.add(imgInstance).setActiveObject(imgInstance);
-      canvas.renderAll();
-      addHistory();
-    } catch (error) {
-      showError('Failed to load image.');
-    }
-  }
-
-  // Upload Image
-  document.getElementById('uploadImage').addEventListener('change', async (e) => {
-    if (!e.target.files.length) {
-      showError('No file selected.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target.result;
-      img.onload = () => loadImage(img);
-      img.onerror = () => showError('Unsupported or corrupted image.');
-    };
-    reader.onerror = () => showError('Failed to read file.');
-    reader.readAsDataURL(e.target.files[0]);
-  });
-
-  // Paste Image
-  document.getElementById('pasteImage').addEventListener('click', async () => {
-    try {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        if (item.types.includes('image/png')) {
-          const blob = await item.getType('image/png');
-          const img = new Image();
-          img.src = URL.createObjectURL(blob);
-          img.onload = () => loadImage(img);
-          break;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canva Image Editor</title>
+    <style>
+        /* Root CSS Variables for Modern Theme */
+        :root {
+            --background-color: #1a1b1e;
+            --toolbar-bg: #2a2c31;
+            --button-bg: #3b3e46;
+            --button-hover-bg: #4caf50;
+            --label-bg: #007bff;
+            --label-hover-bg: #0056b3;
+            --canvas-border: #555;
+            --canvas-shadow: rgba(0, 0, 0, 0.5);
+            --context-menu-bg: rgba(42, 44, 49, 0.95);
+            --context-menu-border: rgba(255, 255, 255, 0.1);
+            --context-menu-hover: rgba(255, 255, 255, 0.2);
+            --transition-duration: 0.2s;
+            --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+            --radius: 5px;
+            --glow: 0 0 6px rgba(76, 175, 80, 0.5);
         }
-      }
-    } catch (error) {
-      showError('Failed to paste image.');
-    }
-    hideContextMenu();
-  });
 
-  // Drag & Drop
-  const canvasContainer = document.getElementById('canvasContainer');
-  canvasContainer.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-  });
-  canvasContainer.addEventListener('drop', (e) => {
-    e.preventDefault();
-    const files = e.dataTransfer.files;
-    if (files.length > 0 && files[0].type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-        img.onload = () => loadImage(img);
-      };
-      reader.readAsDataURL(files[0]);
-    } else {
-      showError('Please drop a valid image.');
-    }
-  });
-
-  // Context Menu Functions
-  function showContextMenu(x, y, isMobileTrigger = false) {
-    const activeObject = canvas.getActiveObject();
-    document.getElementById('pasteImage').style.display = 'block';
-    document.getElementById('deleteLayerContext').style.display = activeObject ? 'block' : 'none';
-    document.getElementById('duplicateLayer').style.display = activeObject ? 'block' : 'none';
-    document.getElementById('cropButton').style.display = activeObject ? 'block' : 'none';
-    document.getElementById('circularCropButton').style.display = activeObject ? 'block' : 'none';
-    document.getElementById('filtersMenu').style.display = activeObject ? 'block' : 'none';
-    document.getElementById('flipHorizontal').style.display = activeObject ? 'block' : 'none';
-    document.getElementById('flipVertical').style.display = activeObject ? 'block' : 'none';
-    
-    const contextMenu = document.getElementById('contextMenu');
-    
-    // Add mobile class for larger icons if triggered on mobile
-    if (isMobileTrigger) {
-      contextMenu.classList.add('mobile-active');
-    } else {
-      contextMenu.classList.remove('mobile-active');
-    }
-    
-    // Ensure context menu stays within viewport
-    const menuWidth = contextMenu.offsetWidth || 200;
-    const menuHeight = contextMenu.offsetHeight || 300;
-    let left = x;
-    let top = y;
-    
-    if (left + menuWidth > window.innerWidth) {
-      left = window.innerWidth - menuWidth;
-    }
-    if (top + menuHeight > window.innerHeight) {
-      top = window.innerHeight - menuHeight;
-    }
-    if (left < 0) left = 0;
-    if (top < 0) top = 0;
-
-    contextMenu.style.left = `${left}px`;
-    contextMenu.style.top = `${top}px`;
-    contextMenu.style.display = 'block';
-    contextMenu.classList.add('active');
-  }
-
-  function hideContextMenu() {
-    const contextMenu = document.getElementById('contextMenu');
-    contextMenu.classList.remove('active');
-    contextMenu.classList.remove('mobile-active');
-    contextMenu.style.display = 'none';
-  }
-
-  // Context Menu Events
-  document.addEventListener('click', (e) => {
-    const contextMenu = document.getElementById('contextMenu');
-    if (!contextMenu.contains(e.target) && !canvasContainer.contains(e.target)) {
-      hideContextMenu();
-    }
-  });
-
-  canvasContainer.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    showContextMenu(e.clientX, e.clientY, false);
-  });
-
-  // Mobile Touch Events for Context Menu
-  if (isMobile) {
-    // Mobile context trigger button in toolbar
-    document.getElementById('mobileToolbarContext').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const rect = e.target.getBoundingClientRect();
-      showContextMenu(rect.left, rect.bottom, true);
-    });
-
-    // Mobile context trigger button in canvas container
-    document.getElementById('mobileContextTrigger').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const rect = canvasContainer.getBoundingClientRect();
-      showContextMenu(rect.right - 50, rect.bottom - 50, true);
-    });
-
-    // Prevent default context menu on long press
-    canvasContainer.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        longPressTimer = setTimeout(() => {
-          e.preventDefault();
-        }, 500);
-      }
-    });
-
-    canvasContainer.addEventListener('touchmove', (e) => {
-      clearTimeout(longPressTimer);
-    });
-
-    canvasContainer.addEventListener('touchend', (e) => {
-      clearTimeout(longPressTimer);
-    });
-  }
-
-  // Keyboard Navigation
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      hideContextMenu();
-    }
-  });
-
-  // Layer Operations
-  document.getElementById('duplicateLayer').addEventListener('click', () => {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-      const clone = fabric.util.object.clone(activeObject);
-      clone.set({ 
-        left: activeObject.left + 10, 
-        top: activeObject.top + 10
-      });
-      canvas.add(clone);
-      canvas.setActiveObject(clone);
-      addHistory();
-    }
-    hideContextMenu();
-  });
-
-  document.getElementById('deleteLayerContext').addEventListener('click', () => {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-      canvas.remove(activeObject);
-      addHistory();
-    }
-    hideContextMenu();
-  });
-
-  // Crop Functions
-  document.getElementById('cropButton').addEventListener('click', () => {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject && activeObject.type === 'image') {
-      enterCropMode(activeObject);
-    }
-    hideContextMenu();
-  });
-
-  function enterCropMode(image) {
-    if (isCropping) return;
-    isCropping = true;
-    cropRect = new fabric.Rect({
-      left: image.left,
-      top: image.top,
-      width: image.width * image.scaleX,
-      height: image.height * image.scaleY,
-      fill: 'rgba(0,0,0,0.3)',
-      hasBorders: true,
-      hasControls: true,
-      selectable: true,
-      lockAspectRatio: true
-    });
-    canvas.add(cropRect);
-    canvas.setActiveObject(cropRect);
-    canvas.renderAll();
-
-    const cropButton = document.createElement('button');
-    cropButton.innerText = 'Crop';
-    cropButton.className = 'crop-button';
-    document.body.appendChild(cropButton);
-
-    const cancelButton = document.createElement('button');
-    cancelButton.innerText = 'Cancel';
-    cancelButton.className = 'cancel-crop-button';
-    document.body.appendChild(cancelButton);
-
-    cropButton.addEventListener('click', () => {
-      cropImage(image);
-      document.body.removeChild(cropButton);
-      document.body.removeChild(cancelButton);
-    });
-
-    cancelButton.addEventListener('click', () => {
-      canvas.remove(cropRect);
-      isCropping = false;
-      cropRect = null;
-      canvas.renderAll();
-      document.body.removeChild(cropButton);
-      document.body.removeChild(cancelButton);
-    });
-  }
-
-  function cropImage(image) {
-    if (!cropRect) return;
-    try {
-      const croppedLeft = cropRect.left - image.left;
-      const croppedTop = cropRect.top - image.top;
-      const croppedWidth = cropRect.width * cropRect.scaleX;
-      const croppedHeight = cropRect.height * cropRect.scaleY;
-      const croppedCanvas = document.createElement('canvas');
-      croppedCanvas.width = croppedWidth * 2;
-      croppedCanvas.height = croppedHeight * 2;
-      const croppedCtx = croppedCanvas.getContext('2d');
-      croppedCtx.imageSmoothingEnabled = true;
-      croppedCtx.imageSmoothingQuality = 'high';
-      croppedCtx.drawImage(
-        image._element,
-        croppedLeft / image.scaleX,
-        croppedTop / image.scaleY,
-        croppedWidth / image.scaleX,
-        croppedHeight / image.scaleY,
-        0, 0, croppedWidth * 2, croppedHeight * 2
-      );
-      const croppedImg = new Image();
-      croppedImg.src = croppedCanvas.toDataURL('image/webp', 1.0);
-      croppedImg.onload = () => {
-        const newImage = new fabric.Image(croppedImg, {
-          left: image.left,
-          top: image.top,
-          scaleX: image.scaleX / 2,
-          scaleY: image.scaleY / 2,
-          hasControls: true,
-          hasBorders: true,
-          selectable: true
-        });
-        canvas.remove(image);
-        canvas.add(newImage);
-        canvas.setActiveObject(newImage);
-        canvas.renderAll();
-        addHistory();
-      };
-      canvas.remove(cropRect);
-      isCropping = false;
-      cropRect = null;
-    } catch (error) {
-      showError('Failed to crop image.');
-    }
-  }
-
-  document.getElementById('circularCropButton').addEventListener('click', () => {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject && activeObject.type === 'image') {
-      enterCircularCropMode(activeObject);
-    }
-    hideContextMenu();
-  });
-
-  function enterCircularCropMode(image) {
-    if (isCropping) return;
-    isCropping = true;
-    const centerX = image.left + (image.width * image.scaleX) / 2;
-    const centerY = image.top + (image.height * image.scaleY) / 2;
-    const radius = Math.min(image.width * image.scaleX, image.height * image.scaleY) / 2;
-    cropCircle = new fabric.Circle({
-      left: centerX - radius,
-      top: centerY - radius,
-      radius: radius,
-      fill: 'rgba(0,0,0,0.3)',
-      hasBorders: true,
-      hasControls: true,
-      selectable: true
-    });
-    canvas.add(cropCircle);
-    canvas.setActiveObject(cropCircle);
-    canvas.renderAll();
-
-    const cropButton = document.createElement('button');
-    cropButton.innerText = 'Crop';
-    cropButton.className = 'crop-button';
-    document.body.appendChild(cropButton);
-
-    const cancelButton = document.createElement('button');
-    cancelButton.innerText = 'Cancel';
-    cancelButton.className = 'cancel-crop-button';
-    document.body.appendChild(cancelButton);
-
-    cropButton.addEventListener('click', () => {
-      cropCircleImage(image);
-      document.body.removeChild(cropButton);
-      document.body.removeChild(cancelButton);
-    });
-
-    cancelButton.addEventListener('click', () => {
-      canvas.remove(cropCircle);
-      isCropping = false;
-      cropCircle = null;
-      canvas.renderAll();
-      document.body.removeChild(cropButton);
-      document.body.removeChild(cancelButton);
-    });
-  }
-
-  function cropCircleImage(image) {
-    if (!cropCircle) return;
-    try {
-      const cropRadius = cropCircle.radius * cropCircle.scaleX;
-      const circleCenterX = cropCircle.left + cropRadius;
-      const circleCenterY = cropCircle.top + cropRadius;
-      const diameter = cropRadius * 2;
-      const croppedCanvas = document.createElement('canvas');
-      croppedCanvas.width = diameter * 2;
-      croppedCanvas.height = diameter * 2;
-      const croppedCtx = croppedCanvas.getContext('2d');
-      croppedCtx.imageSmoothingEnabled = true;
-      croppedCtx.imageSmoothingQuality = 'high';
-      croppedCtx.beginPath();
-      croppedCtx.arc(diameter, diameter, diameter, 0, Math.PI * 2, false);
-      croppedCtx.clip();
-      const imageLeftOffset = (circleCenterX - cropRadius - image.left) / image.scaleX;
-      const imageTopOffset = (circleCenterY - cropRadius - image.top) / image.scaleY;
-      croppedCtx.drawImage(
-        image._element,
-        imageLeftOffset,
-        imageTopOffset,
-        diameter / image.scaleX,
-        diameter / image.scaleY,
-        0, 0, diameter * 2, diameter * 2
-      );
-      const croppedImg = new Image();
-      croppedImg.src = croppedCanvas.toDataURL('image/webp', 1.0);
-      croppedImg.onload = () => {
-        const newImage = new fabric.Image(croppedImg, {
-          left: image.left + (circleCenterX - cropRadius - image.left),
-          top: image.top + (circleCenterY - cropRadius - image.top),
-          scaleX: 0.5,
-          scaleY: 0.5,
-          hasControls: true,
-          hasBorders: true,
-          selectable: true
-        });
-        canvas.remove(image);
-        canvas.add(newImage);
-        canvas.setActiveObject(newImage);
-        canvas.renderAll();
-        addHistory();
-      };
-      canvas.remove(cropCircle);
-      cropCircle = null;
-      isCropping = false;
-    } catch (error) {
-      showError('Failed to crop image.');
-    }
-  }
-
-  // Undo/Redo
-  document.getElementById('undoButton').addEventListener('click', () => {
-    if (historyIndex > 0) {
-      historyIndex--;
-      restoreCanvasState(history[historyIndex]);
-    }
-  });
-
-  document.getElementById('redoButton').addEventListener('click', () => {
-    if (historyIndex < history.length - 1) {
-      historyIndex++;
-      restoreCanvasState(history[historyIndex]);
-    }
-  });
-
-  // Clear Canvas
-  document.getElementById('clearCanvas').addEventListener('click', () => {
-    canvas.clear();
-    history = [];
-    historyIndex = -1;
-    canvas.renderAll();
-  });
-
-  // Keyboard Shortcuts
-  document.addEventListener('keydown', (e) => {
-    if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-      e.preventDefault();
-      const activeObject = canvas.getActiveObject();
-      if (activeObject) {
-        canvas.remove(activeObject);
-        addHistory();
-        canvas.renderAll();
-      }
-    }
-    if (e.ctrlKey && e.key === 'z') {
-      e.preventDefault();
-      document.getElementById('undoButton').click();
-    }
-    if (e.ctrlKey && e.key === 'y') {
-      e.preventDefault();
-      document.getElementById('redoButton').click();
-    }
-  });
-
-  // Transformations
-  document.getElementById('flipHorizontal').addEventListener('click', () => {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-      activeObject.set({ scaleX: -activeObject.scaleX });
-      activeObject.setCoords();
-      canvas.renderAll();
-      addHistory();
-    }
-    hideContextMenu();
-  });
-
-  document.getElementById('flipVertical').addEventListener('click', () => {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject) {
-      activeObject.set({ scaleY: -activeObject.scaleY });
-      activeObject.setCoords();
-      canvas.renderAll();
-      addHistory();
-    }
-    hideContextMenu();
-  });
-
-  // Download Image Functions
-  function addCaption(ctx, canvasElem, caption) {
-    ctx.font = "500 22px Arial";
-    ctx.fillStyle = "black";
-    ctx.globalAlpha = 0.7;
-    const textMetrics = ctx.measureText(caption);
-    const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10, 15);
-    } else {
-      ctx.rect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10);
-    }
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = "white";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(caption, canvasElem.width / 2, canvasElem.height - (textHeight / 2 + 5));
-  }
-
-  function addWatermark(ctx, canvasElem) {
-    const padding = 5;
-    ctx.font = "700 24px Arial";
-    ctx.fillStyle = "#010642";
-    ctx.globalAlpha = 0.77;
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(canvasElem.width - 150 - padding, padding, 150, 36, 50);
-    } else {
-      ctx.rect(canvasElem.width - 150 - padding, padding, 150, 36);
-    }
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = "white";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("VvipTimes", canvasElem.width - 75 - padding, padding + 18);
-  }
-
-  async function compressImage(canvasElem) {
-    const maxFileSize = 50 * 1024;
-    const qualityStep = 0.02;
-    let quality = 1.0;
-    let dataUrl = canvasElem.toDataURL('image/webp', quality);
-    let blob = await fetch(dataUrl).then(res => res.blob());
-    if (blob.size <= maxFileSize) return dataUrl;
-
-    let lower = 0.1, upper = 1.0;
-    while (upper - lower > qualityStep && quality > 0.1) {
-      quality = (lower + upper) / 2;
-      dataUrl = canvasElem.toDataURL('image/webp', quality);
-      blob = await fetch(dataUrl).then(res => res.blob());
-      if (blob.size <= maxFileSize) {
-        lower = quality;
-      } else {
-        upper = quality;
-      }
-    }
-    return canvasElem.toDataURL('image/webp', lower);
-  }
-
-  function downloadImage() {
-    try {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = 1200;
-      tempCanvas.height = 628;
-      const ctx = tempCanvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      const imageData = canvas.toDataURL('image/webp', 1.0);
-      const img = new Image();
-      img.onload = async () => {
-        ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
-        if (document.getElementById('captionCheckbox').checked) {
-          const caption = document.getElementById('captionInput').value;
-          if (caption) addCaption(ctx, tempCanvas, caption);
+        /* Global Reset & Styling */
+        body {
+            font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0 0 0 6px; /* Added left padding for whole tool */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--background-color);
+            color: #fff;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
-        if (document.getElementById('watermarkCheckbox').checked) {
-          addWatermark(ctx, tempCanvas);
+
+        /* Toolbar Styling */
+        .toolbar {
+            height: 40px;
+            padding: 2px 4px;
+            background: var(--toolbar-bg);
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: nowrap;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            touch-action: manipulation;
         }
-        const downloadDataUrl = await compressImage(tempCanvas);
-        const downloadLink = document.createElement('a');
-        downloadLink.href = downloadDataUrl;
-        downloadLink.download = `${document.getElementById('captionInput').value.replace(/\s+/g, '_') || 'image'}.webp`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      };
-      img.src = imageData;
-    } catch (error) {
-      showError('Failed to download image.');
-    }
-  }
 
-  // Desktop download button
-  document.getElementById('downloadImage').addEventListener('click', downloadImage);
-  
-  // Mobile download button
-  document.getElementById('mobileDownloadButton').addEventListener('click', downloadImage);
+        /* Button & Label Styling */
+        button, label {
+            padding: 9px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            background: var(--button-bg);
+            color: #fff;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-duration) var(--transition-ease);
+            position: relative;
+            touch-action: manipulation;
+        }
 
-  // Filters
-  const brightnessSlider = document.getElementById('brightnessFilter');
-  const contrastSlider = document.getElementById('contrastFilter');
-  const saturationSlider = document.getElementById('saturationFilter');
-  const blurSlider = document.getElementById('blurFilter');
-  const grayscaleButton = document.getElementById('grayscaleFilter');
+        label {
+            background: var(--label-bg);
+        }
 
-  function applyFilters() {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject && activeObject.type === 'image') {
-      activeObject.filters = [];
-      if (parseFloat(brightnessSlider.value) !== 0) {
-        activeObject.filters.push(new fabric.Image.filters.Brightness({ brightness: parseFloat(brightnessSlider.value) / 100 }));
-      }
-      if (parseFloat(contrastSlider.value) !== 0) {
-        activeObject.filters.push(new fabric.Image.filters.Contrast({ contrast: parseFloat(contrastSlider.value) / 100 }));
-      }
-      if (parseFloat(saturationSlider.value) !== 0) {
-        activeObject.filters.push(new fabric.Image.filters.Saturation({ saturation: parseFloat(saturationSlider.value) / 100 }));
-      }
-      if (parseFloat(blurSlider.value) > 0) {
-        activeObject.filters.push(new fabric.Image.filters.Blur({ blur: parseFloat(blurSlider.value) }));
-      }
-      activeObject.applyFilters();
-      canvas.renderAll();
-      addHistory();
-    }
-  }
+        button:hover, label:hover {
+            background: var(--button-hover-bg);
+            transform: scale(1.05);
+            box-shadow: var(--glow);
+        }
 
-  const debouncedApplyFilters = debounce(applyFilters, 50);
+        .toolbar-section .tooltip {
+            visibility: hidden;
+            background: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 3px;
+            padding: 3px 6px;
+            position: absolute;
+            z-index: 1000;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity var(--transition-duration);
+            font-size: 12px;
+        }
 
-  brightnessSlider.addEventListener('input', debouncedApplyFilters);
-  contrastSlider.addEventListener('input', debouncedApplyFilters);
-  saturationSlider.addEventListener('input', debouncedApplyFilters);
-  blurSlider.addEventListener('input', debouncedApplyFilters);
+        button:hover .tooltip, label:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
 
-  grayscaleButton.addEventListener('click', () => {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject && activeObject.type === 'image') {
-      activeObject.filters = [new fabric.Image.filters.Grayscale()];
-      activeObject.applyFilters();
-      canvas.renderAll();
-      addHistory();
-    }
-    hideContextMenu();
-  });
+        /* Input Field Styling */
+        .input-field {
+            padding: 2px;
+            border: 1px solid var(--canvas-border);
+            border-radius: var(--radius);
+            font-size: 18px;
+            background: #2a2c31;
+            color: #fff;
+            transition: border-color var(--transition-duration);
+            flex-grow: 1;
+            min-width: 80px;
+            height: 35px;
+            touch-action: manipulation;
+        }
 
-  // Selection Styling
-  const CORNER_COLOR = 'rgba(76, 175, 80, 0.9)';
-  const CORNER_STROKE_COLOR = 'indigo';
-  const CORNER_STYLE = 'circle';
-  const CORNER_STROKE_WIDTH = 3;
-  const CORNER_SIZE = 12;
+        .input-field:focus {
+            border-color: var(--label-bg);
+            outline: none;
+        }
 
-  fabric.Object.prototype.set({
-    cornerColor: CORNER_COLOR,
-    cornerStrokeColor: CORNER_STROKE_COLOR,
-    cornerStyle: CORNER_STYLE,
-    cornerStrokeWidth: CORNER_STROKE_WIDTH,
-    cornerSize: CORNER_SIZE,
-    transparentCorners: false
-  });
+        /* Checkbox Styling */
+        .checkbox {
+            margin-right: 2px;
+            transform: scale(0.8);
+        }
 
-  canvas.on('selection:created', () => {
-    const activeObject = canvas.getActiveObject();
-    if (activeObject && activeObject.type === 'image') {
-      activeObject.set({
-        borderColor: '#4caf50',
-        borderDashArray: [8, 6],
-        shadow: new fabric.Shadow({
-          color: 'rgba(76, 175, 80, 0.7)',
-          blur: 25,
-          offsetX: 5,
-          offsetY: 5
-        })
-      });
-      activeObject.canvas.wrapperEl.classList.add('selected-image');
-      canvas.renderAll();
-    }
-  });
+        /* Canvas Container */
+        .canvas-container {
+            margin: 6px 10px 6px 10px; /* Added left margin */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: all var(--transition-duration);
+            touch-action: manipulation;
+        }
 
-  canvas.on('selection:cleared', () => {
-    canvas.getObjects().forEach(obj => {
-      if (obj.type === 'image') {
-        obj.set({
-          borderColor: '',
-          borderDashArray: null,
-          shadow: null
-        });
-      }
-    });
-    canvas.wrapperEl.classList.remove('selected-image');
-    canvas.renderAll();
-  });
+        /* Canvas Styling */
+        #imageCanvas {
+            border: 2px solid var(--canvas-border);
+            background: #fff;
+            cursor: crosshair;
+            box-shadow: var(--canvas-shadow);
+            border-radius: var(--radius);
+            transition: box-shadow var(--transition-duration);
+            touch-action: manipulation;
+        }
 
-  // Initialize
-  canvas.renderAll();
-})();
-</script>
+        #imageCanvas:hover {
+            box-shadow: var(--glow);
+        }
+
+        /* Selected Image Styling */
+        .selected-image {
+            animation: pulseGlow 1.5s ease-in-out infinite;
+        }
+
+        /* Context Menu Styling */
+        .context-menu {
+            position: absolute;
+            z-index: 1000;
+            background: var(--context-menu-bg);
+            border: 1px solid var(--context-menu-border);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            transition: all var(--transition-duration);
+        }
+
+        .context-menu.active {
+            display: flex;
+            animation: fadeIn 0.2s var(--transition-ease);
+        }
+
+        .context-menu-group {
+            display: flex;
+            flex-direction: row;
+            gap: 4px;
+            padding: 4px;
+            border: 1px dashed var(--context-menu-border);
+            border-radius: var(--radius);
+        }
+
+        .context-menu-item {
+            padding: 8px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all var(--transition-duration);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            color: #fff;
+            position: relative;
+            touch-action: manipulation;
+        }
+
+        .context-menu-item:hover {
+            background: var(--context-menu-hover);
+            transform: scale(1.05);
+        }
+
+        .context-menu-item .icon {
+            font-size: 18px;
+        }
+
+        .context-menu-item .tooltip {
+            visibility: hidden;
+            background: #333;
+            color: #fff;
+            border-radius: 4px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1001;
+            top: 50%;
+            left: 110%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity var(--transition-duration);
+        }
+
+        .context-menu-item:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Submenu Styling */
+        .submenu {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background: var(--context-menu-bg);
+            border: 1px solid var(--context-menu-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            z-index: 1002;
+            border-radius: var(--radius);
+            padding: 8px;
+            min-width: 180px;
+        }
+
+        .context-menu-item:hover .submenu {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .submenu-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            transition: all var(--transition-duration);
+        }
+
+        .submenu-item:hover {
+            background: var(--context-menu-hover);
+        }
+
+        .submenu-item input[type="range"] {
+            width: 100px;
+        }
+
+        /* Crop Button Styling */
+        .crop-button, .cancel-crop-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            background: var(--button-bg);
+            color: #fff;
+            cursor: pointer;
+            transition: all var(--transition-duration);
+            touch-action: manipulation;
+        }
+
+        .cancel-crop-button {
+            right: 100px;
+            background: #dc3545;
+        }
+
+        .crop-button:hover {
+            background: var(--button-hover-bg);
+            transform: scale(1.05);
+        }
+
+        .cancel-crop-button:hover {
+            background: #c82333;
+        }
+
+        /* Mobile Download Button */
+        .mobile-download-container {
+            display: none;
+            width: 100%;
+            justify-content: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .mobile-download-button {
+            background: var(--button-hover-bg);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all var(--transition-duration);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .mobile-download-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 6px rgba(76, 175, 80, 0.5); }
+            50% { box-shadow: 0 0 12px rgba(76, 175, 80, 0.8); }
+            100% { box-shadow: 0 0 6px rgba(76, 175, 80, 0.5); }
+        }
+
+        /* Mobile-specific styles */
+        .mobile-context-trigger {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            touch-action: manipulation;
+        }
+
+        /* Mobile context menu items - bigger icons */
+        .mobile-context-menu .context-menu-item .icon {
+            font-size: 24px;
+        }
+
+        .mobile-context-menu .context-menu-item {
+            width: 44px;
+            height: 44px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .toolbar {
+                padding: 2px 4px;
+                gap: 2px;
+                height: auto;
+                flex-wrap: wrap;
+            }
+            .input-field {
+                min-width: 60px;
+                font-size: 14px;
+                height: 28px;
+                padding: 1px;
+            }
+            button, label {
+                font-size: 14px;
+                padding: 6px;
+                height: 28px;
+                min-width: 28px;
+            }
+            .checkbox {
+                transform: scale(0.7);
+            }
+            .context-menu {
+                transform: scale(0.9);
+            }
+            .mobile-context-trigger {
+                display: flex;
+            }
+            .canvas-container {
+                margin: 10px 0;
+            }
+            #imageCanvas {
+                max-width: 95vw;
+                max-height: 60vh;
+            }
+            .context-menu-item {
+                width: 40px;
+                height: 40px;
+            }
+            .submenu {
+                min-width: 200px;
+            }
+            .crop-button, .cancel-crop-button {
+                padding: 10px 18px;
+                font-size: 16px;
+            }
+            .mobile-download-container {
+                display: flex;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .toolbar {
+                padding: 2px;
+                gap: 1px;
+            }
+            .input-field {
+                min-width: 50px;
+                font-size: 12px;
+                height: 24px;
+            }
+            button, label {
+                font-size: 12px;
+                padding: 4px;
+                height: 24px;
+                min-width: 24px;
+            }
+            .context-menu {
+                transform: scale(0.85);
+            }
+            .context-menu-item {
+                width: 36px;
+                height: 36px;
+            }
+            .submenu {
+                min-width: 180px;
+            }
+        }
+
+        /* Error Alert Styling */
+        .error-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            animation: slideInRight 0.3s var(--transition-ease);
+            display: none;
+            max-width: 80vw;
+            word-wrap: break-word;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Hide mobile context menu button on desktop */
+        .toolbar-mobile-context {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar-mobile-context {
+                display: flex;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="toolbar">
+        <div class="toolbar-section">
+            <label for="uploadImage"><i class="fas fa-upload icon"></i><span class="tooltip">Upload Image</span></label>
+            <input type="file" id="uploadImage" style="display: none;" accept="image/*">
+        </div>
+        <div class="toolbar-section">
+            <button id="downloadImage"><i class="fas fa-download icon"></i><span class="tooltip">Download Image</span></button>
+        </div>
+        <div class="toolbar-section">
+            <button id="undoButton"><i class="fas fa-undo icon"></i><span class="tooltip">Undo (Ctrl+Z)</span></button>
+        </div>
+        <div class="toolbar-section">
+            <button id="redoButton"><i class="fas fa-redo icon"></i><span class="tooltip">Redo (Ctrl+Y)</span></button>
+        </div>
+        <div class="toolbar-section">
+            <button id="clearCanvas"><i class="fas fa-trash icon"></i><span class="tooltip">Clear Canvas</span></button>
+        </div>
+        <div class="toolbar-section" style="display: flex; flex-direction: row; align-items: center; gap: 4px; flex-grow: 1;">
+            <input type="text" id="captionInput" placeholder="Enter caption..." class="input-field" aria-label="Caption input">
+            <label><input type="checkbox" id="captionCheckbox" class="checkbox" aria-label="Toggle caption"><i class="fas fa-comment icon"></i><span class="tooltip">Toggle Caption</span></label>
+            <label><input type="checkbox" id="watermarkCheckbox" class="checkbox" aria-label="Toggle watermark"><i class="fas fa-stamp icon"></i><span class="tooltip">Toggle Watermark</span></label>
+        </div>
+        <!-- Mobile context menu button in toolbar -->
+        <div class="toolbar-section toolbar-mobile-context">
+            <button id="toolbarContextTrigger"><i class="fas fa-ellipsis-v icon"></i><span class="tooltip">Context Menu</span></button>
+        </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu">
+        <div class="context-menu-group">
+            <div class="context-menu-item" id="pasteImage">
+                <i class="fas fa-clipboard icon"></i>
+                <span class="tooltip">Paste Image</span>
+            </div>
+            <div class="context-menu-item" id="deleteLayerContext">
+                <i class="fas fa-trash icon"></i>
+                <span class="tooltip">Delete Layer</span>
+            </div>
+            <div class="context-menu-item" id="duplicateLayer">
+                <i class="fas fa-copy icon"></i>
+                <span class="tooltip">Duplicate Layer</span>
+            </div>
+        </div>
+        <div class="context-menu-group">
+            <div class="context-menu-item" id="circularCropButton">
+                <i class="fas fa-circle-notch icon"></i>
+                <span class="tooltip">Circular Crop</span>
+            </div>
+            <div class="context-menu-item" id="cropButton">
+                <i class="fas fa-crop icon"></i>
+                <span class="tooltip">Rectangular Crop</span>
+            </div>
+        </div>
+        <div class="context-menu-group">
+            <div class="context-menu-item" id="filtersMenu">
+                <i class="fas fa-paint-brush icon"></i>
+                <span class="tooltip">Filters</span>
+                <div class="submenu" id="submenu">
+                    <div class="submenu-item" id="grayscaleFilter"><i class="fas fa-paint-brush icon"></i> Grayscale</div>
+                    <div class="submenu-item">
+                        <i class="fas fa-sun icon"></i> Brightness
+                        <input type="range" id="brightnessFilter" min="-50" max="50" step="0.5" value="0" aria-label="Brightness filter">
+                    </div>
+                    <div class="submenu-item">
+                        <i class="fas fa-adjust icon"></i> Contrast
+                        <input type="range" id="contrastFilter" min="-50" max="50" step="0.5" value="0" aria-label="Contrast filter">
+                    </div>
+                    <div class="submenu-item">
+                        <i class="fas fa-paint-brush icon"></i> Saturation
+                        <input type="range" id="saturationFilter" min="-50" max="50" step="0.5" value="0" aria-label="Saturation filter">
+                    </div>
+                    <div class="submenu-item">
+                        <i class="fas fa-brush icon"></i> Blur
+                        <input type="range" id="blurFilter" min="0" max="0.5" step="0.005" value="0" aria-label="Blur filter">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- New Layer Ordering Options -->
+        <div class="context-menu-group">
+            <div class="context-menu-item" id="bringForward">
+                <i class="fas fa-arrow-up icon"></i>
+                <span class="tooltip">Bring Forward</span>
+            </div>
+            <div class="context-menu-item" id="sendBackward">
+                <i class="fas fa-arrow-down icon"></i>
+                <span class="tooltip">Send Backward</span>
+            </div>
+        </div>
+        <div class="context-menu-group">
+            <div class="context-menu-item" id="flipHorizontal">
+                <i class="fas fa-arrows-alt-h icon"></i>
+                <span class="tooltip">Flip Horizontal</span>
+            </div>
+            <div class="context-menu-item" id="flipVertical">
+                <i class="fas fa-arrows-alt-v icon"></i>
+                <span class="tooltip">Flip Vertical</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-container" id="canvasContainer">
+        <canvas id="imageCanvas" width="1000" height="524"></canvas>
+        <button class="mobile-context-trigger" id="mobileContextTrigger">
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Download Button -->
+    <div class="mobile-download-container">
+        <button id="mobileDownloadButton" class="mobile-download-button">
+            <i class="fas fa-download icon"></i> Download Image
+        </button>
+    </div>
+
+    <div id="errorAlert" class="error-alert"></div>
+
+    <script>
+        (() => {
+            // Initialize Fabric.js canvas
+            const canvas = new fabric.Canvas('imageCanvas', {
+                preserveObjectStacking: true,
+                selection: true,
+                uniformScaling: false
+            });
+
+            // Global Variables
+            let isCropping = false, cropCircle, cropRect;
+            let history = [];
+            let historyIndex = -1;
+            let longPressTimer = null;
+            let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            // Helper Functions
+            function showError(message) {
+                const alert = document.getElementById('errorAlert');
+                alert.textContent = message;
+                alert.style.display = 'block';
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 3000);
+                console.error(message);
+            }
+
+            // Debounce Utility
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // History Management
+            function addHistory() {
+                if (historyIndex < history.length - 1) {
+                    history = history.slice(0, historyIndex + 1);
+                }
+                const currentState = JSON.stringify(canvas.toJSON(['selectable', 'hasControls', 'hasBorders', 'filters', 'scaleX', 'scaleY']));
+                history.push(currentState);
+                historyIndex++;
+                if (history.length > 50) {
+                    history.shift();
+                    historyIndex--;
+                }
+            }
+
+            function restoreCanvasState(state) {
+                try {
+                    canvas.clear();
+                    canvas.loadFromJSON(state, () => {
+                        canvas.renderAll();
+                    });
+                } catch (error) {
+                    showError('Failed to restore canvas state.');
+                }
+            }
+
+            // Enforce Aspect Ratio During Scaling
+            canvas.on('object:scaling', (e) => {
+                const obj = e.target;
+                if (obj && obj.type === 'image') {
+                    const scale = Math.max(Math.abs(obj.scaleX), Math.abs(obj.scaleY));
+                    obj.set({
+                        scaleX: scale * (obj.scaleX < 0 ? -1 : 1),
+                        scaleY: scale * (obj.scaleY < 0 ? -1 : 1)
+                    });
+                    obj.setCoords();
+                    canvas.renderAll();
+                }
+            });
+
+            // Image Loading
+            function loadImage(img) {
+                try {
+                    const imgInstance = new fabric.Image(img);
+                    const canvasAspect = canvas.width / canvas.height;
+                    const imgAspect = img.width / img.height;
+                    const scaleFactor = (canvasAspect > imgAspect) ? canvas.height / img.height : canvas.width / img.width;
+                    imgInstance.set({
+                        left: (canvas.width - img.width * scaleFactor) / 2,
+                        top: (canvas.height - img.height * scaleFactor) / 2,
+                        scaleX: scaleFactor,
+                        scaleY: scaleFactor,
+                        hasControls: true,
+                        hasBorders: true,
+                        selectable: true
+                    });
+                    canvas.add(imgInstance).setActiveObject(imgInstance);
+                    canvas.renderAll();
+                    addHistory();
+                } catch (error) {
+                    showError('Failed to load image.');
+                }
+            }
+
+            // Upload Image
+            document.getElementById('uploadImage').addEventListener('change', async (e) => {
+                if (!e.target.files.length) {
+                    showError('No file selected.');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => loadImage(img);
+                    img.onerror = () => showError('Unsupported or corrupted image.');
+                };
+                reader.onerror = () => showError('Failed to read file.');
+                reader.readAsDataURL(e.target.files[0]);
+            });
+
+            // Paste Image
+            document.getElementById('pasteImage').addEventListener('click', async () => {
+                try {
+                    const items = await navigator.clipboard.read();
+                    for (const item of items) {
+                        if (item.types.includes('image/png')) {
+                            const blob = await item.getType('image/png');
+                            const img = new Image();
+                            img.src = URL.createObjectURL(blob);
+                            img.onload = () => loadImage(img);
+                            break;
+                        }
+                    }
+                } catch (error) {
+                    showError('Failed to paste image.');
+                }
+                document.getElementById('contextMenu').style.display = 'none';
+            });
+
+            // Drag & Drop
+            const canvasContainer = document.getElementById('canvasContainer');
+            canvasContainer.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            });
+            canvasContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && files[0].type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.src = event.target.result;
+                        img.onload = () => loadImage(img);
+                    };
+                    reader.readAsDataURL(files[0]);
+                } else {
+                    showError('Please drop a valid image.');
+                }
+            });
+
+            // Context Menu Functions
+            function showContextMenu(x, y) {
+                const activeObject = canvas.getActiveObject();
+                document.getElementById('pasteImage').style.display = 'block';
+                document.getElementById('deleteLayerContext').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('duplicateLayer').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('cropButton').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('circularCropButton').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('filtersMenu').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('flipHorizontal').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('flipVertical').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('bringForward').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('sendBackward').style.display = activeObject ? 'block' : 'none';
+                
+                const contextMenu = document.getElementById('contextMenu');
+                
+                // Add mobile class for bigger icons
+                if (isMobile) {
+                    contextMenu.classList.add('mobile-context-menu');
+                } else {
+                    contextMenu.classList.remove('mobile-context-menu');
+                }
+                
+                // Ensure context menu stays within viewport
+                const menuWidth = 200;
+                const menuHeight = 350; // Increased for new layer options
+                let left = x;
+                let top = y;
+                
+                if (left + menuWidth > window.innerWidth) {
+                    left = window.innerWidth - menuWidth;
+                }
+                if (top + menuHeight > window.innerHeight) {
+                    top = window.innerHeight - menuHeight;
+                }
+                if (left < 0) left = 0;
+                if (top < 0) top = 0;
+
+                contextMenu.style.left = `${left}px`;
+                contextMenu.style.top = `${top}px`;
+                contextMenu.style.display = 'block';
+                contextMenu.classList.add('active');
+            }
+
+            function hideContextMenu() {
+                const contextMenu = document.getElementById('contextMenu');
+                contextMenu.classList.remove('active');
+                contextMenu.style.display = 'none';
+            }
+
+            // Context Menu Events
+            document.addEventListener('click', (e) => {
+                const contextMenu = document.getElementById('contextMenu');
+                if (!contextMenu.contains(e.target) && !canvasContainer.contains(e.target)) {
+                    hideContextMenu();
+                }
+            });
+
+            canvasContainer.addEventListener('contextmenu', (e) => {
+                if (isMobile) return; // Disable right-click context menu on mobile
+                e.preventDefault();
+                e.stopPropagation();
+                showContextMenu(e.clientX, e.clientY);
+            });
+
+            // Mobile Touch Events for Context Menu
+            if (isMobile) {
+                // Remove long press functionality
+                // Instead use the toolbar button and floating button
+                
+                // Toolbar context menu button
+                document.getElementById('toolbarContextTrigger').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const rect = e.target.getBoundingClientRect();
+                    showContextMenu(rect.left, rect.bottom);
+                });
+
+                // Mobile context trigger button
+                document.getElementById('mobileContextTrigger').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const rect = canvasContainer.getBoundingClientRect();
+                    showContextMenu(rect.right - 50, rect.bottom - 50);
+                });
+            }
+
+            // Keyboard Navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    hideContextMenu();
+                }
+            });
+
+            // Layer Operations
+            document.getElementById('duplicateLayer').addEventListener('click', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject) {
+                    const clone = fabric.util.object.clone(activeObject);
+                    clone.set({ 
+                        left: activeObject.left + 10, 
+                        top: activeObject.top + 10
+                    });
+                    canvas.add(clone);
+                    canvas.setActiveObject(clone);
+                    addHistory();
+                }
+                hideContextMenu();
+            });
+
+            document.getElementById('deleteLayerContext').addEventListener('click', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject) {
+                    canvas.remove(activeObject);
+                    addHistory();
+                }
+                hideContextMenu();
+            });
+
+            // New Layer Ordering Functions
+            document.getElementById('bringForward').addEventListener('click', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject) {
+                    canvas.bringForward(activeObject);
+                    canvas.renderAll();
+                    addHistory();
+                }
+                hideContextMenu();
+            });
+
+            document.getElementById('sendBackward').addEventListener('click', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject) {
+                    canvas.sendBackwards(activeObject);
+                    canvas.renderAll();
+                    addHistory();
+                }
+                hideContextMenu();
+            });
+
+            // Crop Functions
+            document.getElementById('cropButton').addEventListener('click', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject && activeObject.type === 'image') {
+                    enterCropMode(activeObject);
+                }
+                hideContextMenu();
+            });
+
+            function enterCropMode(image) {
+                if (isCropping) return;
+                isCropping = true;
+                cropRect = new fabric.Rect({
+                    left: image.left,
+                    top: image.top,
+                    width: image.width * image.scaleX,
+                    height: image.height * image.scaleY,
+                    fill: 'rgba(0,0,0,0.3)',
+                    hasBorders: true,
+                    hasControls: true,
+                    selectable: true,
+                    lockAspectRatio: true
+                });
+                canvas.add(cropRect);
+                canvas.setActiveObject(cropRect);
+                canvas.renderAll();
+
+                const cropButton = document.createElement('button');
+                cropButton.innerText = 'Crop';
+                cropButton.className = 'crop-button';
+                document.body.appendChild(cropButton);
+
+                const cancelButton = document.createElement('button');
+                cancelButton.innerText = 'Cancel';
+                cancelButton.className = 'cancel-crop-button';
+                document.body.appendChild(cancelButton);
+
+                cropButton.addEventListener('click', () => {
+                    cropImage(image);
+                    document.body.removeChild(cropButton);
+                    document.body.removeChild(cancelButton);
+                });
+
+                cancelButton.addEventListener('click', () => {
+                    canvas.remove(cropRect);
+                    isCropping = false;
+                    cropRect = null;
+                    canvas.renderAll();
+                    document.body.removeChild(cropButton);
+                    document.body.removeChild(cancelButton);
+                });
+            }
+
+            function cropImage(image) {
+                if (!cropRect) return;
+                try {
+                    const croppedLeft = cropRect.left - image.left;
+                    const croppedTop = cropRect.top - image.top;
+                    const croppedWidth = cropRect.width * cropRect.scaleX;
+                    const croppedHeight = cropRect.height * cropRect.scaleY;
+                    const croppedCanvas = document.createElement('canvas');
+                    croppedCanvas.width = croppedWidth * 2;
+                    croppedCanvas.height = croppedHeight * 2;
+                    const croppedCtx = croppedCanvas.getContext('2d');
+                    croppedCtx.imageSmoothingEnabled = true;
+                    croppedCtx.imageSmoothingQuality = 'high';
+                    croppedCtx.drawImage(
+                        image._element,
+                        croppedLeft / image.scaleX,
+                        croppedTop / image.scaleY,
+                        croppedWidth / image.scaleX,
+                        croppedHeight / image.scaleY,
+                        0, 0, croppedWidth * 2, croppedHeight * 2
+                    );
+                    const croppedImg = new Image();
+                    croppedImg.src = croppedCanvas.toDataURL('image/webp', 1.0);
+                    croppedImg.onload = () => {
+                        const newImage = new fabric.Image(croppedImg, {
+                            left: image.left,
+                            top: image.top,
+                            scaleX: image.scaleX / 2,
+                            scaleY: image.scaleY / 2,
+                            hasControls: true,
+                            hasBorders: true,
+                            selectable: true
+                        });
+                        canvas.remove(image);
+                        canvas.add(newImage);
+                        canvas.setActiveObject(newImage);
+                        canvas.renderAll();
+                        addHistory();
+                    };
+                    canvas.remove(cropRect);
+                    isCropping = false;
+                    cropRect = null;
+                } catch (error) {
+                    showError('Failed to crop image.');
+                }
+            }
+
+            document.getElementById('circularCropButton').addEventListener('click', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject && activeObject.type === 'image') {
+                    enterCircularCropMode(activeObject);
+                }
+                hideContextMenu();
+            });
+
+            function enterCircularCropMode(image) {
+                if (isCropping) return;
+                isCropping = true;
+                const centerX = image.left + (image.width * image.scaleX) / 2;
+                const centerY = image.top + (image.height * image.scaleY) / 2;
+                const radius = Math.min(image.width * image.scaleX, image.height * image.scaleY) / 2;
+                cropCircle = new fabric.Circle({
+                    left: centerX - radius,
+                    top: centerY - radius,
+                    radius: radius,
+                    fill: 'rgba(0,0,0,0.3)',
+                    hasBorders: true,
+                    hasControls: true,
+                    selectable: true
+                });
+                canvas.add(cropCircle);
+                canvas.setActiveObject(cropCircle);
+                canvas.renderAll();
+
+                const cropButton = document.createElement('button');
+                cropButton.innerText = 'Crop';
+                cropButton.className = 'crop-button';
+                document.body.appendChild(cropButton);
+
+                const cancelButton = document.createElement('button');
+                cancelButton.innerText = 'Cancel';
+                cancelButton.className = 'cancel-crop-button';
+                document.body.appendChild(cancelButton);
+
+                cropButton.addEventListener('click', () => {
+                    cropCircleImage(image);
+                    document.body.removeChild(cropButton);
+                    document.body.removeChild(cancelButton);
+                });
+
+                cancelButton.addEventListener('click', () => {
+                    canvas.remove(cropCircle);
+                    isCropping = false;
+                    cropCircle = null;
+                    canvas.renderAll();
+                    document.body.removeChild(cropButton);
+                    document.body.removeChild(cancelButton);
+                });
+            }
+
+            function cropCircleImage(image) {
+                if (!cropCircle) return;
+                try {
+                    const cropRadius = cropCircle.radius * cropCircle.scaleX;
+                    const circleCenterX = cropCircle.left + cropRadius;
+                    const circleCenterY = cropCircle.top + cropRadius;
+                    const diameter = cropRadius * 2;
+                    const croppedCanvas = document.createElement('canvas');
+                    croppedCanvas.width = diameter * 2;
+                    croppedCanvas.height = diameter * 2;
+                    const croppedCtx = croppedCanvas.getContext('2d');
+                    croppedCtx.imageSmoothingEnabled = true;
+                    croppedCtx.imageSmoothingQuality = 'high';
+                    croppedCtx.beginPath();
+                    croppedCtx.arc(diameter, diameter, diameter, 0, Math.PI * 2, false);
+                    croppedCtx.clip();
+                    const imageLeftOffset = (circleCenterX - cropRadius - image.left) / image.scaleX;
+                    const imageTopOffset = (circleCenterY - cropRadius - image.top) / image.scaleY;
+                    croppedCtx.drawImage(
+                        image._element,
+                        imageLeftOffset,
+                        imageTopOffset,
+                        diameter / image.scaleX,
+                        diameter / image.scaleY,
+                        0, 0, diameter * 2, diameter * 2
+                    );
+                    const croppedImg = new Image();
+                    croppedImg.src = croppedCanvas.toDataURL('image/webp', 1.0);
+                    croppedImg.onload = () => {
+                        const newImage = new fabric.Image(croppedImg, {
+                            left: image.left + (circleCenterX - cropRadius - image.left),
+                            top: image.top + (circleCenterY - cropRadius - image.top),
+                            scaleX: 0.5,
+                            scaleY: 0.5,
+                            hasControls: true,
+                            hasBorders: true,
+                            selectable: true
+                        });
+                        canvas.remove(image);
+                        canvas.add(newImage);
+                        canvas.setActiveObject(newImage);
+                        canvas.renderAll();
+                        addHistory();
+                    };
+                    canvas.remove(cropCircle);
+                    cropCircle = null;
+                    isCropping = false;
+                } catch (error) {
+                    showError('Failed to crop image.');
+                }
+            }
+
+            // Undo/Redo
+            document.getElementById('undoButton').addEventListener('click', () => {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    restoreCanvasState(history[historyIndex]);
+                }
+            });
+
+            document.getElementById('redoButton').addEventListener('click', () => {
+                if (historyIndex < history.length - 1) {
+                    historyIndex++;
+                    restoreCanvasState(history[historyIndex]);
+                }
+            });
+
+            // Clear Canvas
+            document.getElementById('clearCanvas').addEventListener('click', () => {
+                canvas.clear();
+                history = [];
+                historyIndex = -1;
+                canvas.renderAll();
+            });
+
+            // Keyboard Shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    e.preventDefault();
+                    const activeObject = canvas.getActiveObject();
+                    if (activeObject) {
+                        canvas.remove(activeObject);
+                        addHistory();
+                        canvas.renderAll();
+                    }
+                }
+                if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    document.getElementById('undoButton').click();
+                }
+                if (e.ctrlKey && e.key === 'y') {
+                    e.preventDefault();
+                    document.getElementById('redoButton').click();
+                }
+            });
+
+            // Transformations
+            document.getElementById('flipHorizontal').addEventListener('click', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject) {
+                    activeObject.set({ scaleX: -activeObject.scaleX });
+                    activeObject.setCoords();
+                    canvas.renderAll();
+                    addHistory();
+                }
+                hideContextMenu();
+            });
+
+            document.getElementById('flipVertical').addEventListener('click', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject) {
+                    activeObject.set({ scaleY: -activeObject.scaleY });
+                    activeObject.setCoords();
+                    canvas.renderAll();
+                    addHistory();
+                }
+                hideContextMenu();
+            });
+
+            // Download Image
+            function addCaption(ctx, canvasElem, caption) {
+                ctx.font = "500 22px Arial";
+                ctx.fillStyle = "black";
+                ctx.globalAlpha = 0.7;
+                const textMetrics = ctx.measureText(caption);
+                const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10, 15);
+                } else {
+                    ctx.rect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10);
+                }
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = "white";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(caption, canvasElem.width / 2, canvasElem.height - (textHeight / 2 + 5));
+            }
+
+            function addWatermark(ctx, canvasElem) {
+                const padding = 5;
+                ctx.font = "700 24px Arial";
+                ctx.fillStyle = "#010642";
+                ctx.globalAlpha = 0.77;
+                ctx.beginPath();
+                if (ctx.roundRect) {
+                    ctx.roundRect(canvasElem.width - 150 - padding, padding, 150, 36, 50);
+                } else {
+                    ctx.rect(canvasElem.width - 150 - padding, padding, 150, 36);
+                }
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = "white";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("VvipTimes", canvasElem.width - 75 - padding, padding + 18);
+            }
+
+            async function compressImage(canvasElem) {
+                const maxFileSize = 50 * 1024;
+                const qualityStep = 0.02;
+                let quality = 1.0;
+                let dataUrl = canvasElem.toDataURL('image/webp', quality);
+                let blob = await fetch(dataUrl).then(res => res.blob());
+                if (blob.size <= maxFileSize) return dataUrl;
+
+                let lower = 0.1, upper = 1.0;
+                while (upper - lower > qualityStep && quality > 0.1) {
+                    quality = (lower + upper) / 2;
+                    dataUrl = canvasElem.toDataURL('image/webp', quality);
+                    blob = await fetch(dataUrl).then(res => res.blob());
+                    if (blob.size <= maxFileSize) {
+                        lower = quality;
+                    } else {
+                        upper = quality;
+                    }
+                }
+                return canvasElem.toDataURL('image/webp', lower);
+            }
+
+            function downloadImage() {
+                try {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = 1200;
+                    tempCanvas.height = 628;
+                    const ctx = tempCanvas.getContext('2d');
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    const imageData = canvas.toDataURL('image/webp', 1.0);
+                    const img = new Image();
+                    img.onload = async () => {
+                        ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+                        if (document.getElementById('captionCheckbox').checked) {
+                            const caption = document.getElementById('captionInput').value;
+                            if (caption) addCaption(ctx, tempCanvas, caption);
+                        }
+                        if (document.getElementById('watermarkCheckbox').checked) {
+                            addWatermark(ctx, tempCanvas);
+                        }
+                        const downloadDataUrl = await compressImage(tempCanvas);
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = downloadDataUrl;
+                        downloadLink.download = `${document.getElementById('captionInput').value.replace(/\s+/g, '_') || 'image'}.webp`;
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    };
+                    img.src = imageData;
+                } catch (error) {
+                    showError('Failed to download image.');
+                }
+            }
+
+            document.getElementById('downloadImage').addEventListener('click', downloadImage);
+            
+            // Mobile download button
+            document.getElementById('mobileDownloadButton').addEventListener('click', downloadImage);
+
+            // Filters
+            const brightnessSlider = document.getElementById('brightnessFilter');
+            const contrastSlider = document.getElementById('contrastFilter');
+            const saturationSlider = document.getElementById('saturationFilter');
+            const blurSlider = document.getElementById('blurFilter');
+            const grayscaleButton = document.getElementById('grayscaleFilter');
+
+            function applyFilters() {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject && activeObject.type === 'image') {
+                    activeObject.filters = [];
+                    if (parseFloat(brightnessSlider.value) !== 0) {
+                        activeObject.filters.push(new fabric.Image.filters.Brightness({ brightness: parseFloat(brightnessSlider.value) / 100 }));
+                    }
+                    if (parseFloat(contrastSlider.value) !== 0) {
+                        activeObject.filters.push(new fabric.Image.filters.Contrast({ contrast: parseFloat(contrastSlider.value) / 100 }));
+                    }
+                    if (parseFloat(saturationSlider.value) !== 0) {
+                        activeObject.filters.push(new fabric.Image.filters.Saturation({ saturation: parseFloat(saturationSlider.value) / 100 }));
+                    }
+                    if (parseFloat(blurSlider.value) > 0) {
+                        activeObject.filters.push(new fabric.Image.filters.Blur({ blur: parseFloat(blurSlider.value) }));
+                    }
+                    activeObject.applyFilters();
+                    canvas.renderAll();
+                    addHistory();
+                }
+            }
+
+            const debouncedApplyFilters = debounce(applyFilters, 50);
+
+            brightnessSlider.addEventListener('input', debouncedApplyFilters);
+            contrastSlider.addEventListener('input', debouncedApplyFilters);
+            saturationSlider.addEventListener('input', debouncedApplyFilters);
+            blurSlider.addEventListener('input', debouncedApplyFilters);
+
+            grayscaleButton.addEventListener('click', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject && activeObject.type === 'image') {
+                    activeObject.filters = [new fabric.Image.filters.Grayscale()];
+                    activeObject.applyFilters();
+                    canvas.renderAll();
+                    addHistory();
+                }
+                hideContextMenu();
+            });
+
+            // Selection Styling
+            const CORNER_COLOR = 'rgba(76, 175, 80, 0.9)';
+            const CORNER_STROKE_COLOR = 'indigo';
+            const CORNER_STYLE = 'circle';
+            const CORNER_STROKE_WIDTH = 3;
+            const CORNER_SIZE = 12;
+
+            fabric.Object.prototype.set({
+                cornerColor: CORNER_COLOR,
+                cornerStrokeColor: CORNER_STROKE_COLOR,
+                cornerStyle: CORNER_STYLE,
+                cornerStrokeWidth: CORNER_STROKE_WIDTH,
+                cornerSize: CORNER_SIZE,
+                transparentCorners: false
+            });
+
+            canvas.on('selection:created', () => {
+                const activeObject = canvas.getActiveObject();
+                if (activeObject && activeObject.type === 'image') {
+                    activeObject.set({
+                        borderColor: '#4caf50',
+                        borderDashArray: [8, 6],
+                        shadow: new fabric.Shadow({
+                            color: 'rgba(76, 175, 80, 0.7)',
+                            blur: 25,
+                            offsetX: 5,
+                            offsetY: 5
+                        })
+                    });
+                    activeObject.canvas.wrapperEl.classList.add('selected-image');
+                    canvas.renderAll();
+                }
+            });
+
+            canvas.on('selection:cleared', () => {
+                canvas.getObjects().forEach(obj => {
+                    if (obj.type === 'image') {
+                        obj.set({
+                            borderColor: '',
+                            borderDashArray: null,
+                            shadow: null
+                        });
+                    }
+                });
+                canvas.wrapperEl.classList.remove('selected-image');
+                canvas.renderAll();
+            });
+
+            // Initialize
+            canvas.renderAll();
+        })();
+    </script>
+</body>
+</html>
