@@ -22,7 +22,7 @@
   body {
     font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
     margin: 0;
-    padding: 0;
+    padding: 0 0 0 6px; /* Added left padding */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -33,6 +33,7 @@
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
+    box-sizing: border-box;
   }
 
   /* Toolbar Styling */
@@ -49,6 +50,7 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(8px);
     touch-action: manipulation;
+    box-sizing: border-box;
   }
 
   /* Button & Label Styling */
@@ -129,13 +131,14 @@
 
   /* Canvas Container */
   .canvas-container {
-    margin: 6px 10px 6px 10px; /* Added 10px left margin */
+    margin: 6px 10px 6px 10px; /* Added left margin */
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
     transition: all var(--transition-duration);
     touch-action: manipulation;
+    box-sizing: border-box;
   }
 
   /* Canvas Styling */
@@ -332,10 +335,57 @@
     z-index: 999;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
     touch-action: manipulation;
+  }
+
+  /* Mobile context menu button in toolbar */
+  .mobile-toolbar-context {
+    display: none;
+    background: var(--button-bg);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
     transition: all var(--transition-duration);
   }
 
-  .mobile-context-trigger:hover {
+  .mobile-toolbar-context:hover {
+    background: var(--button-hover-bg);
+    transform: scale(1.05);
+  }
+
+  /* Mobile download button */
+  .mobile-download-container {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    margin: 15px 0;
+    width: 100%;
+  }
+
+  .mobile-download-button {
+    padding: 15px 25px;
+    font-size: 18px;
+    background: var(--button-bg);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all var(--transition-duration);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 300px;
+    justify-content: center;
+  }
+
+  .mobile-download-button:hover {
     background: var(--button-hover-bg);
     transform: scale(1.05);
     box-shadow: var(--glow);
@@ -366,36 +416,42 @@
     }
     .context-menu {
       transform: scale(0.9);
-      padding: 12px; /* More padding for mobile */
     }
     .mobile-context-trigger {
       display: flex;
     }
+    .mobile-toolbar-context {
+      display: flex;
+    }
+    .mobile-download-container {
+      display: flex;
+    }
     .canvas-container {
-      margin: 10px 0 10px 10px; /* Added 10px left margin */
+      margin: 10px 0;
     }
     #imageCanvas {
       max-width: 95vw;
       max-height: 60vh;
     }
     .context-menu-item {
-      width: 44px; /* Bigger for mobile */
-      height: 44px;
-    }
-    .context-menu-item .icon {
-      font-size: 22px; /* Bigger icons for mobile */
+      width: 40px;
+      height: 40px;
     }
     .submenu {
       min-width: 200px;
-      transform: scale(1.1); /* Bigger submenu for mobile */
-    }
-    .submenu-item {
-      padding: 10px 14px; /* More padding for mobile */
-      font-size: 16px; /* Bigger text for mobile */
     }
     .crop-button, .cancel-crop-button {
       padding: 10px 18px;
       font-size: 16px;
+    }
+    
+    /* Larger icons for mobile context menu */
+    .context-menu.mobile-active .context-menu-item .icon {
+      font-size: 24px;
+    }
+    .context-menu.mobile-active .context-menu-item {
+      width: 50px;
+      height: 50px;
     }
   }
 
@@ -417,18 +473,17 @@
     }
     .context-menu {
       transform: scale(0.85);
-      padding: 10px;
     }
     .context-menu-item {
-      width: 40px;
-      height: 40px;
-    }
-    .context-menu-item .icon {
-      font-size: 20px;
+      width: 36px;
+      height: 36px;
     }
     .submenu {
       min-width: 180px;
-      transform: scale(1.05);
+    }
+    .mobile-download-button {
+      padding: 12px 20px;
+      font-size: 16px;
     }
   }
 
@@ -479,6 +534,12 @@
     <input type="text" id="captionInput" placeholder="Enter caption..." class="input-field" aria-label="Caption input">
     <label><input type="checkbox" id="captionCheckbox" class="checkbox" aria-label="Toggle caption"><i class="fas fa-comment icon"></i><span class="tooltip">Toggle Caption</span></label>
     <label><input type="checkbox" id="watermarkCheckbox" class="checkbox" aria-label="Toggle watermark"><i class="fas fa-stamp icon"></i><span class="tooltip">Toggle Watermark</span></label>
+  </div>
+  <div class="toolbar-section">
+    <button class="mobile-toolbar-context" id="mobileToolbarContext">
+      <i class="fas fa-ellipsis-v"></i>
+      <span class="tooltip">Menu</span>
+    </button>
   </div>
 </div>
 
@@ -548,6 +609,12 @@
   <canvas id="imageCanvas" width="1000" height="524"></canvas>
   <button class="mobile-context-trigger" id="mobileContextTrigger">
     <i class="fas fa-ellipsis-v"></i>
+  </button>
+</div>
+
+<div class="mobile-download-container">
+  <button class="mobile-download-button" id="mobileDownloadButton">
+    <i class="fas fa-download icon"></i> Download Image
   </button>
 </div>
 
@@ -715,7 +782,7 @@
   });
 
   // Context Menu Functions
-  function showContextMenu(x, y) {
+  function showContextMenu(x, y, isMobileTrigger = false) {
     const activeObject = canvas.getActiveObject();
     document.getElementById('pasteImage').style.display = 'block';
     document.getElementById('deleteLayerContext').style.display = activeObject ? 'block' : 'none';
@@ -728,59 +795,86 @@
     
     const contextMenu = document.getElementById('contextMenu');
     
+    // Add mobile class for larger icons if triggered on mobile
+    if (isMobileTrigger) {
+      contextMenu.classList.add('mobile-active');
+    } else {
+      contextMenu.classList.remove('mobile-active');
+    }
+    
     // Ensure context menu stays within viewport
-    const menuWidth = contextMenu.offsetWidth;
-    const menuHeight = contextMenu.offsetHeight;
+    const menuWidth = contextMenu.offsetWidth || 200;
+    const menuHeight = contextMenu.offsetHeight || 300;
     let left = x;
     let top = y;
     
     if (left + menuWidth > window.innerWidth) {
-      left = window.innerWidth - menuWidth - 10;
+      left = window.innerWidth - menuWidth;
     }
     if (top + menuHeight > window.innerHeight) {
-      top = window.innerHeight - menuHeight - 10;
+      top = window.innerHeight - menuHeight;
     }
-    if (left < 10) left = 10;
-    if (top < 10) top = 10;
+    if (left < 0) left = 0;
+    if (top < 0) top = 0;
 
     contextMenu.style.left = `${left}px`;
     contextMenu.style.top = `${top}px`;
     contextMenu.style.display = 'block';
     contextMenu.classList.add('active');
-    
-    // Add event listener to close menu when clicking outside
-    setTimeout(() => {
-      document.addEventListener('click', handleOutsideClick, { once: true });
-    }, 10);
-  }
-
-  function handleOutsideClick(e) {
-    if (!e.target.closest('.context-menu') && !e.target.closest('.mobile-context-trigger')) {
-      hideContextMenu();
-    }
   }
 
   function hideContextMenu() {
     const contextMenu = document.getElementById('contextMenu');
     contextMenu.classList.remove('active');
+    contextMenu.classList.remove('mobile-active');
     contextMenu.style.display = 'none';
-    document.removeEventListener('click', handleOutsideClick);
   }
 
   // Context Menu Events
+  document.addEventListener('click', (e) => {
+    const contextMenu = document.getElementById('contextMenu');
+    if (!contextMenu.contains(e.target) && !canvasContainer.contains(e.target)) {
+      hideContextMenu();
+    }
+  });
+
   canvasContainer.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    showContextMenu(e.clientX, e.clientY);
+    showContextMenu(e.clientX, e.clientY, false);
   });
 
-  // Mobile Context Menu Trigger
+  // Mobile Touch Events for Context Menu
   if (isMobile) {
-    // Mobile context trigger button
+    // Mobile context trigger button in toolbar
+    document.getElementById('mobileToolbarContext').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const rect = e.target.getBoundingClientRect();
+      showContextMenu(rect.left, rect.bottom, true);
+    });
+
+    // Mobile context trigger button in canvas container
     document.getElementById('mobileContextTrigger').addEventListener('click', (e) => {
       e.stopPropagation();
       const rect = canvasContainer.getBoundingClientRect();
-      showContextMenu(rect.right - 200, rect.bottom - 200);
+      showContextMenu(rect.right - 50, rect.bottom - 50, true);
+    });
+
+    // Prevent default context menu on long press
+    canvasContainer.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        longPressTimer = setTimeout(() => {
+          e.preventDefault();
+        }, 500);
+      }
+    });
+
+    canvasContainer.addEventListener('touchmove', (e) => {
+      clearTimeout(longPressTimer);
+    });
+
+    canvasContainer.addEventListener('touchend', (e) => {
+      clearTimeout(longPressTimer);
     });
   }
 
@@ -1089,7 +1183,7 @@
     hideContextMenu();
   });
 
-  // Download Image
+  // Download Image Functions
   function addCaption(ctx, canvasElem, caption) {
     ctx.font = "500 22px Arial";
     ctx.fillStyle = "black";
@@ -1151,7 +1245,7 @@
     return canvasElem.toDataURL('image/webp', lower);
   }
 
-  document.getElementById('downloadImage').addEventListener('click', async () => {
+  function downloadImage() {
     try {
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = 1200;
@@ -1182,7 +1276,13 @@
     } catch (error) {
       showError('Failed to download image.');
     }
-  });
+  }
+
+  // Desktop download button
+  document.getElementById('downloadImage').addEventListener('click', downloadImage);
+  
+  // Mobile download button
+  document.getElementById('mobileDownloadButton').addEventListener('click', downloadImage);
 
   // Filters
   const brightnessSlider = document.getElementById('brightnessFilter');
