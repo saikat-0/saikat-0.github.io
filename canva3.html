@@ -39,12 +39,11 @@
         }
 
         .canvas-container {
-            margin: 0 0 0 10px;
+            
             display: flex;
-            top:10px;
             justify-content: center;
-            align-items: center;
-            position: relative;
+            align-items: flex-start;
+            position: absolute;
             transition: all var(--transition-duration);
             touch-action: manipulation;
             flex: 1;
@@ -52,6 +51,7 @@
         }
 
         #imageCanvas {
+            margin: 0 0 0 10px;
             border: 2px solid var(--canvas-border);
             background: #fff;
             cursor: crosshair;
