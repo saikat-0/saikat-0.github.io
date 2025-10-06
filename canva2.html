@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canva Image Editor</title>
+    <title>Enhanced Canva Tool</title>
     <style>
         /* Root CSS Variables for Modern Theme */
         :root {
@@ -28,7 +28,7 @@
         body {
             font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
-            
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -117,7 +117,7 @@
             color: #fff;
             transition: border-color var(--transition-duration);
             flex-grow: 1;
-            min-width: 70px;
+            min-width: 80px;
             height: 35px;
             touch-action: manipulation;
         }
@@ -135,7 +135,7 @@
 
         /* Canvas Container */
         .canvas-container {
-            margin: 6px 0; /* Added left margin */
+            margin: 6px 10px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -311,10 +311,11 @@
         /* Mobile Download Button */
         .mobile-download-container {
             display: none;
-            width: 100%;
-            justify-content: center;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            flex-direction: column;
+            align-items: center;
+            margin: 15px 0;
+            width: 90%;
+            max-width: 300px;
         }
 
         .mobile-download-button {
@@ -322,20 +323,60 @@
             color: white;
             border: none;
             border-radius: 50px;
-            padding: 15px 30px;
-            font-size: 20px;
+            padding: 15px 25px;
+            font-size: 18px;
             font-weight: bold;
+            cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
-            cursor: pointer;
+            width: 100%;
             transition: all var(--transition-duration);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
         .mobile-download-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+            background: #3d8b40;
+            transform: scale(1.03);
+        }
+
+        .mobile-download-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #ccc;
+            text-align: center;
+        }
+
+        /* Mobile Context Menu Button */
+        .mobile-context-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px 0;
+            width: 90%;
+            max-width: 300px;
+        }
+
+        .mobile-context-button {
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            transition: all var(--transition-duration);
+        }
+
+        .mobile-context-button:hover {
+            background: #4a4d55;
+            transform: scale(1.03);
         }
 
         /* Animations */
@@ -368,16 +409,6 @@
             z-index: 999;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             touch-action: manipulation;
-        }
-
-        /* Mobile context menu items - bigger icons */
-        .mobile-context-menu .context-menu-item .icon {
-            font-size: 24px;
-        }
-
-        .mobile-context-menu .context-menu-item {
-            width: 44px;
-            height: 44px;
         }
 
         /* Responsive Design */
@@ -427,7 +458,10 @@
                 padding: 10px 18px;
                 font-size: 16px;
             }
-            .mobile-download-container {
+            
+            /* Show mobile buttons on mobile */
+            .mobile-download-container,
+            .mobile-context-container {
                 display: flex;
             }
         }
@@ -458,6 +492,16 @@
             .submenu {
                 min-width: 180px;
             }
+            
+            .mobile-download-button {
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+            
+            .mobile-context-button {
+                padding: 10px 18px;
+                font-size: 14px;
+            }
         }
 
         /* Error Alert Styling */
@@ -480,17 +524,6 @@
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
-        }
-
-        /* Hide mobile context menu button on desktop */
-        .toolbar-mobile-context {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .toolbar-mobile-context {
-                display: flex;
-            }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
@@ -518,10 +551,6 @@
             <input type="text" id="captionInput" placeholder="Enter caption..." class="input-field" aria-label="Caption input">
             <label><input type="checkbox" id="captionCheckbox" class="checkbox" aria-label="Toggle caption"><i class="fas fa-comment icon"></i><span class="tooltip">Toggle Caption</span></label>
             <label><input type="checkbox" id="watermarkCheckbox" class="checkbox" aria-label="Toggle watermark"><i class="fas fa-stamp icon"></i><span class="tooltip">Toggle Watermark</span></label>
-        </div>
-        <!-- Mobile context menu button in toolbar -->
-        <div class="toolbar-section toolbar-mobile-context">
-            <button id="toolbarContextTrigger"><i class="fas fa-ellipsis-v icon"></i><span class="tooltip">Context Menu</span></button>
         </div>
     </div>
 
@@ -575,7 +604,6 @@
                 </div>
             </div>
         </div>
-        <!-- New Layer Ordering Options -->
         <div class="context-menu-group">
             <div class="context-menu-item" id="bringForward">
                 <i class="fas fa-arrow-up icon"></i>
@@ -604,12 +632,22 @@
             <i class="fas fa-ellipsis-v"></i>
         </button>
     </div>
-
+    
+    <!-- Mobile Context Menu Button -->
+    <div class="mobile-context-container">
+        <button class="mobile-context-button" id="mobileContextButton">
+            <i class="fas fa-ellipsis-h"></i> Options Menu
+        </button>
+    </div>
+    
     <!-- Mobile Download Button -->
     <div class="mobile-download-container">
-        <button id="mobileDownloadButton" class="mobile-download-button">
-            <i class="fas fa-download icon"></i> Download Image
+        <button class="mobile-download-button" id="mobileDownloadButton">
+            <i class="fas fa-download"></i> Download Image
         </button>
+        <div class="mobile-download-text">
+            Save your edited image to your device
+        </div>
     </div>
 
     <div id="errorAlert" class="error-alert"></div>
@@ -784,23 +822,16 @@
                 document.getElementById('cropButton').style.display = activeObject ? 'block' : 'none';
                 document.getElementById('circularCropButton').style.display = activeObject ? 'block' : 'none';
                 document.getElementById('filtersMenu').style.display = activeObject ? 'block' : 'none';
-                document.getElementById('flipHorizontal').style.display = activeObject ? 'block' : 'none';
-                document.getElementById('flipVertical').style.display = activeObject ? 'block' : 'none';
                 document.getElementById('bringForward').style.display = activeObject ? 'block' : 'none';
                 document.getElementById('sendBackward').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('flipHorizontal').style.display = activeObject ? 'block' : 'none';
+                document.getElementById('flipVertical').style.display = activeObject ? 'block' : 'none';
                 
                 const contextMenu = document.getElementById('contextMenu');
                 
-                // Add mobile class for bigger icons
-                if (isMobile) {
-                    contextMenu.classList.add('mobile-context-menu');
-                } else {
-                    contextMenu.classList.remove('mobile-context-menu');
-                }
-                
                 // Ensure context menu stays within viewport
                 const menuWidth = 200;
-                const menuHeight = 350; // Increased for new layer options
+                const menuHeight = 350;
                 let left = x;
                 let top = y;
                 
@@ -834,24 +865,20 @@
             });
 
             canvasContainer.addEventListener('contextmenu', (e) => {
-                if (isMobile) return; // Disable right-click context menu on mobile
                 e.preventDefault();
                 e.stopPropagation();
                 showContextMenu(e.clientX, e.clientY);
             });
 
+            // Mobile Context Menu Button
+            document.getElementById('mobileContextButton').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const rect = canvasContainer.getBoundingClientRect();
+                showContextMenu(rect.left + 20, rect.bottom + 10);
+            });
+
             // Mobile Touch Events for Context Menu
             if (isMobile) {
-                // Remove long press functionality
-                // Instead use the toolbar button and floating button
-                
-                // Toolbar context menu button
-                document.getElementById('toolbarContextTrigger').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const rect = e.target.getBoundingClientRect();
-                    showContextMenu(rect.left, rect.bottom);
-                });
-
                 // Mobile context trigger button
                 document.getElementById('mobileContextTrigger').addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -892,13 +919,13 @@
                 hideContextMenu();
             });
 
-            // New Layer Ordering Functions
+            // Layer Ordering
             document.getElementById('bringForward').addEventListener('click', () => {
                 const activeObject = canvas.getActiveObject();
                 if (activeObject) {
                     canvas.bringForward(activeObject);
-                    canvas.renderAll();
                     addHistory();
+                    canvas.renderAll();
                 }
                 hideContextMenu();
             });
@@ -907,8 +934,8 @@
                 const activeObject = canvas.getActiveObject();
                 if (activeObject) {
                     canvas.sendBackwards(activeObject);
-                    canvas.renderAll();
                     addHistory();
+                    canvas.renderAll();
                 }
                 hideContextMenu();
             });
@@ -1283,7 +1310,7 @@
 
             document.getElementById('downloadImage').addEventListener('click', downloadImage);
             
-            // Mobile download button
+            // Mobile Download Button
             document.getElementById('mobileDownloadButton').addEventListener('click', downloadImage);
 
             // Filters
