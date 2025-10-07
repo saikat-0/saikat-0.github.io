@@ -122,7 +122,7 @@
             border: none;
             border-radius: 50%;
             padding: 15px;
-            font-size: 45px;
+            font-size: 55px;
             cursor: pointer;
             transition: all var(--transition-duration);
             display: flex;
@@ -169,10 +169,10 @@
             background: var(--button-bg);
             border-radius: 50%;
             padding: 15px;
-            width: 80;
+            width: 80px;
             height: 80px;
             color: white;
-            font-size: 45px;
+            font-size: 60px;
             cursor: pointer;
             transition: all var(--transition-duration);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -254,8 +254,8 @@
         }
 
         .context-card-section-title {
-            font-size: 16px;
-            color: #aaa;
+            font-size: 30px;
+            color: #aaa solid;
             margin-bottom: 5px;
             padding-left: 10px;
             text-transform: uppercase;
@@ -291,12 +291,12 @@
         }
 
         .context-card-icon {
-            font-size: 24px;
+            font-size: 50px;
             margin-bottom: 8px;
         }
 
         .context-card-label {
-            font-size: 12px;
+            font-size: 30px;
             text-align: center;
         }
 
@@ -318,13 +318,13 @@
         }
 
         .filter-label {
-            font-size: 14px;
+            font-size: 34px;
             min-width: 100px;
         }
 
         .filter-slider {
             flex: 1;
-            height: 6px;
+            height: 10px;
             -webkit-appearance: none;
             appearance: none;
             background: #3b3e46;
@@ -335,8 +335,8 @@
         .filter-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: var(--button-hover-bg);
             cursor: pointer;
@@ -472,7 +472,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .zoom-button {
@@ -526,83 +526,17 @@
 
         @media (max-width: 768px) {
             .mobile-button {
-                width: 60px;
-                height: 60px;
-                font-size: 35px;
+                width: 80px;
+                height: 80px;
+                font-size: 60px;
             }
-
-            .mobile-download-button {
-                width: 70px;
-                height: 70px;
-                font-size: 40px;
-            }
-
-            .checkbox-container {
-                width: 70px;
-                height: 70px;
-                font-size: 40px;
-            }
-
             .caption-input {
                 font-size: 16px;
                 height: 45px;
             }
-
-            .context-card-item {
-                min-height: 70px;
-                padding: 10px 5px;
-            }
-
-            .context-card-icon {
-                font-size: 20px;
-            }
-
-            .context-card-label {
-                font-size: 10px;
-            }
         }
 
-        @media (max-width: 480px) {
-            .mobile-button {
-                width: 50px;
-                height: 50px;
-                font-size: 30px;
-            }
-
-            .mobile-download-button {
-                width: 60px;
-                height: 60px;
-                font-size: 35px;
-            }
-
-            .checkbox-container {
-                width: 60px;
-                height: 60px;
-                font-size: 35px;
-            }
-
-            .caption-input {
-                font-size: 14px;
-                height: 40px;
-            }
-
-            .context-card-row {
-                gap: 5px;
-            }
-
-            .context-card-item {
-                min-height: 60px;
-                padding: 8px 4px;
-            }
-
-            .context-card-icon {
-                font-size: 18px;
-            }
-
-            .context-card-label {
-                font-size: 9px;
-            }
-        }
+        
     </style>
 </head>
 <body>
@@ -759,19 +693,25 @@
     <script>
         (() => {
             // Initialize Fabric.js canvas with enhanced mobile support
-            const canvas = new fabric.Canvas('imageCanvas', {
-                preserveObjectStacking: true,
-                selection: true,
-                uniformScaling: false,
-                controlsAboveOverlay: true,
-                allowTouchScrolling: false,
-                // Better mobile interaction
-                stopContextMenu: true,
-                fireRightClick: true,
-                // Improved rendering for mobile
-                renderOnAddRemove: true,
-                stateful: true
-            });
+            // Improved Canvas Initialization
+        const canvas = new fabric.Canvas('imageCanvas', {
+            preserveObjectStacking: true,
+            selection: true,
+            uniformScaling: false,
+            controlsAboveOverlay: true,
+            allowTouchScrolling: false,
+            // Enhanced quality settings
+            renderOnAddRemove: true,
+            stateful: true,
+            enableRetinaScaling: true, // Better quality on high-DPI screens
+            imageSmoothingEnabled: true
+        });
+        
+        // Set higher resolution for the canvas
+        canvas.setDimensions({
+            width: Math.min(955, window.innerWidth - 40),
+            height: 500
+        });
 
             // Global Variables
             let isCropping = false, cropCircle, cropRect;
@@ -1184,53 +1124,76 @@
             }
 
             // Improved Image Loading with better sizing logic
-            function loadImage(img) {
-                try {
-                    const imgInstance = new fabric.Image(img);
-                    const canvasWidth = canvas.width;
-                    const canvasHeight = canvas.height;
-                    const imgAspect = img.width / img.height;
-                    const canvasAspect = canvasWidth / canvasHeight;
-                    
-                    let scaleFactor;
-                    // For horizontal images (width > height): use full width
-                    // For vertical images (height > width): use full height
-                    if (imgAspect > canvasAspect) {
-                        // Horizontal image - fit to width
-                        scaleFactor = canvasWidth / img.width;
-                    } else {
-                        // Vertical image - fit to height
-                        scaleFactor = canvasHeight / img.height;
-                    }
-                    
-                    // Ensure the image doesn't get too small
-                    scaleFactor = Math.max(scaleFactor, 0.1);
-                    
-                    imgInstance.set({
-                        left: (canvasWidth - img.width * scaleFactor) / 2,
-                        top: (canvasHeight - img.height * scaleFactor) / 2,
-                        scaleX: scaleFactor,
-                        scaleY: scaleFactor,
-                        hasControls: true,
-                        hasBorders: true,
-                        selectable: true,
-                        // Better mobile interaction
-                        cornerStyle: 'circle',
-                        transparentCorners: false,
-                        cornerColor: CORNER_COLOR,
-                        cornerStrokeColor: CORNER_STROKE_COLOR,
-                        cornerSize: CORNER_SIZE,
-                        touchCornerSize: CORNER_SIZE * 1.5
-                    });
-                    
-                    canvas.add(imgInstance).setActiveObject(imgInstance);
-                    canvas.renderAll();
-                    addHistory();
-                    showSuccess('Image loaded successfully');
-                } catch (error) {
-                    showError('Failed to load image.');
-                }
-            }
+            // Improved Image Loading with optimal sizing and quality
+function loadImage(img) {
+    try {
+        showLoading('Loading image...');
+        
+        const imgInstance = new fabric.Image(img, {
+            crossOrigin: 'anonymous' // Important for quality
+        });
+        
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const imgAspect = img.width / img.height;
+        const canvasAspect = canvasWidth / canvasHeight;
+        
+        let scaleFactor, left, top;
+        
+        // Smart sizing logic for different image orientations
+        if (imgAspect >= 1) {
+            // Horizontal or square images - use full width
+            scaleFactor = canvasWidth / img.width;
+            left = 0;
+            top = (canvasHeight - (img.height * scaleFactor)) / 2;
+        } else {
+            // Vertical images - use full height
+            scaleFactor = canvasHeight / img.height;
+            left = (canvasWidth - (img.width * scaleFactor)) / 2;
+            top = 0;
+        }
+        
+        // Ensure the image doesn't get too small while maintaining quality
+        scaleFactor = Math.max(scaleFactor, 0.1);
+        
+        // Apply high-quality rendering settings
+        imgInstance.set({
+            left: left,
+            top: top,
+            scaleX: scaleFactor,
+            scaleY: scaleFactor,
+            hasControls: true,
+            hasBorders: true,
+            selectable: true,
+            // Enhanced mobile interaction
+            cornerStyle: 'circle',
+            transparentCorners: false,
+            cornerColor: CORNER_COLOR,
+            cornerStrokeColor: CORNER_STROKE_COLOR,
+            cornerSize: CORNER_SIZE,
+            touchCornerSize: CORNER_SIZE * 1.5,
+            // Quality preservation
+            imageSmoothing: true,
+            objectCaching: false // Better for quality but uses more memory
+        });
+        
+        // Add to canvas with quality optimization
+        canvas.add(imgInstance);
+        canvas.setActiveObject(imgInstance);
+        
+        // Force high-quality rendering
+        canvas.renderAll();
+        canvas.calcOffset();
+        
+        addHistory();
+        hideLoading();
+        showSuccess('Image loaded successfully');
+        
+    } catch (error) {
+        hideLoading();
+        showError('Failed to load image: ' + error.message);
+    }
+}
 
             // Upload Image
             document.getElementById('uploadButton').addEventListener('click', () => {
