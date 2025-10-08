@@ -1,495 +1,720 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-<style>
-    :root {
-        --background-color: #1a1b1e;
-        --toolbar-bg: #2a2c31;
-        --button-bg: #3b3e46;
-        --button-hover-bg: #4caf50;
-        --label-bg: #007bff;
-        --label-hover-bg: #0056b3;
-        --canvas-border: #555;
-        --canvas-shadow: rgba(0, 0, 0, 0.5);
-        --context-menu-bg: rgba(42, 44, 49, 0.95);
-        --context-menu-border: rgba(255, 255, 255, 0.1);
-        --context-menu-hover: rgba(255, 255, 255, 0.2);
-        --transition-duration: 0.2s;
-        --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
-        --radius: 5px;
-        --glow: 0 0 6px rgba(76, 175, 80, 0.5);
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Mobile Image Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.0/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pica@9.0.1/dist/pica.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js@2.3.0/exif.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #1a1b1e;
+            --toolbar-bg: #2a2c31;
+            --button-bg: #3b3e46;
+            --button-hover: #4caf50;
+            --primary: #007bff;
+            --primary-hover: #0056b3;
+            --canvas-border: #555;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --radius: 5px;
+            --font-family: 'Lato', -apple-system, sans-serif;
+            
+            /* Enhanced font sizes for better readability */
+            --font-size-xs: 16px;
+            --font-size-sm: 18px;
+            --font-size-md: 22px;
+            --font-size-lg: 26px;
+            --font-size-xl: 30px;
+            --font-size-2xl: 36px;
+            --font-size-3xl: 42px;
+            --font-size-4xl: 48px;
+            --font-size-5xl: 54px;
+            --font-size-6xl: 60px;
+            
+            --spacing-xs: 5px;
+            --spacing-sm: 10px;
+            --spacing-md: 15px;
+            --spacing-lg: 20px;
+            --spacing-xl: 25px;
+            --button-size-sm: 60px;
+            --button-size-md: 80px;
+            --button-size-lg: 90px;
+            --canvas-height: 628px;
+        }
 
-    body {
-        font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
-        margin: 10px 0 0 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background-color: var(--background-color);
-        color: #fff;
-        overflow-x: hidden;
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-        height: 100vh;
-    }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    .mobile-controls {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        margin-top: 10px;
-        padding: 10px;
-        box-sizing: border-box;
-        gap: 10px;
-    }
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: var(--spacing-sm);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--bg-color);
+            color: #fff;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
 
-    .mobile-controls-row {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        align-items: center;
-    }
+        .app-title {
+            font-size: var(--font-size-2xl);
+            font-weight: 600;
+            margin: 0;
+        }
 
-    .mobile-controls-row.buttons-row {
-        flex-wrap: wrap;
-    }
+        .section-title {
+            font-size: var(--font-size-3xl);
+            color: #aaa;
+            margin-bottom: var(--spacing-xs);
+            padding-left: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
 
-    .mobile-controls-row.input-row {
-        justify-content: center;
-    }
+        .context-label, .filter-label {
+            font-size: var(--font-size-3xl);
+            text-align: center;
+        }
 
-    .mobile-button {
-        background: var(--button-bg);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        padding: 15px;
-        font-size: 40px;
-        cursor: pointer;
-        transition: all var(--transition-duration);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 70px;
-        height: 70px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
-    }
+        .color-label {
+            font-size: var(--font-size-xl);
+            text-align: center;
+            font-weight: 600;
+        }
 
-    .mobile-button:hover, .mobile-button:active {
-        background: var(--button-hover-bg);
-        transform: scale(1.05);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-    }
+        .app-header {
+            width: 100%;
+            text-align: center;
+            padding: var(--spacing-sm) 0;
+            margin-bottom: var(--spacing-sm);
+        }
 
-    .mobile-download-button {
-        background: var(--label-bg);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        padding: 15px;
-        font-size: 45px;
-        cursor: pointer;
-        transition: all var(--transition-duration);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 80px;
-        height: 80px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
-    }
+        .controls-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
 
-    .mobile-download-button:hover, .mobile-download-button:active {
-        background: var(--label-hover-bg);
-        transform: scale(1.05);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-    }
+        .input-row {
+            display: flex;
+            justify-content: center;
+        }
 
-    .caption-input {
-        padding: 12px 15px;
-        border: 1px solid var(--canvas-border);
-        border-radius: 30px;
-        font-size: 18px;
-        background: #2a2c31;
-        color: #fff;
-        transition: border-color var(--transition-duration);
-        flex-grow: 1;
-        max-width: 90%;
-        height: 50px;
-        touch-action: manipulation;
-        text-align: center;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
+        .buttons-row {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
 
-    .caption-input:focus {
-        border-color: var(--label-bg);
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-    }
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            margin-top: var(--spacing-sm);
+            touch-action: manipulation;
+        }
 
-    .checkbox-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--button-bg);
-        border-radius: 50%;
-        padding: 15px;
-        width: 50px;
-        height: 50px;
-        color: white;
-        font-size: 45px;
-        cursor: pointer;
-        transition: all var(--transition-duration);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
-    }
+        .context-card {
+            display: none;
+            background: rgba(42, 44, 49, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            flex-direction: column;
+            width: 100%;
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-sm);
+            transition: all var(--transition);
+            transform: translateY(10px);
+            opacity: 0;
+        }
 
-    .checkbox-container:hover, .checkbox-container:active {
-        background: var(--button-hover-bg);
-        transform: scale(1.05);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-    }
+        .context-card.active {
+            display: flex;
+            animation: slideInUp 0.3s var(--transition) forwards;
+        }
 
-    .checkbox-container input[type="checkbox"] {
-        display: none;
-    }
+        .context-section {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
 
-    .checkbox-container.active {
-        background: var(--button-hover-bg);
-        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5);
-    }
+        .context-section:last-child {
+            margin-bottom: 0;
+        }
 
-    .canvas-container {
-        display: flex;
-        justify-content: center;
-        position: relative;
-        transition: all var(--transition-duration);
-        touch-action: manipulation;
-        width: 95%;
-        margin-top: 10px;
-    }
+        .context-row {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--spacing-sm);
+        }
 
-    #imageCanvas {
-        border: 2px solid var(--canvas-border);
-        background: #fff;
-        cursor: crosshair;
-        box-shadow: var(--canvas-shadow);
-        border-radius: var(--radius);
-        transition: box-shadow var(--transition-duration);
-        touch-action: manipulation;
-        max-width: 100%;
-        max-height: 70vh;
-    }
+        .filter-controls {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            width: 100%;
+            padding: var(--spacing-sm);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-top: var(--spacing-sm);
+        }
 
-    #imageCanvas:hover {
-        box-shadow: var(--glow);
-    }
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
 
-    .context-card {
-        display: none;
-        background: var(--context-menu-bg);
-        border: 1px solid var(--context-menu-border);
-        border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(10px);
-        flex-direction: column;
-        width: 95%;
-        margin-top: 15px;
-        padding: 15px;
-        transition: all var(--transition-duration);
-        transform: translateY(10px);
-        opacity: 0;
-    }
+        .caption-input {
+            padding: var(--spacing-md) var(--spacing-md);
+            border: 1px solid var(--canvas-border);
+            border-radius: 30px;
+            font-size: var(--font-size-4xl);
+            background: var(--toolbar-bg);
+            color: #fff;
+            transition: border-color var(--transition);
+            width: 95%;
+            height: var(--button-size-md);
+            touch-action: manipulation;
+            text-align: center;
+            box-shadow: 0 4px 8px var(--shadow);
+        }
 
-    .context-card.active {
-        display: flex;
-        animation: slideInUp 0.3s var(--transition-ease) forwards;
-    }
+        .caption-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
 
-    .context-card-section {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 15px;
-    }
+        .filter-slider {
+            flex: 1;
+            height: 10px;
+            -webkit-appearance: none;
+            background: #3b3e46;
+            border-radius: 3px;
+            outline: none;
+        }
 
-    .context-card-section:last-child {
-        margin-bottom: 0;
-    }
+        .filter-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--button-hover);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
 
-    .context-card-section-title {
-        font-size: 16px;
-        color: #aaa;
-        margin-bottom: 5px;
-        padding-left: 10px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
+        .filter-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--button-hover);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            border: none;
+        }
 
-    .context-card-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-    }
+        input[type="file"] {
+            display: none;
+        }
 
-    .context-card-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: var(--button-bg);
-        border-radius: 10px;
-        padding: 15px 10px;
-        cursor: pointer;
-        transition: all var(--transition-duration);
-        flex: 1;
-        min-height: 80px;
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
-    }
+        .icon-button {
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            padding: var(--spacing-md);
+            font-size: var(--font-size-4xl);
+            cursor: pointer;
+            transition: transform var(--transition), background-color var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: var(--button-size-md);
+            height: var(--button-size-md);
+            box-shadow: 0 4px 8px var(--shadow);
+            touch-action: manipulation;
+        }
 
-    .context-card-item:hover, .context-card-item:active {
-        background: var(--context-menu-hover);
-        transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    }
+        .icon-button:active {
+            background: var(--button-hover);
+            transform: scale(0.95);
+        }
 
-    .context-card-icon {
-        font-size: 24px;
-        margin-bottom: 8px;
-    }
+        .icon-button.active {
+            background: var(--button-hover);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5);
+        }
 
-    .context-card-label {
-        font-size: 12px;
-        text-align: center;
-    }
+        .download-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            padding: var(--spacing-md);
+            font-size: var(--font-size-6xl);
+            cursor: pointer;
+            transition: transform var(--transition), background-color var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: var(--button-size-lg);
+            height: var(--button-size-lg);
+            box-shadow: 0 4px 8px var(--shadow);
+            touch-action: manipulation;
+        }
 
-    .filter-controls {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-        padding: 10px;
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 10px;
-        margin-top: 10px;
-    }
+        .download-button:active {
+            background: var(--primary-hover);
+            transform: scale(0.95);
+        }
 
-    .filter-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
+        .toggle-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--button-bg);
+            border-radius: 50%;
+            padding: var(--spacing-md);
+            width: var(--button-size-lg);
+            height: var(--button-size-lg);
+            color: white;
+            font-size: var(--font-size-6xl);
+            cursor: pointer;
+            transition: transform var(--transition), background-color var(--transition);
+            box-shadow: 0 4px 8px var(--shadow);
+            touch-action: manipulation;
+        }
 
-    .filter-label {
-        font-size: 14px;
-        min-width: 100px;
-    }
+        .toggle-button:active {
+            background: var(--button-hover);
+            transform: scale(0.95);
+        }
 
-    .filter-slider {
-        flex: 1;
-        height: 6px;
-        -webkit-appearance: none;
-        appearance: none;
-        background: #3b3e46;
-        border-radius: 3px;
-        outline: none;
-    }
+        .toggle-button.active {
+            background: var(--button-hover);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5);
+        }
 
-    .filter-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--button-hover-bg);
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
+        .toggle-button input[type="checkbox"] {
+            display: none;
+        }
 
-    .filter-slider::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--button-hover-bg);
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        border: none;
-    }
+        .context-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--button-bg);
+            border-radius: 10px;
+            padding: var(--spacing-md) var(--spacing-sm);
+            cursor: pointer;
+            transition: transform var(--transition), background-color var(--transition);
+            flex: 1;
+            min-height: var(--button-size-lg);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            touch-action: manipulation;
+        }
 
-    .crop-button, .cancel-crop-button {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 1000;
-        padding: 12px 20px;
-        border-radius: var(--radius);
-        background: var(--button-bg);
-        color: #fff;
-        cursor: pointer;
-        transition: all var(--transition-duration);
-        touch-action: manipulation;
-        font-size: 20px;
-    }
+        .context-item:active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
 
-    .cancel-crop-button {
-        right: 120px;
-        background: #dc3545;
-    }
+        .crop-button, .cancel-crop-button {
+            position: absolute;
+            top: var(--spacing-sm);
+            right: var(--spacing-sm);
+            z-index: 1000;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius);
+            background: var(--button-bg);
+            color: #fff;
+            cursor: pointer;
+            transition: all var(--transition);
+            touch-action: manipulation;
+            font-size: var(--font-size-lg);
+            border: none;
+        }
 
-    .crop-button:hover, .crop-button:active {
-        background: var(--button-hover-bg);
-        transform: scale(1.05);
-    }
+        .cancel-crop-button {
+            right: 120px;
+            background: #dc3545;
+        }
 
-    .cancel-crop-button:hover, .cancel-crop-button:active {
-        background: #c82333;
-    }
+        .crop-button:active {
+            background: var(--button-hover);
+            transform: scale(0.95);
+        }
 
-    .selected-image {
-        animation: pulseGlow 1.5s ease-in-out infinite;
-    }
+        .cancel-crop-button:active {
+            background: #c82333;
+            transform: scale(0.95);
+        }
 
-    .error-alert {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #dc3545;
-        color: #fff;
-        padding: 15px 25px;
-        border-radius: var(--radius);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        z-index: 2000;
-        animation: slideInRight 0.3s var(--transition-ease);
-        display: none;
-        max-width: 80vw;
-        word-wrap: break-word;
-        font-size: 18px;
-    }
+        .close-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: var(--font-size-5xl);
+            cursor: pointer;
+            padding: 0;
+            width: var(--button-size-md);
+            height: var(--button-size-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
-    }
+        #imageCanvas {
+            border: 2px solid var(--canvas-border);
+            background: #fff;
+            cursor: crosshair;
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+            transition: box-shadow var(--transition);
+            touch-action: manipulation;
+            max-width: 100%;
+            max-height: 60vh;
+            width: 100%;
+            aspect-ratio: 1.91 / 1;
+        }
 
-    @keyframes slideInUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+        .color-modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(42, 44, 49, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 1100;
+            padding: var(--spacing-md);
+            transform: translateY(-100%);
+            transition: transform var(--transition);
+        }
 
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
+        .color-modal.active {
+            display: block;
+            transform: translateY(0);
+        }
 
-    .hidden {
-        display: none;
-    }
-</style>
+        .color-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
 
-<div class="mobile-controls">
-    <!-- Row 1: Caption Input -->
-    <div class="mobile-controls-row input-row">
-        <input type="text" id="captionInput" placeholder="Enter caption..." class="caption-input">
-    </div>
-    
-    <!-- Row 2: Action Buttons -->
-    <div class="mobile-controls-row buttons-row">
-        <button class="mobile-button" id="uploadButton" title="Upload Image">
-            <i class="fas fa-upload"></i>
-        </button>
-        <button class="mobile-button" id="pasteButton" title="Paste Image">
-            <i class="fas fa-paste"></i>
-        </button>
-        <button class="mobile-button" id="undoButton" title="Undo">
-            <i class="fas fa-undo"></i>
-        </button>
-        <button class="mobile-button" id="redoButton" title="Redo">
-            <i class="fas fa-redo"></i>
-        </button>
-        <button class="mobile-button" id="clearCanvas" title="Clear Canvas">
-            <i class="fas fa-trash"></i>
-        </button>
-        <div class="checkbox-container" id="captionCheckboxContainer" title="Add Caption">
-            <input type="checkbox" id="captionCheckbox" class="checkbox">
-            <i class="fas fa-comment"></i>
+        .color-title {
+            font-size: var(--font-size-4xl);
+            color: #aaa;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+        }
+
+        .color-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--button-bg);
+            border-radius: 15px;
+            padding: var(--spacing-md);
+            cursor: pointer;
+            transition: transform var(--transition), background-color var(--transition);
+            min-height: 120px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            touch-action: manipulation;
+        }
+
+        .color-item:active {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .color-icon {
+            width: var(--button-size-md);
+            height: var(--button-size-md);
+            border-radius: 50%;
+            margin-bottom: var(--spacing-sm);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .context-icon {
+            font-size: var(--font-size-6xl);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .notification {
+            position: fixed;
+            top: var(--spacing-lg);
+            right: var(--spacing-lg);
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            animation: slideInRight 0.3s var(--transition);
+            display: none;
+            max-width: 80vw;
+            word-wrap: break-word;
+            font-size: var(--font-size-lg);
+        }
+
+        .error {
+            background: var(--error);
+            color: #fff;
+        }
+
+        .success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .warning {
+            background: var(--warning);
+            color: #fff;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            display: none;
+        }
+
+        .loading-spinner {
+            width: var(--button-size-md);
+            height: var(--button-size-md);
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .loading-text {
+            color: white;
+            margin-top: var(--spacing-lg);
+            font-size: var(--font-size-lg);
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls-container">
+        <!-- Row 1: Caption Input -->
+        <div class="input-row">
+            <input type="text" id="captionInput" placeholder="Enter caption..." class="caption-input">
         </div>
-        <div class="checkbox-container" id="watermarkCheckboxContainer" title="Add Watermark">
-            <input type="checkbox" id="watermarkCheckbox" class="checkbox">
-            <i class="fas fa-stamp"></i>
+        
+        <!-- Row 2: Action Buttons -->
+        <div class="buttons-row">
+            <button class="icon-button" id="uploadButton" title="Upload Image">
+                <i class="fas fa-upload"></i>
+            </button>
+            <button class="icon-button" id="pasteButton" title="Paste Image">
+                <i class="fas fa-paste"></i>
+            </button>
+            <button class="icon-button" id="undoButton" title="Undo">
+                <i class="fas fa-undo"></i>
+            </button>
+            <button class="icon-button" id="redoButton" title="Redo">
+                <i class="fas fa-redo"></i>
+            </button>
+            <button class="icon-button" id="clearCanvas" title="Clear Canvas">
+                <i class="fas fa-trash"></i>
+            </button>
+            <div class="toggle-button" id="captionToggle" title="Add Caption">
+                <input type="checkbox" id="captionCheckbox">
+                <i class="fas fa-comment"></i>
+            </div>
+            <div class="toggle-button" id="watermarkToggle" title="Add Watermark">
+                <input type="checkbox" id="watermarkCheckbox">
+                <i class="fas fa-stamp"></i>
+            </div>
+            <button class="download-button" id="downloadButton" title="Download Image">
+                <i class="fas fa-download"></i>
+            </button>
         </div>
-        <button class="mobile-download-button" id="mobileDownloadButton" title="Download Image">
-            <i class="fas fa-download"></i>
-        </button>
     </div>
-</div>
 
-<!-- Canvas placed after the 2nd row (buttons row) -->
-<div class="canvas-container" id="canvasContainer">
-    <canvas id="imageCanvas" width="955" height="500"></canvas>
-</div>
+    <!-- Canvas -->
+    <div class="canvas-container" id="canvasContainer">
+        <canvas id="imageCanvas" width="1200" height="628"></canvas>
+    </div>
 
-<div class="mobile-controls">
-    <!-- Row 3: Hidden Context Card (appears when image is selected) -->
+    <!-- Context Card (appears when image is selected) -->
     <div class="context-card" id="contextCard">
-        <div class="context-card-section">
-            <div class="context-card-section-title">Layer Operations</div>
-            <div class="context-card-row">
-                <div class="context-card-item" id="deleteLayerContext">
-                    <div class="context-card-icon"><i class="fas fa-trash"></i></div>
-                    <div class="context-card-label">Delete</div>
+        <!-- Color Presets Modal -->
+        <div class="color-modal" id="colorModal">
+            <div class="color-header">
+                <h2 class="color-title">Color Presets</h2>
+                <button class="close-modal" id="closeColorModal">&times;</button>
+            </div>
+            <div class="color-grid">
+                <div class="color-item" data-preset="vibrant">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #ff0000, #ffff00, #00ff00);"></div>
+                    <div class="color-label">Vibrant</div>
                 </div>
-                <div class="context-card-item" id="duplicateLayer">
-                    <div class="context-card-icon"><i class="fas fa-copy"></i></div>
-                    <div class="context-card-label">Duplicate</div>
+                <div class="color-item" data-preset="natural">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #7eb6ff, #88c999);"></div>
+                    <div class="color-label">Natural</div>
                 </div>
-                <div class="context-card-item" id="bringForward">
-                    <div class="context-card-icon"><i class="fas fa-arrow-up"></i></div>
-                    <div class="context-card-label">Forward</div>
+                <div class="color-item" data-preset="warm">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #ff7b00, #ffd000);"></div>
+                    <div class="color-label">Warm</div>
                 </div>
-                <div class="context-card-item" id="sendBackward">
-                    <div class="context-card-icon"><i class="fas fa-arrow-down"></i></div>
-                    <div class="context-card-label">Backward</div>
+                <div class="color-item" data-preset="cool">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #0044ff, #00ccff);"></div>
+                    <div class="color-label">Cool</div>
+                </div>
+                <div class="color-item" data-preset="cinematic">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #2c3e50, #bdc3c7);"></div>
+                    <div class="color-label">Cinematic</div>
+                </div>
+                <div class="color-item" data-preset="golden">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #ffd700, #daa520);"></div>
+                    <div class="color-label">Golden</div>
+                </div>
+                <div class="color-item" data-preset="pastel">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #ffb6c1, #87ceeb);"></div>
+                    <div class="color-label">Pastel</div>
+                </div>
+                <div class="color-item" data-preset="dramatic">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #000, #8b0000);"></div>
+                    <div class="color-label">Dramatic</div>
+                </div>
+                <div class="color-item" data-preset="portrait">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #ff7eb3, #7e7eff);"></div>
+                    <div class="color-label">Portrait</div>
+                </div>
+                <div class="color-item" data-preset="landscape">
+                    <div class="color-icon" style="background: linear-gradient(135deg, #4CAF50, #2196F3);"></div>
+                    <div class="color-label">Landscape</div>
                 </div>
             </div>
         </div>
         
-        <div class="context-card-section">
-            <div class="context-card-section-title">Transformations</div>
-            <div class="context-card-row">
-                <div class="context-card-item" id="flipHorizontal">
-                    <div class="context-card-icon"><i class="fas fa-arrows-alt-h"></i></div>
-                    <div class="context-card-label">Flip H</div>
+        <div class="context-section">
+            <div class="section-title">Layer Operations</div>
+            <div class="context-row">
+                <div class="context-item" id="deleteLayer">
+                    <div class="context-icon"><i class="fas fa-trash"></i></div>
+                    <div class="context-label">Delete</div>
                 </div>
-                <div class="context-card-item" id="flipVertical">
-                    <div class="context-card-icon"><i class="fas fa-arrows-alt-v"></i></div>
-                    <div class="context-card-label">Flip V</div>
+                <div class="context-item" id="duplicateLayer">
+                    <div class="context-icon"><i class="fas fa-copy"></i></div>
+                    <div class="context-label">Duplicate</div>
                 </div>
-                <div class="context-card-item" id="cropButton">
-                    <div class="context-card-icon"><i class="fas fa-crop"></i></div>
-                    <div class="context-card-label">Crop</div>
+                <div class="context-item" id="bringForward">
+                    <div class="context-icon"><i class="fas fa-arrow-up"></i></div>
+                    <div class="context-label">Forward</div>
                 </div>
-                <div class="context-card-item" id="circularCropButton">
-                    <div class="context-card-icon"><i class="fas fa-circle-notch"></i></div>
-                    <div class="context-card-label">Circle Crop</div>
+                <div class="context-item" id="sendBackward">
+                    <div class="context-icon"><i class="fas fa-arrow-down"></i></div>
+                    <div class="context-label">Backward</div>
                 </div>
             </div>
         </div>
         
-        <div class="context-card-section">
-            <div class="context-card-section-title">Filters</div>
-            <div class="context-card-row">
-                <div class="context-card-item" id="grayscaleFilter">
-                    <div class="context-card-icon"><i class="fas fa-paint-brush"></i></div>
-                    <div class="context-card-label">Grayscale</div>
+        <div class="context-section">
+            <div class="section-title">Transformations</div>
+            <div class="context-row">
+                <div class="context-item" id="flipHorizontal">
+                    <div class="context-icon"><i class="fas fa-arrows-alt-h"></i></div>
+                    <div class="context-label">Flip H</div>
                 </div>
-                <div class="context-card-item" id="resetFilters">
-                    <div class="context-card-icon"><i class="fas fa-sync"></i></div>
-                    <div class="context-card-label">Reset</div>
+                <div class="context-item" id="flipVertical">
+                    <div class="context-icon"><i class="fas fa-arrows-alt-v"></i></div>
+                    <div class="context-label">Flip V</div>
+                </div>
+                <div class="context-item" id="cropButton">
+                    <div class="context-icon"><i class="fas fa-crop"></i></div>
+                    <div class="context-label">Crop</div>
+                </div>
+                <div class="context-item" id="circularCrop">
+                    <div class="context-icon"><i class="fas fa-circle-notch"></i></div>
+                    <div class="context-label">CircleCrop</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="context-section">
+            <div class="section-title">Filters</div>
+            <div class="context-row">
+                <div class="context-item" id="grayscaleFilter">
+                    <div class="context-icon"><i class="fas fa-paint-brush"></i></div>
+                    <div class="context-label">Grayscale</div>
+                </div>
+                <div class="context-item" id="colorPresetsButton">
+                    <div class="context-icon"><i class="fas fa-palette"></i></div>
+                    <div class="context-label">Presets</div>
+                </div>
+                <div class="context-item" id="colorizeButton">
+                    <div class="context-icon"><i class="fas fa-fill-drip"></i></div>
+                    <div class="context-label">Colorize</div>
+                </div>
+                <div class="context-item" id="resetFilters">
+                    <div class="context-icon"><i class="fas fa-sync"></i></div>
+                    <div class="context-label">Reset</div>
                 </div>
             </div>
             <div class="filter-controls">
@@ -512,977 +737,1433 @@
             </div>
         </div>
     </div>
-</div>
 
-<input type="file" id="uploadImage" style="display: none;" accept="image/*">
+    <input type="file" id="uploadImage" accept="image/*">
 
-<div id="errorAlert" class="error-alert"></div>
+    <div id="errorAlert" class="notification error"></div>
+    <div id="successAlert" class="notification success"></div>
+    <div id="warningAlert" class="notification warning"></div>
 
-<script>
-    (() => {
-        // Initialize Fabric.js canvas with better mobile support
-        const canvas = new fabric.Canvas('imageCanvas', {
-            preserveObjectStacking: true,
-            selection: true,
-            uniformScaling: false,
-            // Enhanced controls for mobile
-            controlsAboveOverlay: true,
-            allowTouchScrolling: false
-        });
+    <div class="loading-overlay" id="loadingOverlay">
+        <div>
+            <div class="loading-spinner"></div>
+            <div class="loading-text" id="loadingText">Processing...</div>
+        </div>
+    </div>
 
-        // Global Variables
-        let isCropping = false, cropCircle, cropRect;
-        let history = [];
-        let historyIndex = -1;
-
-        // Enhanced Visual Enhancements & Selection Styles
-        const CORNER_COLOR = 'rgba(76, 175, 80, 0.95)';
-        const CORNER_STROKE_COLOR = '#2e7d32';
-        const CORNER_HOVER_COLOR = 'rgba(255, 255, 255, 0.9)';
-        const CORNER_STYLE = 'circle';
-        const CORNER_STROKE_WIDTH = 3;
-        const CORNER_SIZE = 16;
-        const ACTIVE_CORNER_SIZE = 50;
-        const SHADOW_COLOR = 'rgba(76, 175, 80, 0.6)';
-        const SHADOW_BLUR = 25;
-        const SHADOW_OFFSET_X = 3;
-        const SHADOW_OFFSET_Y = 3;
-        const DASHED_BORDER = [5, 5];
-        const BORDER_THICKNESS = 2;
-
-        // Enhanced corner styling with better mobile support
-        fabric.Object.prototype.set({
-            cornerColor: CORNER_COLOR,
-            cornerStrokeColor: CORNER_STROKE_COLOR,
-            cornerStyle: CORNER_STYLE,
-            cornerStrokeWidth: CORNER_STROKE_WIDTH,
-            cornerSize: CORNER_SIZE,
-            transparentCorners: false,
-            borderColor: 'rgba(76, 175, 80, 0.8)',
-            borderScaleFactor: 1.2,
-            padding: 8,
-            borderDashArray: [5, 5],
-            // Better mobile touch handling
-            touchCornerSize: CORNER_SIZE * 1.5,
-            rotatingPointOffset: 30
-        });
-
-        // Configure canvas controls for better mobile interaction
-        fabric.Object.prototype.controls = {
-            // Top-left corner
-            tl: new fabric.Control({
-                x: -0.5,
-                y: -0.5,
-                cursorStyle: 'nw-resize',
-                actionHandler: fabric.controlsUtils.scalingEqually,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            }),
-            // Top-right corner
-            tr: new fabric.Control({
-                x: 0.5,
-                y: -0.5,
-                cursorStyle: 'ne-resize',
-                actionHandler: fabric.controlsUtils.scalingEqually,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            }),
-            // Bottom-left corner
-            bl: new fabric.Control({
-                x: -0.5,
-                y: 0.5,
-                cursorStyle: 'sw-resize',
-                actionHandler: fabric.controlsUtils.scalingEqually,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            }),
-            // Bottom-right corner
-            br: new fabric.Control({
-                x: 0.5,
-                y: 0.5,
-                cursorStyle: 'se-resize',
-                actionHandler: fabric.controlsUtils.scalingEqually,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            }),
-            // Middle-top
-            mt: new fabric.Control({
-                x: 0,
-                y: -0.5,
-                cursorStyle: 'n-resize',
-                actionHandler: fabric.controlsUtils.scalingY,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            }),
-            // Middle-bottom
-            mb: new fabric.Control({
-                x: 0,
-                y: 0.5,
-                cursorStyle: 's-resize',
-                actionHandler: fabric.controlsUtils.scalingY,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            }),
-            // Middle-left
-            ml: new fabric.Control({
-                x: -0.5,
-                y: 0,
-                cursorStyle: 'w-resize',
-                actionHandler: fabric.controlsUtils.scalingX,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            }),
-            // Middle-right
-            mr: new fabric.Control({
-                x: 0.5,
-                y: 0,
-                cursorStyle: 'e-resize',
-                actionHandler: fabric.controlsUtils.scalingX,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            }),
-            // Rotation control
-            mtr: new fabric.Control({
-                x: 0,
-                y: -0.5,
-                cursorStyle: 'crosshair',
-                actionHandler: fabric.controlsUtils.rotationWithSnapping,
-                offsetY: -30,
-                withConnection: true,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            })
-        };
-
-        // Enhanced style management - removed animations for better performance
-        function setImageStyles(obj, styles) {
-            if (!obj || obj.type !== 'image') return;
-            
-            obj.set({
-                borderColor: styles.borderColor || '',
-                borderDashArray: styles.borderDashArray || null,
-                borderScaleFactor: styles.borderColor ? 1.5 : 1.2,
-                cornerColor: styles.cornerColor || CORNER_COLOR,
-                cornerStrokeColor: styles.cornerStrokeColor || CORNER_STROKE_COLOR,
-                cornerSize: styles.cornerSize || CORNER_SIZE,
-                shadow: styles.shadow || null,
-                selectable: true,
-                evented: true,
-                padding: styles.padding !== undefined ? styles.padding : 8,
-                opacity: styles.opacity !== undefined ? styles.opacity : 1
-            });
-        }
-
-        // Enhanced selection with visual feedback - removed scale animation
-        function enhanceSelectedImages() {
-            const activeObjects = canvas.getActiveObjects();
-            
-            activeObjects.forEach(obj => {
-                if (obj.type === 'image') {
-                    setImageStyles(obj, {
-                        borderColor: 'rgba(76, 175, 80, 0.9)',
-                        borderDashArray: DASHED_BORDER,
-                        cornerColor: CORNER_HOVER_COLOR,
-                        cornerStrokeColor: CORNER_STROKE_COLOR,
-                        cornerSize: ACTIVE_CORNER_SIZE,
-                        shadow: new fabric.Shadow({
-                            color: SHADOW_COLOR,
-                            blur: SHADOW_BLUR,
-                            offsetX: SHADOW_OFFSET_X,
-                            offsetY: SHADOW_OFFSET_Y
-                        }),
-                        padding: 12,
-                        opacity: 1
-                    });
-                }
-            });
-            
-            // Show the context card when an image is selected
-            showContextCard();
-            canvas.renderAll();
-        }
-
-        // Enhanced deselection - removed scale animation
-        function clearImageStyles() {
-            canvas.getObjects().forEach(obj => {
-                if (obj.type === 'image') {
-                    setImageStyles(obj, {
-                        borderColor: '',
-                        borderDashArray: null,
-                        cornerColor: CORNER_COLOR,
-                        cornerStrokeColor: CORNER_STROKE_COLOR,
-                        cornerSize: CORNER_SIZE,
-                        shadow: null,
-                        padding: 8,
-                        opacity: 1
-                    });
-                }
-            });
-            
-            // Hide the context card when no image is selected
-            hideContextCard();
-        }
-
-        // Context Card Functions
-        function showContextCard() {
-            const contextCard = document.getElementById('contextCard');
-            contextCard.classList.add('active');
-        }
-
-        function hideContextCard() {
-            const contextCard = document.getElementById('contextCard');
-            contextCard.classList.remove('active');
-        }
-
-        // Event handlers with enhanced visual feedback
-        canvas.on('selection:created', enhanceSelectedImages);
-        canvas.on('selection:updated', enhanceSelectedImages);
-        canvas.on('selection:cleared', clearImageStyles);
-
-        // Enhanced hover effects
-        canvas.on('mouse:over', (event) => {
-            if (event.target && event.target.type === 'image' && !event.target.active) {
-                event.target.set({
-                    shadow: new fabric.Shadow({
-                        color: 'rgba(76, 175, 80, 0.4)',
-                        blur: 15,
-                        offsetX: 0,
-                        offsetY: 0,
-                    }),
-                    borderColor: 'rgba(76, 175, 80, 0.3)',
-                    borderDashArray: [3, 3]
-                });
-                canvas.renderAll();
-            }
-        });
-
-        canvas.on('mouse:out', (event) => {
-            if (event.target && event.target.type === 'image' && !event.target.active) {
-                event.target.set({
-                    shadow: null,
-                    borderColor: '',
-                    borderDashArray: null
-                });
-                canvas.renderAll();
-            }
-        });
-
-        // Enhanced during interaction feedback
-        canvas.on('object:moving', (e) => {
-            if (e.target && e.target.type === 'image') {
-                e.target.set({
-                    shadow: new fabric.Shadow({
-                        color: 'rgba(76, 175, 80, 0.8)',
-                        blur: 20,
-                        offsetX: 8,
-                        offsetY: 8,
-                    }),
-                    opacity: 0.95
-                });
-            }
-        });
-
-        canvas.on('object:scaling', (e) => {
-            if (e.target && e.target.type === 'image') {
-                e.target.set({
-                    shadow: new fabric.Shadow({
-                        color: 'rgba(255, 152, 0, 0.8)',
-                        blur: 25,
-                        offsetX: 5,
-                        offsetY: 5,
-                    }),
-                    opacity: 0.9
-                });
-            }
-        });
-
-        canvas.on('object:modified', (e) => {
-            if (e.target && e.target.type === 'image') {
-                e.target.set({
-                    opacity: 1,
-                    shadow: new fabric.Shadow({
-                        color: SHADOW_COLOR,
-                        blur: SHADOW_BLUR,
-                        offsetX: SHADOW_OFFSET_X,
-                        offsetY: SHADOW_OFFSET_Y
-                    })
-                });
-                canvas.renderAll();
-            }
-        });
-
-        // Add keyboard interaction feedback
-        document.addEventListener('keydown', (e) => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject && activeObject.type === 'image') {
-                if (e.key === 'Delete' || e.key === 'Backspace') {
-                    // Flash red before deletion
-                    activeObject.set('shadow', new fabric.Shadow({
-                        color: 'rgba(244, 67, 54, 0.8)',
-                        blur: 30,
-                        offsetX: 0,
-                        offsetY: 0
-                    }));
-                    canvas.renderAll();
+    <script>
+        // Single global variable with enhanced image processing
+        const ImageEditor = (() => {
+            class ImageEditor {
+                constructor() {
+                    this.canvas = null;
+                    this.history = [];
+                    this.historyIndex = -1;
+                    this.isCropping = false;
+                    this.cropCircle = null;
+                    this.cropRect = null;
+                    this.isLoading = false;
+                    this.tapCount = 0;
+                    this.tapTimeout = null;
+                    this.TAP_DELAY = 1000;
+                    this.lastTapTime = 0;
+                    this.TAP_INTERVAL = 300;
+                    this.colorizeCount = 0;
+                    this.MAX_COLORIZE_COUNT = 10;
+                    this.MAX_FILE_SIZE = 20 * 1024 * 1024; // Increased to 20MB
                     
-                    setTimeout(() => {
-                        if (canvas.getActiveObject() === activeObject) {
-                            canvas.remove(activeObject);
-                            addHistory();
+                    // Enhanced constants
+                    this.CORNER_COLOR = 'rgba(76, 175, 80, 0.95)';
+                    this.CORNER_STROKE_COLOR = '#2e7d32';
+                    this.CORNER_SIZE = 16;
+                    this.ACTIVE_CORNER_SIZE = 20;
+                    
+                    // DOM cache
+                    this.domElements = {};
+                    
+                    // Image quality settings
+                    this.QUALITY_SETTINGS = {
+                        maxWidth: 3840,
+                        maxHeight: 2160,
+                        webpQuality: 0.95,
+                        jpegQuality: 0.92,
+                        resizeMethod: 'lanczos3', // High-quality resampling
+                        sharpen: true,
+                        sharpenAmount: 0.2
+                    };
+                    
+                    this.init();
+                }
+                
+                init() {
+                    this.createCanvas();
+                    this.cacheDOM();
+                    this.setupEventListeners();
+                    this.setupCanvasEvents();
+                    this.setupObjectStyling();
+                    this.addHistory();
+                    this.showWelcomeMessage();
+                }
+                
+                cacheDOM() {
+                    // Cache frequently used DOM elements
+                    const elements = [
+                        'uploadButton', 'pasteButton', 'undoButton', 'redoButton', 
+                        'clearCanvas', 'captionToggle', 'watermarkToggle', 
+                        'downloadButton', 'captionInput', 'uploadImage', 
+                        'contextCard', 'colorModal', 'closeColorModal', 
+                        'brightnessFilter', 'contrastFilter', 'saturationFilter', 
+                        'blurFilter', 'errorAlert', 'successAlert', 'warningAlert', 
+                        'loadingOverlay', 'loadingText'
+                    ];
+                    
+                    this.domElements = elements.reduce((acc, id) => {
+                        acc[id] = document.getElementById(id);
+                        return acc;
+                    }, {});
+                }
+                
+                createCanvas() {
+                    const container = document.getElementById('canvasContainer');
+                    const containerWidth = container.clientWidth;
+                    const canvasHeight = Math.floor(containerWidth / 1.91);
+                    
+                    this.canvas = new fabric.Canvas('imageCanvas', {
+                        preserveObjectStacking: true,
+                        selection: true,
+                        uniformScaling: false,
+                        allowTouchScrolling: false,
+                        renderOnAddRemove: true,
+                        stateful: true,
+                        enableRetinaScaling: true,
+                        imageSmoothingEnabled: true,
+                        width: containerWidth,
+                        height: canvasHeight,
+                        // Enhanced rendering for better quality
+                        renderOnAddRemove: true,
+                        skipOffscreen: false,
+                        skipTargetFind: false
+                    });
+                }
+                
+                setupEventListeners() {
+                    const { domElements } = this;
+                    
+                    // Upload Image
+                    domElements.uploadButton.addEventListener('click', () => {
+                        domElements.uploadImage.click();
+                    });
+                    
+                    domElements.uploadImage.addEventListener('change', (e) => {
+                        this.handleImageUpload(e);
+                    });
+                    
+                    // Paste Image
+                    domElements.pasteButton.addEventListener('click', () => {
+                        this.handleImagePaste();
+                    });
+                    
+                    // Undo/Redo
+                    domElements.undoButton.addEventListener('click', () => {
+                        this.undo();
+                    });
+                    
+                    domElements.redoButton.addEventListener('click', () => {
+                        this.redo();
+                    });
+                    
+                    // Clear Canvas
+                    domElements.clearCanvas.addEventListener('click', () => {
+                        this.clearCanvas();
+                    });
+                    
+                    // Layer Operations
+                    const layerOperations = [
+                        { id: 'duplicateLayer', fn: () => this.duplicateLayer() },
+                        { id: 'deleteLayer', fn: () => this.deleteLayer() },
+                        { id: 'bringForward', fn: () => this.bringForward() },
+                        { id: 'sendBackward', fn: () => this.sendBackward() },
+                        { id: 'flipHorizontal', fn: () => this.flipHorizontal() },
+                        { id: 'flipVertical', fn: () => this.flipVertical() },
+                        { id: 'cropButton', fn: () => this.startCrop() },
+                        { id: 'circularCrop', fn: () => this.startCircularCrop() },
+                        { id: 'grayscaleFilter', fn: () => this.applyGrayscale() },
+                        { id: 'colorPresetsButton', fn: () => this.showColorModal() },
+                        { id: 'colorizeButton', fn: () => this.colorizeImage() },
+                        { id: 'resetFilters', fn: () => this.resetFilters() }
+                    ];
+                    
+                    layerOperations.forEach(({ id, fn }) => {
+                        document.getElementById(id).addEventListener('click', fn);
+                    });
+                    
+                    // Toggle Functionality
+                    domElements.captionToggle.addEventListener('click', () => {
+                        this.toggleCaption();
+                    });
+                    
+                    domElements.watermarkToggle.addEventListener('click', () => {
+                        this.toggleWatermark();
+                    });
+                    
+                    // Download
+                    domElements.downloadButton.addEventListener('click', () => {
+                        this.downloadImage();
+                    });
+                    
+                    // Hidden download with 5 consecutive taps
+                    document.getElementById('canvasContainer').addEventListener('touchstart', (e) => {
+                        this.handleHiddenDownload(e);
+                    }, { passive: false });
+                    
+                    document.getElementById('canvasContainer').addEventListener('mousedown', (e) => {
+                        this.handleHiddenDownload(e);
+                    });
+                    
+                    // Drag & Drop
+                    document.getElementById('canvasContainer').addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = 'copy';
+                        e.currentTarget.style.borderColor = 'var(--button-hover)';
+                    });
+                    
+                    document.getElementById('canvasContainer').addEventListener('dragleave', (e) => {
+                        e.currentTarget.style.borderColor = '';
+                    });
+                    
+                    document.getElementById('canvasContainer').addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        e.currentTarget.style.borderColor = '';
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0 && files[0].type.startsWith('image/')) {
+                            this.loadImageFromFile(files[0]);
+                        } else {
+                            this.showError('Please drop a valid image.');
                         }
-                    }, 150);
-                }
-            }
-        });
-
-        // Helper Functions
-        function showError(message) {
-            const alert = document.getElementById('errorAlert');
-            alert.textContent = message;
-            alert.style.display = 'block';
-            setTimeout(() => {
-                alert.style.display = 'none';
-            }, 3000);
-            console.error(message);
-        }
-
-        // Debounce Utility
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // History Management
-        function addHistory() {
-            if (historyIndex < history.length - 1) {
-                history = history.slice(0, historyIndex + 1);
-            }
-            const currentState = JSON.stringify(canvas.toJSON(['selectable', 'hasControls', 'hasBorders', 'filters', 'scaleX', 'scaleY']));
-            history.push(currentState);
-            historyIndex++;
-            if (history.length > 50) {
-                history.shift();
-                historyIndex--;
-            }
-        }
-
-        function restoreCanvasState(state) {
-            try {
-                canvas.clear();
-                canvas.loadFromJSON(state, () => {
-                    canvas.renderAll();
-                });
-            } catch (error) {
-                showError('Failed to restore canvas state.');
-            }
-        }
-
-        // Improved Image Loading with better sizing logic
-        function loadImage(img) {
-            try {
-                const imgInstance = new fabric.Image(img);
-                const canvasWidth = canvas.width;
-                const canvasHeight = canvas.height;
-                const imgAspect = img.width / img.height;
-                const canvasAspect = canvasWidth / canvasHeight;
-                
-                let scaleFactor;
-                // For horizontal images (width > height): use full width
-                // For vertical images (height > width): use full height
-                if (imgAspect > canvasAspect) {
-                    // Horizontal image - fit to width
-                    scaleFactor = canvasWidth / img.width;
-                } else {
-                    // Vertical image - fit to height
-                    scaleFactor = canvasHeight / img.height;
+                    });
+                    
+                    // Filters
+                    const debouncedApplyFilters = this.debounce(() => this.applyFilters(), 50);
+                    
+                    domElements.brightnessFilter.addEventListener('input', debouncedApplyFilters);
+                    domElements.contrastFilter.addEventListener('input', debouncedApplyFilters);
+                    domElements.saturationFilter.addEventListener('input', debouncedApplyFilters);
+                    domElements.blurFilter.addEventListener('input', debouncedApplyFilters);
+                    
+                    // Color Presets
+                    domElements.closeColorModal.addEventListener('click', () => {
+                        this.hideColorModal();
+                    });
+                    
+                    // Apply color presets
+                    document.querySelectorAll('.color-item').forEach(item => {
+                        item.addEventListener('click', () => {
+                            const preset = item.getAttribute('data-preset');
+                            this.applyColorPreset(preset);
+                        });
+                    });
+                    
+                    // Window resize handler for responsive canvas
+                    window.addEventListener('resize', () => {
+                        this.handleResize();
+                    });
+                    
+                    // Handle paste from clipboard
+                    document.addEventListener('paste', (e) => {
+                        this.handleClipboardPaste(e);
+                    });
                 }
                 
-                // Ensure the image doesn't get too small
-                scaleFactor = Math.max(scaleFactor, 0.1);
+                setupCanvasEvents() {
+                    // Selection events
+                    this.canvas.on('selection:created', () => this.enhanceSelectedImages());
+                    this.canvas.on('selection:updated', () => this.enhanceSelectedImages());
+                    this.canvas.on('selection:cleared', () => this.clearImageStyles());
+                    
+                    // Mouse events for visual feedback
+                    this.canvas.on('mouse:over', (event) => {
+                        if (event.target && event.target.type === 'image' && !event.target.active) {
+                            event.target.set({
+                                shadow: new fabric.Shadow({
+                                    color: 'rgba(76, 175, 80, 0.4)',
+                                    blur: 15,
+                                    offsetX: 0,
+                                    offsetY: 0,
+                                }),
+                                borderColor: 'rgba(76, 175, 80, 0.3)',
+                                borderDashArray: [3, 3]
+                            });
+                            this.canvas.renderAll();
+                        }
+                    });
+                    
+                    this.canvas.on('mouse:out', (event) => {
+                        if (event.target && event.target.type === 'image' && !event.target.active) {
+                            event.target.set({
+                                shadow: null,
+                                borderColor: '',
+                                borderDashArray: null
+                            });
+                            this.canvas.renderAll();
+                        }
+                    });
+                    
+                    // Interaction feedback
+                    this.canvas.on('object:moving', (e) => {
+                        if (e.target && e.target.type === 'image') {
+                            e.target.set({
+                                shadow: new fabric.Shadow({
+                                    color: 'rgba(76, 175, 80, 0.8)',
+                                    blur: 20,
+                                    offsetX: 8,
+                                    offsetY: 8,
+                                }),
+                                opacity: 0.95
+                            });
+                        }
+                    });
+                    
+                    this.canvas.on('object:scaling', (e) => {
+                        if (e.target && e.target.type === 'image') {
+                            e.target.set({
+                                shadow: new fabric.Shadow({
+                                    color: 'rgba(255, 152, 0, 0.8)',
+                                    blur: 25,
+                                    offsetX: 5,
+                                    offsetY: 5,
+                                }),
+                                opacity: 0.9
+                            });
+                        }
+                    });
+                    
+                    this.canvas.on('object:modified', (e) => {
+                        if (e.target && e.target.type === 'image') {
+                            e.target.set({
+                                opacity: 1,
+                                shadow: new fabric.Shadow({
+                                    color: 'rgba(76, 175, 80, 0.6)',
+                                    blur: 25,
+                                    offsetX: 3,
+                                    offsetY: 3
+                                })
+                            });
+                            this.canvas.renderAll();
+                            this.addHistory();
+                        }
+                    });
+                }
                 
-                imgInstance.set({
-                    left: (canvasWidth - img.width * scaleFactor) / 2,
-                    top: (canvasHeight - img.height * scaleFactor) / 2,
-                    scaleX: scaleFactor,
-                    scaleY: scaleFactor,
-                    hasControls: true,
-                    hasBorders: true,
-                    selectable: true,
-                    // Better mobile interaction
-                    cornerStyle: 'circle',
-                    transparentCorners: false,
-                    cornerColor: CORNER_COLOR,
-                    cornerStrokeColor: CORNER_STROKE_COLOR,
-                    cornerSize: CORNER_SIZE,
-                    touchCornerSize: CORNER_SIZE * 1.5
-                });
+                setupObjectStyling() {
+                    // Enhanced corner styling
+                    fabric.Object.prototype.set({
+                        cornerColor: this.CORNER_COLOR,
+                        cornerStrokeColor: this.CORNER_STROKE_COLOR,
+                        cornerStyle: 'circle',
+                        cornerStrokeWidth: 3,
+                        cornerSize: this.CORNER_SIZE,
+                        transparentCorners: false,
+                        borderColor: 'rgba(76, 175, 80, 0.8)',
+                        borderScaleFactor: 1.2,
+                        padding: 8,
+                        borderDashArray: [5, 5],
+                        touchCornerSize: this.CORNER_SIZE * 1.5,
+                        rotatingPointOffset: 30,
+                        hasRotatingPoint: true,
+                        lockRotation: false
+                    });
+                }
                 
-                canvas.add(imgInstance).setActiveObject(imgInstance);
-                canvas.renderAll();
-                addHistory();
-            } catch (error) {
-                showError('Failed to load image.');
-            }
-        }
-
-        // Upload Image
-        document.getElementById('uploadButton').addEventListener('click', () => {
-            document.getElementById('uploadImage').click();
-        });
-
-        document.getElementById('uploadImage').addEventListener('change', async (e) => {
-            if (!e.target.files.length) {
-                showError('No file selected.');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = () => loadImage(img);
-                img.onerror = () => showError('Unsupported or corrupted image.');
-            };
-            reader.onerror = () => showError('Failed to read file.');
-            reader.readAsDataURL(e.target.files[0]);
-        });
-
-        // Paste Image
-        document.getElementById('pasteButton').addEventListener('click', async () => {
-            try {
-                const items = await navigator.clipboard.read();
-                for (const item of items) {
-                    if (item.types.includes('image/png')) {
-                        const blob = await item.getType('image/png');
-                        const img = new Image();
-                        img.src = URL.createObjectURL(blob);
-                        img.onload = () => loadImage(img);
-                        break;
+                // Image Loading and Handling with enhanced quality
+                handleImageUpload(e) {
+                    if (!e.target.files.length) {
+                        this.showError('No file selected.');
+                        return;
+                    }
+                    
+                    const file = e.target.files[0];
+                    this.loadImageFromFile(file);
+                }
+                
+                loadImageFromFile(file) {
+                    if (!file.type.startsWith('image/')) {
+                        this.showError('Please select an image file.');
+                        return;
+                    }
+                    
+                    // Check file size
+                    if (file.size > this.MAX_FILE_SIZE) {
+                        this.showError(`Image size too large. Please select an image under ${this.MAX_FILE_SIZE / (1024 * 1024)}MB.`);
+                        return;
+                    }
+                    
+                    this.showLoading('Loading image...');
+                    
+                    // Use Compressor.js for better image handling
+                    new Compressor(file, {
+                        quality: 0.95,
+                        maxWidth: this.QUALITY_SETTINGS.maxWidth,
+                        maxHeight: this.QUALITY_SETTINGS.maxHeight,
+                        convertSize: 5000000, // Convert to JPEG if over 5MB
+                        success: (result) => {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                const img = new Image();
+                                img.src = event.target.result;
+                                img.onload = () => {
+                                    this.loadImage(img);
+                                    this.hideLoading();
+                                };
+                                img.onerror = () => {
+                                    this.showError('Unsupported or corrupted image.');
+                                    this.hideLoading();
+                                };
+                            };
+                            reader.onerror = () => {
+                                this.showError('Failed to read file.');
+                                this.hideLoading();
+                            };
+                            reader.readAsDataURL(result);
+                        },
+                        error: (err) => {
+                            this.showError('Failed to process image: ' + err.message);
+                            this.hideLoading();
+                        }
+                    });
+                }
+                
+                async handleImagePaste() {
+                    try {
+                        if (!navigator.clipboard) {
+                            this.showError('Clipboard API not supported in this browser.');
+                            return;
+                        }
+                        
+                        this.showLoading('Pasting image...');
+                        
+                        const items = await navigator.clipboard.read();
+                        let imageFound = false;
+                        
+                        for (const item of items) {
+                            const imageTypes = item.types.filter(type => type.startsWith('image/'));
+                            if (imageTypes.length > 0) {
+                                const blob = await item.getType(imageTypes[0]);
+                                const img = new Image();
+                                img.src = URL.createObjectURL(blob);
+                                img.onload = () => {
+                                    this.loadImage(img);
+                                    this.hideLoading();
+                                    imageFound = true;
+                                };
+                                break;
+                            }
+                        }
+                        
+                        if (!imageFound) {
+                            this.hideLoading();
+                            this.showError('No image found in clipboard.');
+                        }
+                    } catch (error) {
+                        this.hideLoading();
+                        this.showError('Failed to paste image. Make sure you have an image copied.');
                     }
                 }
-            } catch (error) {
-                showError('Failed to paste image.');
-            }
-        });
-
-        // Drag & Drop
-        const canvasContainer = document.getElementById('canvasContainer');
-        canvasContainer.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'copy';
-        });
-        canvasContainer.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => loadImage(img);
-                };
-                reader.readAsDataURL(files[0]);
-            } else {
-                showError('Please drop a valid image.');
-            }
-        });
-
-        // Layer Operations
-        document.getElementById('duplicateLayer').addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                const clone = fabric.util.object.clone(activeObject);
-                clone.set({ 
-                    left: activeObject.left + 10, 
-                    top: activeObject.top + 10
-                });
-                canvas.add(clone);
-                canvas.setActiveObject(clone);
-                addHistory();
-            }
-        });
-
-        document.getElementById('deleteLayerContext').addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                canvas.remove(activeObject);
-                addHistory();
-            }
-        });
-
-        // Layer Ordering
-        document.getElementById('bringForward').addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                canvas.bringForward(activeObject);
-                addHistory();
-            }
-        });
-
-        document.getElementById('sendBackward').addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                canvas.sendBackwards(activeObject);
-                addHistory();
-            }
-        });
-
-        // Crop Functions
-        document.getElementById('cropButton').addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject && activeObject.type === 'image') {
-                enterCropMode(activeObject);
-            }
-        });
-
-        function enterCropMode(image) {
-            if (isCropping) return;
-            isCropping = true;
-            cropRect = new fabric.Rect({
-                left: image.left,
-                top: image.top,
-                width: image.width * image.scaleX,
-                height: image.height * image.scaleY,
-                fill: 'rgba(0,0,0,0.3)',
-                hasBorders: true,
-                hasControls: true,
-                selectable: true,
-                lockAspectRatio: true,
-                // Better mobile controls for crop rectangle
-                cornerStyle: 'circle',
-                transparentCorners: false,
-                cornerColor: CORNER_COLOR,
-                cornerStrokeColor: CORNER_STROKE_COLOR,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            });
-            canvas.add(cropRect);
-            canvas.setActiveObject(cropRect);
-            canvas.renderAll();
-
-            const cropButton = document.createElement('button');
-            cropButton.innerText = 'Crop';
-            cropButton.className = 'crop-button';
-            document.body.appendChild(cropButton);
-
-            const cancelButton = document.createElement('button');
-            cancelButton.innerText = 'Cancel';
-            cancelButton.className = 'cancel-crop-button';
-            document.body.appendChild(cancelButton);
-
-            cropButton.addEventListener('click', () => {
-                cropImage(image);
-                document.body.removeChild(cropButton);
-                document.body.removeChild(cancelButton);
-            });
-
-            cancelButton.addEventListener('click', () => {
-                canvas.remove(cropRect);
-                isCropping = false;
-                cropRect = null;
-                canvas.renderAll();
-                document.body.removeChild(cropButton);
-                document.body.removeChild(cancelButton);
-            });
-        }
-
-        function cropImage(image) {
-            if (!cropRect) return;
-            try {
-                const croppedLeft = cropRect.left - image.left;
-                const croppedTop = cropRect.top - image.top;
-                const croppedWidth = cropRect.width * cropRect.scaleX;
-                const croppedHeight = cropRect.height * cropRect.scaleY;
-                const croppedCanvas = document.createElement('canvas');
-                croppedCanvas.width = croppedWidth * 2;
-                croppedCanvas.height = croppedHeight * 2;
-                const croppedCtx = croppedCanvas.getContext('2d');
-                croppedCtx.imageSmoothingEnabled = true;
-                croppedCtx.imageSmoothingQuality = 'high';
-                croppedCtx.drawImage(
-                    image._element,
-                    croppedLeft / image.scaleX,
-                    croppedTop / image.scaleY,
-                    croppedWidth / image.scaleX,
-                    croppedHeight / image.scaleY,
-                    0, 0, croppedWidth * 2, croppedHeight * 2
-                );
-                const croppedImg = new Image();
-                croppedImg.src = croppedCanvas.toDataURL('image/webp', 1.0);
-                croppedImg.onload = () => {
-                    const newImage = new fabric.Image(croppedImg, {
+                
+                handleClipboardPaste(e) {
+                    const items = e.clipboardData.items;
+                    for (let i = 0; i < items.length; i++) {
+                        if (items[i].type.indexOf('image') !== -1) {
+                            const blob = items[i].getAsFile();
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                const img = new Image();
+                                img.src = event.target.result;
+                                img.onload = () => this.loadImage(img);
+                            };
+                            reader.readAsDataURL(blob);
+                            e.preventDefault();
+                            break;
+                        }
+                    }
+                }
+                
+                loadImage(img) {
+                    try {
+                        this.showLoading('Loading image...');
+                        
+                        const imgInstance = new fabric.Image(img, {
+                            crossOrigin: 'anonymous'
+                        });
+                        
+                        const canvasWidth = this.canvas.width;
+                        const canvasHeight = this.canvas.height;
+                        const imgAspect = img.width / img.height;
+                        const canvasAspect = canvasWidth / canvasHeight;
+                        
+                        let scaleFactor, left, top;
+                        
+                        // Smart sizing logic for different image orientations
+                        if (imgAspect >= 1) {
+                            // Horizontal or square images - use full width
+                            scaleFactor = canvasWidth / img.width;
+                            left = 0;
+                            top = (canvasHeight - (img.height * scaleFactor)) / 2;
+                        } else {
+                            // Vertical images - use full height
+                            scaleFactor = canvasHeight / img.height;
+                            left = (canvasWidth - (img.width * scaleFactor)) / 2;
+                            top = 0;
+                        }
+                        
+                        // Ensure the image doesn't get too small while maintaining quality
+                        scaleFactor = Math.max(scaleFactor, 0.1);
+                        
+                        // Apply high-quality rendering settings
+                        imgInstance.set({
+                            left: left,
+                            top: top,
+                            scaleX: scaleFactor,
+                            scaleY: scaleFactor,
+                            hasControls: true,
+                            hasBorders: true,
+                            selectable: true,
+                            cornerStyle: 'circle',
+                            transparentCorners: false,
+                            cornerColor: this.CORNER_COLOR,
+                            cornerStrokeColor: this.CORNER_STROKE_COLOR,
+                            cornerSize: this.CORNER_SIZE,
+                            touchCornerSize: this.CORNER_SIZE * 1.5,
+                            imageSmoothing: true,
+                            objectCaching: false
+                        });
+                        
+                        // Add to canvas with quality optimization
+                        this.canvas.add(imgInstance);
+                        this.canvas.setActiveObject(imgInstance);
+                        
+                        // Force high-quality rendering
+                        this.canvas.renderAll();
+                        this.canvas.calcOffset();
+                        
+                        this.addHistory();
+                        this.hideLoading();
+                        this.showSuccess('Image loaded successfully');
+                        
+                    } catch (error) {
+                        this.hideLoading();
+                        this.showError('Failed to load image: ' + error.message);
+                    }
+                }
+                
+                // Layer Operations
+                duplicateLayer() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject) {
+                        const clone = fabric.util.object.clone(activeObject);
+                        clone.set({ 
+                            left: activeObject.left + 10, 
+                            top: activeObject.top + 10
+                        });
+                        this.canvas.add(clone);
+                        this.canvas.setActiveObject(clone);
+                        this.addHistory();
+                        this.showSuccess('Layer duplicated');
+                    } else {
+                        this.showWarning('No object selected to duplicate.');
+                    }
+                }
+                
+                deleteLayer() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject) {
+                        this.canvas.remove(activeObject);
+                        this.addHistory();
+                        this.showSuccess('Layer deleted');
+                    } else {
+                        this.showWarning('No object selected to delete.');
+                    }
+                }
+                
+                bringForward() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject) {
+                        this.canvas.bringForward(activeObject);
+                        this.addHistory();
+                        this.showSuccess('Layer brought forward');
+                    } else {
+                        this.showWarning('No object selected.');
+                    }
+                }
+                
+                sendBackward() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject) {
+                        this.canvas.sendBackwards(activeObject);
+                        this.addHistory();
+                        this.showSuccess('Layer sent backward');
+                    } else {
+                        this.showWarning('No object selected.');
+                    }
+                }
+                
+                // Transformations
+                flipHorizontal() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject) {
+                        activeObject.set({ scaleX: -activeObject.scaleX });
+                        activeObject.setCoords();
+                        this.canvas.renderAll();
+                        this.addHistory();
+                        this.showSuccess('Image flipped horizontally');
+                    } else {
+                        this.showWarning('No object selected to flip.');
+                    }
+                }
+                
+                flipVertical() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject) {
+                        activeObject.set({ scaleY: -activeObject.scaleY });
+                        activeObject.setCoords();
+                        this.canvas.renderAll();
+                        this.addHistory();
+                        this.showSuccess('Image flipped vertically');
+                    } else {
+                        this.showWarning('No object selected to flip.');
+                    }
+                }
+                
+                startCrop() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject && activeObject.type === 'image') {
+                        this.enterCropMode(activeObject);
+                    } else {
+                        this.showWarning('Please select an image to crop.');
+                    }
+                }
+                
+                enterCropMode(image) {
+                    if (this.isCropping) return;
+                    this.isCropping = true;
+                    this.cropRect = new fabric.Rect({
                         left: image.left,
                         top: image.top,
-                        scaleX: image.scaleX / 2,
-                        scaleY: image.scaleY / 2,
-                        hasControls: true,
+                        width: image.width * image.scaleX,
+                        height: image.height * image.scaleY,
+                        fill: 'rgba(0,0,0,0.3)',
                         hasBorders: true,
+                        hasControls: true,
                         selectable: true,
-                        // Better mobile controls
+                        lockAspectRatio: true,
                         cornerStyle: 'circle',
                         transparentCorners: false,
-                        cornerColor: CORNER_COLOR,
-                        cornerStrokeColor: CORNER_STROKE_COLOR,
-                        cornerSize: CORNER_SIZE,
-                        touchCornerSize: CORNER_SIZE * 1.5
+                        cornerColor: this.CORNER_COLOR,
+                        cornerStrokeColor: this.CORNER_STROKE_COLOR,
+                        cornerSize: this.CORNER_SIZE,
+                        touchCornerSize: this.CORNER_SIZE * 1.5
                     });
-                    canvas.remove(image);
-                    canvas.add(newImage);
-                    canvas.setActiveObject(newImage);
-                    canvas.renderAll();
-                    addHistory();
-                };
-                canvas.remove(cropRect);
-                isCropping = false;
-                cropRect = null;
-            } catch (error) {
-                showError('Failed to crop image.');
-            }
-        }
-
-        document.getElementById('circularCropButton').addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject && activeObject.type === 'image') {
-                enterCircularCropMode(activeObject);
-            }
-        });
-
-        function enterCircularCropMode(image) {
-            if (isCropping) return;
-            isCropping = true;
-            const centerX = image.left + (image.width * image.scaleX) / 2;
-            const centerY = image.top + (image.height * image.scaleY) / 2;
-            const radius = Math.min(image.width * image.scaleX, image.height * image.scaleY) / 2;
-            cropCircle = new fabric.Circle({
-                left: centerX - radius,
-                top: centerY - radius,
-                radius: radius,
-                fill: 'rgba(0,0,0,0.3)',
-                hasBorders: true,
-                hasControls: true,
-                selectable: true,
-                // Better mobile controls
-                cornerStyle: 'circle',
-                transparentCorners: false,
-                cornerColor: CORNER_COLOR,
-                cornerStrokeColor: CORNER_STROKE_COLOR,
-                cornerSize: CORNER_SIZE,
-                touchCornerSize: CORNER_SIZE * 1.5
-            });
-            canvas.add(cropCircle);
-            canvas.setActiveObject(cropCircle);
-            canvas.renderAll();
-
-            const cropButton = document.createElement('button');
-            cropButton.innerText = 'Crop';
-            cropButton.className = 'crop-button';
-            document.body.appendChild(cropButton);
-
-            const cancelButton = document.createElement('button');
-            cancelButton.innerText = 'Cancel';
-            cancelButton.className = 'cancel-crop-button';
-            document.body.appendChild(cancelButton);
-
-            cropButton.addEventListener('click', () => {
-                cropCircleImage(image);
-                document.body.removeChild(cropButton);
-                document.body.removeChild(cancelButton);
-            });
-
-            cancelButton.addEventListener('click', () => {
-                canvas.remove(cropCircle);
-                isCropping = false;
-                cropCircle = null;
-                canvas.renderAll();
-                document.body.removeChild(cropButton);
-                document.body.removeChild(cancelButton);
-            });
-        }
-
-        function cropCircleImage(image) {
-            if (!cropCircle) return;
-            try {
-                const cropRadius = cropCircle.radius * cropCircle.scaleX;
-                const circleCenterX = cropCircle.left + cropRadius;
-                const circleCenterY = cropCircle.top + cropRadius;
-                const diameter = cropRadius * 2;
-                const croppedCanvas = document.createElement('canvas');
-                croppedCanvas.width = diameter * 2;
-                croppedCanvas.height = diameter * 2;
-                const croppedCtx = croppedCanvas.getContext('2d');
-                croppedCtx.imageSmoothingEnabled = true;
-                croppedCtx.imageSmoothingQuality = 'high';
-                croppedCtx.beginPath();
-                croppedCtx.arc(diameter, diameter, diameter, 0, Math.PI * 2, false);
-                croppedCtx.clip();
-                const imageLeftOffset = (circleCenterX - cropRadius - image.left) / image.scaleX;
-                const imageTopOffset = (circleCenterY - cropRadius - image.top) / image.scaleY;
-                croppedCtx.drawImage(
-                    image._element,
-                    imageLeftOffset,
-                    imageTopOffset,
-                    diameter / image.scaleX,
-                    diameter / image.scaleY,
-                    0, 0, diameter * 2, diameter * 2
-                );
-                const croppedImg = new Image();
-                croppedImg.src = croppedCanvas.toDataURL('image/webp', 1.0);
-                croppedImg.onload = () => {
-                    const newImage = new fabric.Image(croppedImg, {
-                        left: image.left + (circleCenterX - cropRadius - image.left),
-                        top: image.top + (circleCenterY - cropRadius - image.top),
-                        scaleX: 0.5,
-                        scaleY: 0.5,
-                        hasControls: true,
-                        hasBorders: true,
-                        selectable: true,
-                        // Better mobile controls
-                        cornerStyle: 'circle',
-                        transparentCorners: false,
-                        cornerColor: CORNER_COLOR,
-                        cornerStrokeColor: CORNER_STROKE_COLOR,
-                        cornerSize: CORNER_SIZE,
-                        touchCornerSize: CORNER_SIZE * 1.5
-                    });
-                    canvas.remove(image);
-                    canvas.add(newImage);
-                    canvas.setActiveObject(newImage);
-                    canvas.renderAll();
-                    addHistory();
-                };
-                canvas.remove(cropCircle);
-                cropCircle = null;
-                isCropping = false;
-            } catch (error) {
-                showError('Failed to crop image.');
-            }
-        }
-
-        // Undo/Redo
-        document.getElementById('undoButton').addEventListener('click', () => {
-            if (historyIndex > 0) {
-                historyIndex--;
-                restoreCanvasState(history[historyIndex]);
-            }
-        });
-
-        document.getElementById('redoButton').addEventListener('click', () => {
-            if (historyIndex < history.length - 1) {
-                historyIndex++;
-                restoreCanvasState(history[historyIndex]);
-            }
-        });
-
-        // Clear Canvas
-        document.getElementById('clearCanvas').addEventListener('click', () => {
-            canvas.clear();
-            history = [];
-            historyIndex = -1;
-            canvas.renderAll();
-        });
-
-        // Transformations
-        document.getElementById('flipHorizontal').addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                activeObject.set({ scaleX: -activeObject.scaleX });
-                activeObject.setCoords();
-                canvas.renderAll();
-                addHistory();
-            }
-        });
-
-        document.getElementById('flipVertical').addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                activeObject.set({ scaleY: -activeObject.scaleY });
-                activeObject.setCoords();
-                canvas.renderAll();
-                addHistory();
-            }
-        });
-
-        // Checkbox Toggle Functionality
-        document.getElementById('captionCheckboxContainer').addEventListener('click', () => {
-            const checkbox = document.getElementById('captionCheckbox');
-            checkbox.checked = !checkbox.checked;
-            document.getElementById('captionCheckboxContainer').classList.toggle('active', checkbox.checked);
-        });
-
-        document.getElementById('watermarkCheckboxContainer').addEventListener('click', () => {
-            const checkbox = document.getElementById('watermarkCheckbox');
-            checkbox.checked = !checkbox.checked;
-            document.getElementById('watermarkCheckboxContainer').classList.toggle('active', checkbox.checked);
-        });
-
-        // Download Image
-        function addCaption(ctx, canvasElem, caption) {
-            ctx.font = "500 22px Arial";
-            ctx.fillStyle = "black";
-            ctx.globalAlpha = 0.7;
-            const textMetrics = ctx.measureText(caption);
-            const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
-            ctx.beginPath();
-            if (ctx.roundRect) {
-                ctx.roundRect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10, 15);
-            } else {
-                ctx.rect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10);
-            }
-            ctx.fill();
-            ctx.globalAlpha = 1;
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(caption, canvasElem.width / 2, canvasElem.height - (textHeight / 2 + 5));
-        }
-
-        function addWatermark(ctx, canvasElem) {
-            const padding = 5;
-            ctx.font = "700 24px Arial";
-            ctx.fillStyle = "#010642";
-            ctx.globalAlpha = 0.77;
-            ctx.beginPath();
-            if (ctx.roundRect) {
-                ctx.roundRect(canvasElem.width - 150 - padding, padding, 150, 36, 50);
-            } else {
-                ctx.rect(canvasElem.width - 150 - padding, padding, 150, 36);
-            }
-            ctx.fill();
-            ctx.globalAlpha = 1;
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("VvipTimes", canvasElem.width - 75 - padding, padding + 18);
-        }
-
-        async function compressImage(canvasElem) {
-            const maxFileSize = 50 * 1024;
-            const qualityStep = 0.02;
-            let quality = 1.0;
-            let dataUrl = canvasElem.toDataURL('image/webp', quality);
-            let blob = await fetch(dataUrl).then(res => res.blob());
-            if (blob.size <= maxFileSize) return dataUrl;
-
-            let lower = 0.1, upper = 1.0;
-            while (upper - lower > qualityStep && quality > 0.1) {
-                quality = (lower + upper) / 2;
-                dataUrl = canvasElem.toDataURL('image/webp', quality);
-                blob = await fetch(dataUrl).then(res => res.blob());
-                if (blob.size <= maxFileSize) {
-                    lower = quality;
-                } else {
-                    upper = quality;
+                    this.canvas.add(this.cropRect);
+                    this.canvas.setActiveObject(this.cropRect);
+                    this.canvas.renderAll();
+                    
+                    this.createCropButtons(image, 'rect');
                 }
-            }
-            return canvasElem.toDataURL('image/webp', lower);
-        }
-
-        function downloadImage() {
-            try {
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = 1200;
-                tempCanvas.height = 628;
-                const ctx = tempCanvas.getContext('2d');
-                ctx.imageSmoothingEnabled = true;
-                ctx.imageSmoothingQuality = 'high';
-                const imageData = canvas.toDataURL('image/webp', 1.0);
-                const img = new Image();
-                img.onload = async () => {
-                    ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
-                    if (document.getElementById('captionCheckbox').checked) {
-                        const caption = document.getElementById('captionInput').value;
-                        if (caption) addCaption(ctx, tempCanvas, caption);
-                    }
-                    if (document.getElementById('watermarkCheckbox').checked) {
-                        addWatermark(ctx, tempCanvas);
-                    }
-                    const downloadDataUrl = await compressImage(tempCanvas);
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = downloadDataUrl;
-                    downloadLink.download = `${document.getElementById('captionInput').value.replace(/\s+/g, '_') || 'image'}.webp`;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                };
-                img.src = imageData;
-            } catch (error) {
-                showError('Failed to download image.');
-            }
-        }
-
-        // Mobile download button
-        document.getElementById('mobileDownloadButton').addEventListener('click', downloadImage);
-
-        // Filters
-        const brightnessSlider = document.getElementById('brightnessFilter');
-        const contrastSlider = document.getElementById('contrastFilter');
-        const saturationSlider = document.getElementById('saturationFilter');
-        const blurSlider = document.getElementById('blurFilter');
-        const grayscaleButton = document.getElementById('grayscaleFilter');
-        const resetFiltersButton = document.getElementById('resetFilters');
-
-        function applyFilters() {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject && activeObject.type === 'image') {
-                activeObject.filters = [];
-                if (parseFloat(brightnessSlider.value) !== 0) {
-                    activeObject.filters.push(new fabric.Image.filters.Brightness({ brightness: parseFloat(brightnessSlider.value) / 100 }));
-                }
-                if (parseFloat(contrastSlider.value) !== 0) {
-                    activeObject.filters.push(new fabric.Image.filters.Contrast({ contrast: parseFloat(contrastSlider.value) / 100 }));
-                }
-                if (parseFloat(saturationSlider.value) !== 0) {
-                    activeObject.filters.push(new fabric.Image.filters.Saturation({ saturation: parseFloat(saturationSlider.value) / 100 }));
-                }
-                if (parseFloat(blurSlider.value) > 0) {
-                    activeObject.filters.push(new fabric.Image.filters.Blur({ blur: parseFloat(blurSlider.value) }));
-                }
-                activeObject.applyFilters();
-                canvas.renderAll();
-                addHistory();
-            }
-        }
-
-        const debouncedApplyFilters = debounce(applyFilters, 50);
-
-        brightnessSlider.addEventListener('input', debouncedApplyFilters);
-        contrastSlider.addEventListener('input', debouncedApplyFilters);
-        saturationSlider.addEventListener('input', debouncedApplyFilters);
-        blurSlider.addEventListener('input', debouncedApplyFilters);
-
-        grayscaleButton.addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject && activeObject.type === 'image') {
-                activeObject.filters = [new fabric.Image.filters.Grayscale()];
-                activeObject.applyFilters();
-                canvas.renderAll();
-                addHistory();
-            }
-        });
-
-        resetFiltersButton.addEventListener('click', () => {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject && activeObject.type === 'image') {
-                activeObject.filters = [];
-                activeObject.applyFilters();
-                canvas.renderAll();
-                addHistory();
                 
-                // Reset sliders
-                brightnessSlider.value = 0;
-                contrastSlider.value = 0;
-                saturationSlider.value = 0;
-                blurSlider.value = 0;
+                createCropButtons(image, type) {
+                    const cropButton = document.createElement('button');
+                    cropButton.innerText = 'Crop';
+                    cropButton.className = 'crop-button';
+                    document.body.appendChild(cropButton);
+                    
+                    const cancelButton = document.createElement('button');
+                    cancelButton.innerText = 'Cancel';
+                    cancelButton.className = 'cancel-crop-button';
+                    document.body.appendChild(cancelButton);
+                    
+                    cropButton.addEventListener('click', () => {
+                        if (type === 'rect') {
+                            this.cropImage(image);
+                        } else {
+                            this.cropCircleImage(image);
+                        }
+                        document.body.removeChild(cropButton);
+                        document.body.removeChild(cancelButton);
+                    });
+                    
+                    cancelButton.addEventListener('click', () => {
+                        if (type === 'rect') {
+                            this.canvas.remove(this.cropRect);
+                            this.cropRect = null;
+                        } else {
+                            this.canvas.remove(this.cropCircle);
+                            this.cropCircle = null;
+                        }
+                        this.isCropping = false;
+                        this.canvas.renderAll();
+                        document.body.removeChild(cropButton);
+                        document.body.removeChild(cancelButton);
+                    });
+                }
+                
+                cropImage(image) {
+                    if (!this.cropRect) return;
+                    try {
+                        const croppedLeft = this.cropRect.left - image.left;
+                        const croppedTop = this.cropRect.top - image.top;
+                        const croppedWidth = this.cropRect.width * this.cropRect.scaleX;
+                        const croppedHeight = this.cropRect.height * this.cropRect.scaleY;
+                        const croppedCanvas = document.createElement('canvas');
+                        croppedCanvas.width = croppedWidth * 2;
+                        croppedCanvas.height = croppedHeight * 2;
+                        const croppedCtx = croppedCanvas.getContext('2d');
+                        
+                        // Enhanced image rendering with detail preservation
+                        croppedCtx.imageSmoothingEnabled = true;
+                        croppedCtx.imageSmoothingQuality = 'high';
+                        
+                        croppedCtx.drawImage(
+                            image._element,
+                            croppedLeft / image.scaleX,
+                            croppedTop / image.scaleY,
+                            croppedWidth / image.scaleX,
+                            croppedHeight / image.scaleY,
+                            0, 0, croppedWidth * 2, croppedHeight * 2
+                        );
+                        
+                        const croppedImg = new Image();
+                        croppedImg.src = croppedCanvas.toDataURL('image/webp', 1.0);
+                        croppedImg.onload = () => {
+                            const newImage = new fabric.Image(croppedImg, {
+                                left: image.left,
+                                top: image.top,
+                                scaleX: image.scaleX / 2,
+                                scaleY: image.scaleY / 2,
+                                hasControls: true,
+                                hasBorders: true,
+                                selectable: true,
+                                cornerStyle: 'circle',
+                                transparentCorners: false,
+                                cornerColor: this.CORNER_COLOR,
+                                cornerStrokeColor: this.CORNER_STROKE_COLOR,
+                                cornerSize: this.CORNER_SIZE,
+                                touchCornerSize: this.CORNER_SIZE * 1.5
+                            });
+                            this.canvas.remove(image);
+                            this.canvas.add(newImage);
+                            this.canvas.setActiveObject(newImage);
+                            this.canvas.renderAll();
+                            this.addHistory();
+                            this.showSuccess('Image cropped successfully');
+                        };
+                        this.canvas.remove(this.cropRect);
+                        this.isCropping = false;
+                        this.cropRect = null;
+                    } catch (error) {
+                        this.showError('Failed to crop image.');
+                    }
+                }
+                
+                startCircularCrop() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject && activeObject.type === 'image') {
+                        this.enterCircularCropMode(activeObject);
+                    } else {
+                        this.showWarning('Please select an image to crop.');
+                    }
+                }
+                
+                enterCircularCropMode(image) {
+                    if (this.isCropping) return;
+                    this.isCropping = true;
+                    const centerX = image.left + (image.width * image.scaleX) / 2;
+                    const centerY = image.top + (image.height * image.scaleY) / 2;
+                    const radius = Math.min(image.width * image.scaleX, image.height * image.scaleY) / 2;
+                    this.cropCircle = new fabric.Circle({
+                        left: centerX - radius,
+                        top: centerY - radius,
+                        radius: radius,
+                        fill: 'rgba(0,0,0,0.3)',
+                        hasBorders: true,
+                        hasControls: true,
+                        selectable: true,
+                        cornerStyle: 'circle',
+                        transparentCorners: false,
+                        cornerColor: this.CORNER_COLOR,
+                        cornerStrokeColor: this.CORNER_STROKE_COLOR,
+                        cornerSize: this.CORNER_SIZE,
+                        touchCornerSize: this.CORNER_SIZE * 1.5
+                    });
+                    this.canvas.add(this.cropCircle);
+                    this.canvas.setActiveObject(this.cropCircle);
+                    this.canvas.renderAll();
+                    
+                    this.createCropButtons(image, 'circle');
+                }
+                
+                cropCircleImage(image) {
+                    if (!this.cropCircle) return;
+                    try {
+                        const cropRadius = this.cropCircle.radius * this.cropCircle.scaleX;
+                        const circleCenterX = this.cropCircle.left + cropRadius;
+                        const circleCenterY = this.cropCircle.top + cropRadius;
+                        const diameter = cropRadius * 2;
+                        const croppedCanvas = document.createElement('canvas');
+                        croppedCanvas.width = diameter * 2;
+                        croppedCanvas.height = diameter * 2;
+                        const croppedCtx = croppedCanvas.getContext('2d');
+                        
+                        // Enhanced image rendering with detail preservation
+                        croppedCtx.imageSmoothingEnabled = true;
+                        croppedCtx.imageSmoothingQuality = 'high';
+                        
+                        croppedCtx.beginPath();
+                        croppedCtx.arc(diameter, diameter, diameter, 0, Math.PI * 2, false);
+                        croppedCtx.clip();
+                        const imageLeftOffset = (circleCenterX - cropRadius - image.left) / image.scaleX;
+                        const imageTopOffset = (circleCenterY - cropRadius - image.top) / image.scaleY;
+                        croppedCtx.drawImage(
+                            image._element,
+                            imageLeftOffset,
+                            imageTopOffset,
+                            diameter / image.scaleX,
+                            diameter / image.scaleY,
+                            0, 0, diameter * 2, diameter * 2
+                        );
+                        const croppedImg = new Image();
+                        croppedImg.src = croppedCanvas.toDataURL('image/webp', 1.0);
+                        croppedImg.onload = () => {
+                            const newImage = new fabric.Image(croppedImg, {
+                                left: image.left + (circleCenterX - cropRadius - image.left),
+                                top: image.top + (circleCenterY - cropRadius - image.top),
+                                scaleX: 0.5,
+                                scaleY: 0.5,
+                                hasControls: true,
+                                hasBorders: true,
+                                selectable: true,
+                                cornerStyle: 'circle',
+                                transparentCorners: false,
+                                cornerColor: this.CORNER_COLOR,
+                                cornerStrokeColor: this.CORNER_STROKE_COLOR,
+                                cornerSize: this.CORNER_SIZE,
+                                touchCornerSize: this.CORNER_SIZE * 1.5
+                            });
+                            this.canvas.remove(image);
+                            this.canvas.add(newImage);
+                            this.canvas.setActiveObject(newImage);
+                            this.canvas.renderAll();
+                            this.addHistory();
+                            this.showSuccess('Circular crop applied successfully');
+                        };
+                        this.canvas.remove(this.cropCircle);
+                        this.cropCircle = null;
+                        this.isCropping = false;
+                    } catch (error) {
+                        this.showError('Failed to crop image.');
+                    }
+                }
+                
+                // Filter Operations with enhanced algorithms
+                applyFilters() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject && activeObject.type === 'image') {
+                        activeObject.filters = [];
+                        const { domElements } = this;
+                        
+                        if (parseFloat(domElements.brightnessFilter.value) !== 0) {
+                            activeObject.filters.push(new fabric.Image.filters.Brightness({ 
+                                brightness: parseFloat(domElements.brightnessFilter.value) / 100 
+                            }));
+                        }
+                        if (parseFloat(domElements.contrastFilter.value) !== 0) {
+                            activeObject.filters.push(new fabric.Image.filters.Contrast({ 
+                                contrast: parseFloat(domElements.contrastFilter.value) / 100 
+                            }));
+                        }
+                        if (parseFloat(domElements.saturationFilter.value) !== 0) {
+                            activeObject.filters.push(new fabric.Image.filters.Saturation({ 
+                                saturation: parseFloat(domElements.saturationFilter.value) / 100 
+                            }));
+                        }
+                        if (parseFloat(domElements.blurFilter.value) > 0) {
+                            activeObject.filters.push(new fabric.Image.filters.Blur({ 
+                                blur: parseFloat(domElements.blurFilter.value) 
+                            }));
+                        }
+                        activeObject.applyFilters();
+                        this.canvas.renderAll();
+                        this.addHistory();
+                    }
+                }
+                
+                applyGrayscale() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject && activeObject.type === 'image') {
+                        activeObject.filters = [new fabric.Image.filters.Grayscale()];
+                        activeObject.applyFilters();
+                        this.canvas.renderAll();
+                        this.addHistory();
+                        this.showSuccess('Grayscale filter applied');
+                    } else {
+                        this.showWarning('No image selected to apply filter.');
+                    }
+                }
+                
+                colorizeImage() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject && activeObject.type === 'image') {
+                        // Reset colorize count if it exceeds max
+                        if (this.colorizeCount >= this.MAX_COLORIZE_COUNT) {
+                            this.colorizeCount = 0;
+                        }
+                        
+                        // Increment colorize count
+                        this.colorizeCount++;
+                        
+                        // Calculate color adjustment based on count
+                        const adjustment = this.colorizeCount * 0.05;
+                        
+                        // Apply color matrix filter for colorization
+                        const colorMatrix = [
+                            1 + adjustment, 0, 0, 0, 0,
+                            0, 1, 0, 0, 0,
+                            0, 0, 1 - adjustment, 0, 0,
+                            0, 0, 0, 1, 0
+                        ];
+                        
+                        // Check if there's already a ColorMatrix filter
+                        let colorMatrixFilter = activeObject.filters.find(filter => 
+                            filter.type === 'ColorMatrix'
+                        );
+                        
+                        if (colorMatrixFilter) {
+                            // Update existing filter
+                            colorMatrixFilter.matrix = colorMatrix;
+                        } else {
+                            // Add new filter
+                            colorMatrixFilter = new fabric.Image.filters.ColorMatrix({
+                                matrix: colorMatrix
+                            });
+                            activeObject.filters.push(colorMatrixFilter);
+                        }
+                        
+                        activeObject.applyFilters();
+                        this.canvas.renderAll();
+                        this.addHistory();
+                        this.showSuccess(`Colorized (${this.colorizeCount}/${this.MAX_COLORIZE_COUNT})`);
+                    } else {
+                        this.showWarning('No image selected to colorize.');
+                    }
+                }
+                
+                resetFilters() {
+                    const activeObject = this.canvas.getActiveObject();
+                    if (activeObject && activeObject.type === 'image') {
+                        activeObject.filters = [];
+                        activeObject.applyFilters();
+                        this.canvas.renderAll();
+                        this.addHistory();
+                        
+                        // Reset sliders
+                        const { domElements } = this;
+                        domElements.brightnessFilter.value = 0;
+                        domElements.contrastFilter.value = 0;
+                        domElements.saturationFilter.value = 0;
+                        domElements.blurFilter.value = 0;
+                        
+                        // Reset colorize count
+                        this.colorizeCount = 0;
+                        
+                        this.showSuccess('Filters reset');
+                    } else {
+                        this.showWarning('No image selected to reset filters.');
+                    }
+                }
+                
+                applyColorPreset(preset) {
+                    const activeObject = this.canvas.getActiveObject();
+                    
+                    if (activeObject && activeObject.type === 'image') {
+                        // Reset filters first
+                        activeObject.filters = [];
+                        
+                        // Apply preset-specific filters
+                        switch(preset) {
+                            case 'vibrant':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: 0.15 }),
+                                    new fabric.Image.filters.Contrast({ contrast: 0.2 }),
+                                    new fabric.Image.filters.Saturation({ saturation: 0.25 })
+                                );
+                                break;
+                            case 'natural':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: 0.05 }),
+                                    new fabric.Image.filters.Contrast({ contrast: 0.1 }),
+                                    new fabric.Image.filters.Saturation({ saturation: 0.1 })
+                                );
+                                break;
+                            case 'warm':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: 0.1 }),
+                                    new fabric.Image.filters.Saturation({ saturation: 0.2 })
+                                );
+                                break;
+                            case 'cool':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: -0.05 }),
+                                    new fabric.Image.filters.Saturation({ saturation: 0.1 })
+                                );
+                                break;
+                            case 'cinematic':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: -0.1 }),
+                                    new fabric.Image.filters.Contrast({ contrast: 0.2 }),
+                                    new fabric.Image.filters.Saturation({ saturation: -0.1 })
+                                );
+                                break;
+                            case 'golden':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: 0.1 }),
+                                    new fabric.Image.filters.Saturation({ saturation: 0.15 }),
+                                    new fabric.Image.filters.Sepia({ amount: 0.2 })
+                                );
+                                break;
+                            case 'pastel':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: 0.15 }),
+                                    new fabric.Image.filters.Saturation({ saturation: -0.3 })
+                                );
+                                break;
+                            case 'dramatic':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: -0.2 }),
+                                    new fabric.Image.filters.Contrast({ contrast: 0.3 }),
+                                    new fabric.Image.filters.Saturation({ saturation: -0.2 })
+                                );
+                                break;
+                            case 'portrait':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: 0.1 }),
+                                    new fabric.Image.filters.Contrast({ contrast: 0.15 }),
+                                    new fabric.Image.filters.Saturation({ saturation: 0.1 })
+                                );
+                                break;
+                            case 'landscape':
+                                activeObject.filters.push(
+                                    new fabric.Image.filters.Brightness({ brightness: 0.05 }),
+                                    new fabric.Image.filters.Contrast({ contrast: 0.1 }),
+                                    new fabric.Image.filters.Saturation({ saturation: 0.2 })
+                                );
+                                break;
+                        }
+                        
+                        activeObject.applyFilters();
+                        this.canvas.renderAll();
+                        this.addHistory();
+                        this.hideColorModal();
+                        
+                        const presetName = document.querySelector(`.color-item[data-preset="${preset}"] .color-label`).textContent;
+                        this.showSuccess(`Applied ${presetName} preset`);
+                    } else {
+                        this.showWarning('No image selected to apply preset.');
+                    }
+                }
+                
+                // Toggle Functions
+                toggleCaption() {
+                    const checkbox = document.getElementById('captionCheckbox');
+                    checkbox.checked = !checkbox.checked;
+                    document.getElementById('captionToggle').classList.toggle('active', checkbox.checked);
+                    this.showSuccess(checkbox.checked ? 'Caption enabled' : 'Caption disabled');
+                }
+                
+                toggleWatermark() {
+                    const checkbox = document.getElementById('watermarkCheckbox');
+                    checkbox.checked = !checkbox.checked;
+                    document.getElementById('watermarkToggle').classList.toggle('active', checkbox.checked);
+                    this.showSuccess(checkbox.checked ? 'Watermark enabled' : 'Watermark disabled');
+                }
+                
+                // History Management
+                addHistory() {
+                    if (this.historyIndex < this.history.length - 1) {
+                        this.history = this.history.slice(0, this.historyIndex + 1);
+                    }
+                    const currentState = JSON.stringify(this.canvas.toJSON(['selectable', 'hasControls', 'hasBorders', 'filters', 'scaleX', 'scaleY']));
+                    this.history.push(currentState);
+                    this.historyIndex++;
+                    if (this.history.length > 50) {
+                        this.history.shift();
+                        this.historyIndex--;
+                    }
+                    
+                    this.updateUndoRedoButtons();
+                }
+                
+                restoreCanvasState(state) {
+                    try {
+                        this.canvas.clear();
+                        this.canvas.loadFromJSON(state, () => {
+                            this.canvas.renderAll();
+                        });
+                    } catch (error) {
+                        this.showError('Failed to restore canvas state.');
+                    }
+                }
+                
+                undo() {
+                    if (this.historyIndex > 0) {
+                        this.historyIndex--;
+                        this.restoreCanvasState(this.history[this.historyIndex]);
+                        this.showSuccess('Undo successful');
+                    }
+                }
+                
+                redo() {
+                    if (this.historyIndex < this.history.length - 1) {
+                        this.historyIndex++;
+                        this.restoreCanvasState(this.history[this.historyIndex]);
+                        this.showSuccess('Redo successful');
+                    }
+                }
+                
+                updateUndoRedoButtons() {
+                    const { domElements } = this;
+                    
+                    const canUndo = this.historyIndex > 0;
+                    const canRedo = this.historyIndex < this.history.length - 1;
+                    
+                    domElements.undoButton.disabled = !canUndo;
+                    domElements.redoButton.disabled = !canRedo;
+                    
+                    domElements.undoButton.style.opacity = canUndo ? '1' : '0.5';
+                    domElements.redoButton.style.opacity = canRedo ? '1' : '0.5';
+                }
+                
+                // Download Functions with enhanced quality
+                async downloadImage() {
+                    try {
+                        if (this.canvas.getObjects().length === 0) {
+                            this.showWarning('Canvas is empty. Please add an image first.');
+                            return;
+                        }
+                        
+                        this.showLoading('Preparing download...');
+                        
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = 1200;
+                        tempCanvas.height = 628;
+                        const ctx = tempCanvas.getContext('2d');
+                        
+                        // Enhanced image rendering settings
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        
+                        // Use pica for high-quality image resizing
+                        const canvasData = this.canvas.toDataURL('image/webp', 1.0);
+                        const img = new Image();
+                        img.onload = async () => {
+                            // Use pica for high-quality resizing
+                            if (window.pica) {
+                                const resizedCanvas = document.createElement('canvas');
+                                resizedCanvas.width = 1200;
+                                resizedCanvas.height = 628;
+                                
+                                try {
+                                    await window.pica().resize(img, resizedCanvas, {
+                                        quality: 3,
+                                        alpha: true,
+                                        unsharpAmount: 80,
+                                        unsharpRadius: 0.6,
+                                        unsharpThreshold: 2
+                                    });
+                                    
+                                    ctx.drawImage(resizedCanvas, 0, 0);
+                                } catch (error) {
+                                    // Fallback to regular drawing
+                                    ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+                                }
+                            } else {
+                                ctx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+                            }
+                            
+                            if (document.getElementById('captionCheckbox').checked) {
+                                const caption = this.domElements.captionInput.value;
+                                if (caption) this.addCaption(ctx, tempCanvas, caption);
+                            }
+                            if (document.getElementById('watermarkCheckbox').checked) {
+                                this.addWatermark(ctx, tempCanvas);
+                            }
+                            
+                            const downloadDataUrl = await this.compressImage(tempCanvas);
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = downloadDataUrl;
+                            downloadLink.download = `${this.domElements.captionInput.value.replace(/\s+/g, '_') || 'image'}.webp`;
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+                            this.hideLoading();
+                            this.showSuccess('Image downloaded successfully');
+                        };
+                        img.src = canvasData;
+                    } catch (error) {
+                        this.hideLoading();
+                        this.showError('Failed to download image: ' + error.message);
+                    }
+                }
+                
+                addCaption(ctx, canvasElem, caption) {
+                    ctx.font = "500 22px Arial";
+                    ctx.fillStyle = "black";
+                    ctx.globalAlpha = 0.7;
+                    const textMetrics = ctx.measureText(caption);
+                    const textHeight = textMetrics.actualBoundingBoxAscent + textMetrics.actualBoundingBoxDescent;
+                    ctx.beginPath();
+                    if (ctx.roundRect) {
+                        ctx.roundRect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10, 15);
+                    } else {
+                        ctx.rect(0, canvasElem.height - (textHeight + 10), canvasElem.width, textHeight + 10);
+                    }
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    ctx.fillStyle = "white";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(caption, canvasElem.width / 2, canvasElem.height - (textHeight / 2 + 5));
+                }
+                
+                addWatermark(ctx, canvasElem) {
+                    const padding = 5;
+                    ctx.font = "700 24px Arial";
+                    ctx.fillStyle = "#010642";
+                    ctx.globalAlpha = 0.77;
+                    ctx.beginPath();
+                    if (ctx.roundRect) {
+                        ctx.roundRect(canvasElem.width - 150 - padding, padding, 150, 36, 50);
+                    } else {
+                        ctx.rect(canvasElem.width - 150 - padding, padding, 150, 36);
+                    }
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    ctx.fillStyle = "white";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("VvipTimes", canvasElem.width - 75 - padding, padding + 18);
+                }
+                
+                compressImage(canvasElem) {
+                    return new Promise((resolve) => {
+                        const maxFileSize = 50 * 1024; // 50KB target
+                        const qualityStep = 0.02;
+                        let quality = 1.0;
+                        
+                        function attemptCompression() {
+                            canvasElem.toBlob((blob) => {
+                                if (blob.size <= maxFileSize || quality <= 0.1) {
+                                    const reader = new FileReader();
+                                    reader.onload = () => resolve(reader.result);
+                                    reader.readAsDataURL(blob);
+                                } else {
+                                    quality -= qualityStep;
+                                    attemptCompression();
+                                }
+                            }, 'image/webp', quality);
+                        }
+                        
+                        attemptCompression();
+                    });
+                }
+                
+                // Hidden Download
+                handleHiddenDownload(event) {
+                    // Prevent default double-tap zoom behavior
+                    event.preventDefault();
+                    
+                    const currentTime = new Date().getTime();
+                    const timeDiff = currentTime - this.lastTapTime;
+                    
+                    // Reset if too much time has passed
+                    if (timeDiff > this.TAP_INTERVAL) {
+                        this.tapCount = 0;
+                    }
+                    
+                    this.tapCount++;
+                    this.lastTapTime = currentTime;
+                    
+                    // Clear previous timeout
+                    if (this.tapTimeout) {
+                        clearTimeout(this.tapTimeout);
+                    }
+                    
+                    // Set new timeout
+                    this.tapTimeout = setTimeout(() => {
+                        this.tapCount = 0;
+                    }, this.TAP_DELAY);
+                    
+                    // Check if we have 5 consecutive taps
+                    if (this.tapCount >= 5) {
+                        this.tapCount = 0;
+                        clearTimeout(this.tapTimeout);
+                        this.downloadImage();
+                        this.showSuccess('Hidden download triggered!');
+                    }
+                }
+                
+                // UI Functions
+                enhanceSelectedImages() {
+                    const activeObjects = this.canvas.getActiveObjects();
+                    
+                    activeObjects.forEach(obj => {
+                        if (obj.type === 'image') {
+                            obj.set({
+                                borderColor: 'rgba(76, 175, 80, 0.9)',
+                                borderDashArray: [5, 5],
+                                cornerColor: 'rgba(255, 255, 255, 0.9)',
+                                cornerStrokeColor: this.CORNER_STROKE_COLOR,
+                                cornerSize: this.ACTIVE_CORNER_SIZE,
+                                shadow: new fabric.Shadow({
+                                    color: 'rgba(76, 175, 80, 0.6)',
+                                    blur: 25,
+                                    offsetX: 3,
+                                    offsetY: 3
+                                }),
+                                padding: 12,
+                                opacity: 1
+                            });
+                        }
+                    });
+                    
+                    this.showContextCard();
+                    this.canvas.renderAll();
+                }
+                
+                clearImageStyles() {
+                    this.canvas.getObjects().forEach(obj => {
+                        if (obj.type === 'image') {
+                            obj.set({
+                                borderColor: '',
+                                borderDashArray: null,
+                                cornerColor: this.CORNER_COLOR,
+                                cornerStrokeColor: this.CORNER_STROKE_COLOR,
+                                cornerSize: this.CORNER_SIZE,
+                                shadow: null,
+                                padding: 8,
+                                opacity: 1
+                            });
+                        }
+                    });
+                    
+                    this.hideContextCard();
+                }
+                
+                showContextCard() {
+                    this.domElements.contextCard.classList.add('active');
+                }
+                
+                hideContextCard() {
+                    this.domElements.contextCard.classList.remove('active');
+                    this.hideColorModal();
+                }
+                
+                showColorModal() {
+                    this.domElements.colorModal.classList.add('active');
+                }
+                
+                hideColorModal() {
+                    this.domElements.colorModal.classList.remove('active');
+                }
+                
+                clearCanvas() {
+                    if (this.canvas.getObjects().length === 0) {
+                        this.showWarning('Canvas is already empty.');
+                        return;
+                    }
+                    
+                    if (confirm('Are you sure you want to clear the canvas? This action cannot be undone.')) {
+                        this.canvas.clear();
+                        this.history = [];
+                        this.historyIndex = -1;
+                        this.canvas.renderAll();
+                        this.showSuccess('Canvas cleared');
+                    }
+                }
+                
+                // Utility Functions
+                debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+                
+                showNotification(message, type = 'error') {
+                    const { domElements } = this;
+                    const alert = domElements[`${type}Alert`];
+                    alert.textContent = message;
+                    alert.style.display = 'block';
+                    setTimeout(() => {
+                        alert.style.display = 'none';
+                    }, 3000);
+                    console[type === 'error' ? 'error' : 'log'](message);
+                }
+                
+                showError(message) {
+                    this.showNotification(message, 'error');
+                }
+                
+                showSuccess(message) {
+                    this.showNotification(message, 'success');
+                }
+                
+                showWarning(message) {
+                    this.showNotification(message, 'warning');
+                }
+                
+                showLoading(message = 'Processing...') {
+                    if (this.isLoading) return;
+                    this.isLoading = true;
+                    this.domElements.loadingText.textContent = message;
+                    this.domElements.loadingOverlay.style.display = 'flex';
+                }
+                
+                hideLoading() {
+                    this.isLoading = false;
+                    this.domElements.loadingOverlay.style.display = 'none';
+                }
+                
+                showWelcomeMessage() {
+                    setTimeout(() => {
+                        this.showSuccess('Welcome to Advanced Mobile Image Editor! Upload or paste an image to get started.');
+                    }, 1000);
+                }
+                
+                handleResize() {
+                    // Recalculate canvas dimensions based on 1.91:1 aspect ratio
+                    const container = document.getElementById('canvasContainer');
+                    const containerWidth = container.clientWidth;
+                    const canvasHeight = Math.floor(containerWidth / 1.91);
+                    
+                    this.canvas.setDimensions({
+                        width: containerWidth,
+                        height: canvasHeight
+                    });
+                    
+                    this.canvas.renderAll();
+                }
             }
+            
+            return ImageEditor;
+        })();
+        
+        // Initialize the Image Editor when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.imageEditor = new ImageEditor();
         });
-
-        // Initialize
-        canvas.renderAll();
-    })();
-</script>
+    </script>
+</body>
+</html>
