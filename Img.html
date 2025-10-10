@@ -8,651 +8,886 @@
     <script src="https://cdn.jsdelivr.net/npm/exif-js@2.3.0/exif.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    
+    
+    
     <style>
-        :root {
-            --bg-color: #1a1b1e;
-            --toolbar-bg: #2a2c31;
-            --button-bg: #3b3e46;
-            --button-hover: #4caf50;
-            --primary: #007bff;
-            --primary-hover: #0056b3;
-            --canvas-border: #555;
-            --shadow: rgba(0, 0, 0, 0.5);
-            --success: #4caf50;
-            --warning: #ff9800;
-            --error: #f44336;
-            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            --radius: 5px;
-            --font-family: 'Lato', -apple-system, sans-serif;
-            
-            /* Enhanced font sizes */
-            --font-size-xs: 16px;
-            --font-size-sm: 18px;
-            --font-size-md: 22px;
-            --font-size-lg: 26px;
-            --font-size-xl: 30px;
-            --font-size-2xl: 36px;
-            --font-size-3xl: 42px;
-            --font-size-4xl: 48px;
-            --font-size-5xl: 54px;
-            --font-size-6xl: 60px;
-            
-            --spacing-xs: 5px;
-            --spacing-sm: 10px;
-            --spacing-md: 15px;
-            --spacing-lg: 20px;
-            --spacing-xl: 25px;
-            --button-size-sm: 70px;
-            --button-size-md: 85px;
-            --button-size-lg: 100px;
-            --canvas-height: 628px;
-        }
-
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: var(--font-family);
-            margin: 0;
-            padding: var(--spacing-sm);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: var(--bg-color);
-            color: #fff;
-            overflow-x: hidden;
-            -webkit-user-select: none;
-            user-select: none;
-            min-height: 100vh;
-            touch-action: manipulation;
-        }
-
-        .app-title {
-            font-size: var(--font-size-2xl);
-            font-weight: 600;
-            margin: 0;
-        }
-
-        .section-title {
-            font-size: var(--font-size-3xl);
-            color: #aaa;
-            margin-bottom: var(--spacing-xs);
-            padding-left: var(--spacing-sm);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .context-label, .filter-label {
-            font-size: var(--font-size-3xl);
-            text-align: center;
-        }
-
-        .color-label {
-            font-size: var(--font-size-xl);
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .app-header {
-            width: 100%;
-            text-align: center;
-            padding: var(--spacing-sm) 0;
-            margin-bottom: var(--spacing-sm);
-        }
-
-        .controls-container {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-md);
-        }
-
-        .input-row {
-            display: flex;
-            justify-content: center;
-        }
-
-        .buttons-row {
-            display: flex;
-            gap: var(--spacing-lg);
-            justify-content: center;
-            align-items: center;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            padding: var(--spacing-sm) var(--spacing-xs);
-            width: 100%;
-        }
-
-        .canvas-container {
-            display: flex;
-            justify-content: center;
-            position: relative;
-            width: 100%;
-            margin-top: var(--spacing-sm);
-            touch-action: manipulation;
-        }
-
-        .context-card {
-            display: none;
-            background: rgba(42, 44, 49, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            flex-direction: column;
-            width: 100%;
-            margin-top: var(--spacing-md);
-            padding: var(--spacing-sm);
-            transition: all var(--transition);
-            transform: translateY(10px);
-            opacity: 0;
-        }
-
-        .context-card.active {
-            display: flex;
-            animation: slideInUp 0.3s var(--transition) forwards;
-        }
-
-        .context-section {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-sm);
-            margin-bottom: var(--spacing-md);
-        }
-
-        .context-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .context-row {
-            display: flex;
-            justify-content: space-between;
-            gap: var(--spacing-sm);
-        }
-
-        .filter-controls {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-sm);
-            width: 100%;
-            padding: var(--spacing-sm);
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            margin-top: var(--spacing-sm);
-        }
-
-        .filter-row {
-            display: flex;
-            align-items: center;
-            gap: var(--spacing-md);
-        }
-
-        .caption-input {
-            padding: var(--spacing-md) var(--spacing-md);
-            border: 1px solid var(--canvas-border);
-            border-radius: 30px;
-            font-size: var(--font-size-4xl);
-            background: var(--toolbar-bg);
-            color: #fff;
-            transition: border-color var(--transition);
-            width: 95%;
-            height: var(--button-size-md);
-            touch-action: manipulation;
-            text-align: center;
-            box-shadow: 0 4px 8px var(--shadow);
-        }
-
-        .caption-input:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
-        }
-
-        .filter-slider {
-            flex: 1;
-            height: 10px;
-            -webkit-appearance: none;
-            background: #3b3e46;
-            border-radius: 3px;
-            outline: none;
-        }
-
-        .filter-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--button-hover);
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .filter-slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--button-hover);
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-            border: none;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        /* Enhanced 3D Button Styles */
-        .icon-button {
-            background: linear-gradient(145deg, #4a4d55, #34363d);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: var(--spacing-md);
-            font-size: var(--font-size-4xl);
-            cursor: pointer;
-            transition: all var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: var(--button-size-lg);
-            height: var(--button-size-lg);
-            min-width: var(--button-size-lg);
-            min-height: var(--button-size-lg);
-            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3),
-                        -2px -2px 10px rgba(255, 255, 255, 0.05);
-            touch-action: manipulation;
-            flex-shrink: 0;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .icon-button:active {
-            background: linear-gradient(145deg, #34363d, #4a4d55);
-            transform: translateY(2px);
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2),
-                        -1px -1px 5px rgba(255, 255, 255, 0.05);
-        }
-
-        .icon-button.active {
-            background: var(--button-hover);
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5);
-        }
-
-        .download-button {
-            background: linear-gradient(145deg, #0066cc, #0052a3);
-            color: white;
-            border: none;
-            border-radius: 20px;
-            padding: var(--spacing-md);
-            font-size: var(--font-size-6xl);
-            cursor: pointer;
-            transition: all var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: var(--button-size-lg);
-            height: var(--button-size-lg);
-            min-width: var(--button-size-lg);
-            min-height: var(--button-size-lg);
-            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3),
-                        -2px -2px 10px rgba(255, 255, 255, 0.05);
-            touch-action: manipulation;
-            flex-shrink: 0;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .download-button:active {
-            background: linear-gradient(145deg, #0052a3, #0066cc);
-            transform: translateY(2px);
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2),
-                        -1px -1px 5px rgba(255, 255, 255, 0.05);
-        }
-
-        .toggle-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(145deg, #4a4d55, #34363d);
-            border-radius: 20px;
-            padding: var(--spacing-md);
-            width: var(--button-size-lg);
-            height: var(--button-size-lg);
-            min-width: var(--button-size-lg);
-            min-height: var(--button-size-lg);
-            color: white;
-            font-size: var(--font-size-6xl);
-            cursor: pointer;
-            transition: all var(--transition);
-            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3),
-                        -2px -2px 10px rgba(255, 255, 255, 0.05);
-            touch-action: manipulation;
-            flex-shrink: 0;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .toggle-button:active {
-            background: linear-gradient(145deg, #34363d, #4a4d55);
-            transform: translateY(2px);
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2),
-                        -1px -1px 5px rgba(255, 255, 255, 0.05);
-        }
-
-        .toggle-button.active {
-            background: var(--button-hover);
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5);
-        }
-
-        .toggle-button input[type="checkbox"] {
-            display: none;
-        }
-
-        .context-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: var(--button-bg);
-            border-radius: 10px;
-            padding: var(--spacing-md) var(--spacing-sm);
-            cursor: pointer;
-            transition: transform var(--transition), background-color var(--transition);
-            flex: 1;
-            min-height: var(--button-size-lg);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-            touch-action: manipulation;
-        }
-
-        .context-item:active {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-3px);
-        }
-
-        .crop-button, .cancel-crop-button {
-            position: absolute;
-            top: var(--spacing-sm);
-            right: var(--spacing-sm);
-            z-index: 1000;
-            padding: var(--spacing-md) var(--spacing-lg);
-            border-radius: var(--radius);
-            background: var(--button-bg);
-            color: #fff;
-            cursor: pointer;
-            transition: all var(--transition);
-            touch-action: manipulation;
-            font-size: var(--font-size-lg);
-            border: none;
-        }
-
-        .cancel-crop-button {
-            right: 120px;
-            background: #dc3545;
-        }
-
-        .crop-button:active {
-            background: var(--button-hover);
-            transform: scale(0.95);
-        }
-
-        .cancel-crop-button:active {
-            background: #c82333;
-            transform: scale(0.95);
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            color: white;
-            font-size: var(--font-size-5xl);
-            cursor: pointer;
-            padding: 0;
-            width: var(--button-size-md);
-            height: var(--button-size-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #imageCanvas {
-            border: 2px solid var(--canvas-border);
-            background: #fff;
-            cursor: crosshair;
-            box-shadow: var(--shadow);
-            border-radius: var(--radius);
-            transition: box-shadow var(--transition);
-            touch-action: manipulation;
-            max-width: 100%;
-            max-height: 60vh;
-            width: 100%;
-            aspect-ratio: 1.91 / 1;
-        }
-
-        /* Enhanced Color Modal with better presets */
-        .color-modal {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: rgba(42, 44, 49, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            z-index: 1100;
-            padding: var(--spacing-md);
-            transform: translateY(-100%);
-            transition: transform var(--transition);
-        }
-
-        .color-modal.active {
-            display: block;
-            transform: translateY(0);
-        }
-
-        .color-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-md);
-        }
-
-        .color-title {
-            font-size: var(--font-size-4xl);
-            color: #aaa;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--spacing-md);
-        }
-
-        .color-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: var(--button-bg);
-            border-radius: 15px;
-            padding: var(--spacing-md);
-            cursor: pointer;
-            transition: transform var(--transition), background-color var(--transition);
-            min-height: 120px;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-            touch-action: manipulation;
-        }
-
-        .color-item:active {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-3px);
-        }
-
-        .color-icon {
-            width: var(--button-size-md);
-            height: var(--button-size-md);
-            border-radius: 50%;
-            margin-bottom: var(--spacing-sm);
-            border: 3px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .context-icon {
-            font-size: var(--font-size-6xl);
-            margin-bottom: var(--spacing-sm);
-        }
-
-        /* Enhanced Emoji Modal */
-        .emoji-modal {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            max-height: 60vh;
-            background: rgba(42, 44, 49, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            z-index: 1100;
-            padding: var(--spacing-md);
-            transform: translateY(-100%);
-            transition: transform var(--transition);
-            overflow-y: auto;
-        }
-
-        .emoji-modal.active {
-            display: block;
-            transform: translateY(0);
-        }
-
-        .emoji-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: var(--spacing-md);
-        }
-
-        .emoji-title {
-            font-size: var(--font-size-4xl);
-            color: #aaa;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .emoji-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--spacing-md);
-        }
-
-        .emoji-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: var(--button-bg);
-            border-radius: 15px;
-            padding: var(--spacing-md);
-            cursor: pointer;
-            transition: transform var(--transition), background-color var(--transition);
-            min-height: 140px;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-            touch-action: manipulation;
-        }
-
-        .emoji-item:active {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-3px);
-        }
-
-        .emoji-icon {
-            font-size: var(--font-size-5xl);
-            margin-bottom: var(--spacing-sm);
-        }
-
-        .notification {
-            position: fixed;
-            top: var(--spacing-lg);
-            right: var(--spacing-lg);
-            padding: var(--spacing-md) var(--spacing-xl);
-            border-radius: var(--radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            z-index: 2000;
-            animation: slideInRight 0.3s var(--transition);
-            display: none;
-            max-width: 80vw;
-            word-wrap: break-word;
-            font-size: var(--font-size-lg);
-        }
-
-        .error {
-            background: var(--error);
-            color: #fff;
-        }
-
-        .success {
-            background: var(--success);
-            color: #fff;
-        }
-
-        .warning {
-            background: var(--warning);
-            color: #fff;
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 3000;
-            display: none;
-        }
-
-        .loading-spinner {
-            width: var(--button-size-md);
-            height: var(--button-size-md);
-            border: 5px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        .loading-text {
-            color: white;
-            margin-top: var(--spacing-lg);
-            font-size: var(--font-size-lg);
-        }
-
-        @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .hidden {
-            display: none;
-        }
-    </style>
+:root {
+    --bg-color: #0f0f23;
+    --toolbar-bg: #1a1a2e;
+    --button-bg: #16213e;
+    --button-hover: #0d8b68;
+    --primary: #00c9a7;
+    --primary-hover: #00a085;
+    --canvas-border: #2d4263;
+    --shadow: rgba(0, 0, 0, 0.6);
+    --success: #00c9a7;
+    --warning: #ff9e64;
+    --error: #ff6b6b;
+    --transition: 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --radius: 12px;
+    --font-family: 'Segoe UI', system-ui, sans-serif;
+    
+    /* Enhanced font sizes */
+    --font-size-xs: 16px;
+    --font-size-sm: 18px;
+    --font-size-md: 22px;
+    --font-size-lg: 26px;
+    --font-size-xl: 30px;
+    --font-size-2xl: 36px;
+    --font-size-3xl: 42px;
+    --font-size-4xl: 48px;
+    --font-size-5xl: 54px;
+    --font-size-6xl: 60px;
+    --font-size-8xl: 80px;
+    
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 15px;
+    --spacing-lg: 20px;
+    --spacing-xl: 25px;
+    --button-size-sm: 70px;
+    --button-size-md: 85px;
+    --button-size-lg: 100px;
+    --canvas-height: 628px;
+    
+    /* New 3D effect variables */
+    --button-depth: 8px;
+    --button-pressed-depth: 2px;
+    --glow-intensity: 0.3;
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: var(--font-family);
+    margin: 0;
+    padding: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(135deg, var(--bg-color) 0%, #1a1a2e 50%, #0f3460 100%);
+    color: #e2f3f5;
+    overflow-x: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    min-height: 100vh;
+    touch-action: manipulation;
+}
+
+.app-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(45deg, #00c9a7, #00d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.section-title {
+    font-size: var(--font-size-3xl);
+    color: #a9b7c6;
+    margin-bottom: var(--spacing-xs);
+    padding-left: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.context-label, .filter-label {
+    font-size: var(--font-size-3xl);
+    text-align: center;
+    font-weight: 500;
+}
+
+.color-label {
+    font-size: var(--font-size-xl);
+    text-align: center;
+    font-weight: 600;
+}
+
+.app-header {
+    width: 100%;
+    text-align: center;
+    padding: var(--spacing-sm) 0;
+    margin-bottom: var(--spacing-sm);
+}
+
+.controls-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.input-row {
+    display: flex;
+    justify-content: center;
+}
+
+.buttons-row {
+    display: flex;
+    gap: var(--spacing-lg);
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: var(--spacing-sm) var(--spacing-xs);
+    width: 100%;
+}
+
+.canvas-container {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    margin-top: var(--spacing-sm);
+    touch-action: manipulation;
+}
+
+.context-card {
+    display: none;
+    background: rgba(26, 26, 46, 0.95);
+    border: 1px solid rgba(0, 201, 167, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(15px);
+    flex-direction: column;
+    width: 100%;
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm);
+    transition: all var(--transition);
+    transform: translateY(10px);
+    opacity: 0;
+}
+
+.context-card.active {
+    display: flex;
+    animation: slideInUp 0.3s var(--transition) forwards;
+}
+
+.context-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.context-section:last-child {
+    margin-bottom: 0;
+}
+
+.context-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.filter-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    width: 100%;
+    padding: var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    margin-top: var(--spacing-sm);
+    border: 1px solid rgba(45, 66, 99, 0.5);
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.caption-input {
+    padding: var(--spacing-md) var(--spacing-md);
+    border: 2px solid var(--canvas-border);
+    border-radius: 20px;
+    font-size: var(--font-size-4xl);
+    background: linear-gradient(135deg, var(--toolbar-bg) 0%, #24243e 100%);
+    color: #e2f3f5;
+    transition: all var(--transition);
+    width: 95%;
+    height: var(--button-size-md);
+    touch-action: manipulation;
+    text-align: center;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.1),
+        0 4px 8px var(--shadow);
+}
+
+.caption-input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.1),
+        0 0 0 3px rgba(0, 201, 167, 0.25);
+}
+
+.filter-slider {
+    flex: 1;
+    height: 12px;
+    -webkit-appearance: none;
+    background: linear-gradient(90deg, #00c9a7, #ff9e64);
+    border-radius: 10px;
+    outline: none;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.filter-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #e2f3f5;
+    cursor: pointer;
+    box-shadow: 
+        0 3px 6px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    border: 2px solid var(--primary);
+    transition: all 0.2s ease;
+}
+
+.filter-slider::-webkit-slider-thumb:active {
+    transform: scale(0.9);
+    box-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.filter-slider::-moz-range-thumb {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: #e2f3f5;
+    cursor: pointer;
+    box-shadow: 
+        0 3px 6px rgba(0, 0, 0, 0.4),
+        inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    border: 2px solid var(--primary);
+    transition: all 0.2s ease;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+/* Enhanced 3D Button Styles with depth and glow */
+.icon-button {
+    background: linear-gradient(145deg, #1e2a47, #16213e);
+    color: #e2f3f5;
+    border: none;
+    border-radius: 50%;
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-6xl);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--button-size-lg);
+    height: var(--button-size-lg);
+    min-width: var(--button-size-lg);
+    min-height: var(--button-size-lg);
+    box-shadow: 
+        0 var(--button-depth) 0 #0d1529,
+        0 10px 20px rgba(0, 0, 0, 0.4),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.1);
+    touch-action: manipulation;
+    flex-shrink: 0;
+    border: 1px solid rgba(45, 66, 99, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.icon-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.icon-button:active {
+    transform: translateY(var(--button-pressed-depth));
+    box-shadow: 
+        0 2px 0 #0d1529,
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.icon-button:active::before {
+    opacity: 1;
+}
+
+.icon-button.active {
+    background: var(--button-hover);
+    box-shadow: 
+        0 0 15px rgba(13, 139, 104, var(--glow-intensity)),
+        0 var(--button-depth) 0 #0a6b50,
+        0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.download-button {
+    background: linear-gradient(360deg, black, darkcyan);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: var(--spacing-md);
+    font-size: var(--font-size-8xl);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--button-size-lg);
+    height: var(--button-size-lg);
+    min-width: var(--button-size-lg);
+    min-height: var(--button-size-lg);
+    box-shadow: 
+        0 var(--button-depth) 0 #004266,
+        0 10px 20px rgba(0, 0, 0, 0.4),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.1);
+    touch-action: manipulation;
+    flex-shrink: 0;
+    border: 1px solid rgba(0, 119, 182, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.download-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.download-button:active {
+    transform: translateY(var(--button-pressed-depth));
+    box-shadow: 
+        0 2px 0 #004266,
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.download-button:active::before {
+    opacity: 1;
+}
+
+.toggle-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #1e2a47, #16213e);
+    border-radius: 50%;
+    padding: var(--spacing-sm);
+    width: var(--button-size-lg);
+    height: var(--button-size-lg);
+    min-width: var(--button-size-lg);
+    min-height: var(--button-size-lg);
+    color: #e2f3f5;
+    font-size: var(--font-size-8xl);
+    cursor: pointer;
+    transition: all var(--transition);
+    box-shadow: 
+        0 var(--button-depth) 0 #0d1529,
+        0 10px 20px rgba(0, 0, 0, 0.4),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.1);
+    touch-action: manipulation;
+    flex-shrink: 0;
+    border: 1px solid rgba(45, 66, 99, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.toggle-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.toggle-button:active {
+    transform: translateY(var(--button-pressed-depth));
+    box-shadow: 
+        0 2px 0 #0d1529,
+        0 4px 8px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-button:active::before {
+    opacity: 1;
+}
+
+.toggle-button.active {
+    background: var(--button-hover);
+    box-shadow: 
+        0 0 15px rgba(13, 139, 104, var(--glow-intensity)),
+        0 var(--button-depth) 0 #0a6b50,
+        0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.toggle-button input[type="checkbox"] {
+    display: none;
+}
+
+.context-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #1e2a47, #16213e);
+    border-radius: 15px;
+    padding: var(--spacing-md) var(--spacing-sm);
+    cursor: pointer;
+    transition: transform var(--transition), background-color var(--transition), box-shadow var(--transition);
+    flex: 1;
+    min-height: var(--button-size-lg);
+    box-shadow: 
+        0 6px 0 #0d1529,
+        0 8px 16px rgba(0, 0, 0, 0.3);
+    touch-action: manipulation;
+    border: 1px solid rgba(45, 66, 99, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.context-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+    border-radius: 15px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.context-item:active {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(4px);
+    box-shadow: 
+        0 2px 0 #0d1529,
+        0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.context-item:active::before {
+    opacity: 1;
+}
+
+.crop-button, .cancel-crop-button {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    z-index: 1000;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius);
+    background: linear-gradient(145deg, #1e2a47, #16213e);
+    color: #e2f3f5;
+    cursor: pointer;
+    transition: all var(--transition);
+    touch-action: manipulation;
+    font-size: var(--font-size-lg);
+    border: none;
+    box-shadow: 
+        0 4px 0 #0d1529,
+        0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.cancel-crop-button {
+    right: 120px;
+    background: linear-gradient(145deg, #c44569, #a5375b);
+    box-shadow: 
+        0 4px 0 #7d2945,
+        0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.crop-button:active {
+    background: var(--button-hover);
+    transform: translateY(2px);
+    box-shadow: 
+        0 2px 0 #0d1529,
+        0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.cancel-crop-button:active {
+    background: #c82333;
+    transform: translateY(2px);
+    box-shadow: 
+        0 2px 0 #7d2945,
+        0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: #e2f3f5;
+    font-size: var(--font-size-5xl);
+    cursor: pointer;
+    padding: 0;
+    width: var(--button-size-md);
+    height: var(--button-size-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.close-modal:active {
+    transform: scale(0.9);
+}
+
+#imageCanvas {
+    border: 3px solid var(--canvas-border);
+    background: #0a0a18;
+    cursor: crosshair;
+    box-shadow: 
+        0 10px 25px rgba(0, 0, 0, 0.5),
+        inset 0 1px 3px rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius);
+    transition: box-shadow var(--transition);
+    touch-action: manipulation;
+    max-width: 100%;
+    max-height: 60vh;
+    width: 100%;
+    aspect-ratio: 1.91 / 1;
+}
+
+/* Enhanced Color Modal with better presets */
+.color-modal {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(26, 26, 46, 0.95);
+    border: 1px solid rgba(0, 201, 167, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(15px);
+    z-index: 1100;
+    padding: var(--spacing-md);
+    transform: translateY(-100%);
+    transition: transform var(--transition);
+}
+
+.color-modal.active {
+    display: block;
+    transform: translateY(0);
+}
+
+.color-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.color-title {
+    font-size: var(--font-size-4xl);
+    color: #a9b7c6;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.color-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #1e2a47, #16213e);
+    border-radius: 15px;
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: transform var(--transition), background-color var(--transition), box-shadow var(--transition);
+    min-height: 120px;
+    box-shadow: 
+        0 6px 0 #0d1529,
+        0 8px 16px rgba(0, 0, 0, 0.3);
+    touch-action: manipulation;
+    border: 1px solid rgba(45, 66, 99, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.color-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+    border-radius: 15px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.color-item:active {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(4px);
+    box-shadow: 
+        0 2px 0 #0d1529,
+        0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.color-item:active::before {
+    opacity: 1;
+}
+
+.color-icon {
+    width: var(--button-size-md);
+    height: var(--button-size-md);
+    border-radius: 50%;
+    margin-bottom: var(--spacing-sm);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.context-icon {
+    font-size: var(--font-size-6xl);
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Enhanced Emoji Modal */
+.emoji-modal {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-height: 60vh;
+    background: rgba(26, 26, 46, 0.95);
+    border: 1px solid rgba(0, 201, 167, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(15px);
+    z-index: 1100;
+    padding: var(--spacing-md);
+    transform: translateY(-100%);
+    transition: transform var(--transition);
+    overflow-y: auto;
+}
+
+.emoji-modal.active {
+    display: block;
+    transform: translateY(0);
+}
+
+.emoji-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.emoji-title {
+    font-size: var(--font-size-4xl);
+    color: #a9b7c6;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+.emoji-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, #1e2a47, #16213e);
+    border-radius: 15px;
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: transform var(--transition), background-color var(--transition), box-shadow var(--transition);
+    min-height: 140px;
+    box-shadow: 
+        0 6px 0 #0d1529,
+        0 8px 16px rgba(0, 0, 0, 0.3);
+    touch-action: manipulation;
+    border: 1px solid rgba(45, 66, 99, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.emoji-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+    border-radius: 15px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.emoji-item:active {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(4px);
+    box-shadow: 
+        0 2px 0 #0d1529,
+        0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.emoji-item:active::before {
+    opacity: 1;
+}
+
+.emoji-icon {
+    font-size: var(--font-size-5xl);
+    margin-bottom: var(--spacing-sm);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.notification {
+    position: fixed;
+    top: var(--spacing-lg);
+    right: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    animation: slideInRight 0.3s var(--transition);
+    display: none;
+    max-width: 80vw;
+    word-wrap: break-word;
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    border-left: 5px solid;
+}
+
+.error {
+    background: var(--error);
+    color: #fff;
+    border-left-color: #c53030;
+}
+
+.success {
+    background: var(--success);
+    color: #fff;
+    border-left-color: #0a6b50;
+}
+
+.warning {
+    background: var(--warning);
+    color: #fff;
+    border-left-color: #cc7a2e;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 15, 35, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+    display: none;
+}
+
+.loading-spinner {
+    width: var(--button-size-md);
+    height: var(--button-size-md);
+    border: 5px solid rgba(0, 201, 167, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary);
+    animation: spin 1s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(0, 201, 167, 0.5);
+}
+
+.loading-text {
+    color: #e2f3f5;
+    margin-top: var(--spacing-lg);
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+}
+
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.hidden {
+    display: none;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(26, 26, 46, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
+}
+</style>
+    
+    
+    
 </head>
 <body>
 
@@ -665,11 +900,11 @@
         <!-- Row 2: Action Buttons -->
         <div class="buttons-row">
             <button class="icon-button" id="uploadButton" title="Upload Image">
-                <i class="fas fa-upload"></i>
+                <i class="fa-solid fa-arrow-up-from-bracket" style="color: #63E6BE;"></i>
             </button>
             <button class="icon-button" id="pasteButton" title="Paste Image">
-                <i class="fas fa-paste"></i>
-            </button>
+                <i class="fa-solid fa-paste" style="color: #eb005e;"></i>
+                </button>
             <button class="icon-button" id="undoButton" title="Undo">
                 <i class="fas fa-undo"></i>
             </button>
@@ -677,18 +912,18 @@
                 <i class="fas fa-redo"></i>
             </button>
             <button class="icon-button" id="clearCanvas" title="Clear Canvas">
-                <i class="fas fa-trash"></i>
+                <i class="fa-solid fa-trash-can-arrow-up fa-lg" style="color: #f44a1f;"></i>
             </button>
             <div class="toggle-button" id="captionToggle" title="Add Caption">
                 <input type="checkbox" id="captionCheckbox">
-                <i class="fas fa-comment"></i>
+                <i class="fa-regular fa-closed-captioning fa-sm" style="color: #00fa60;"></i>
             </div>
             <div class="toggle-button" id="watermarkToggle" title="Add Watermark">
                 <input type="checkbox" id="watermarkCheckbox">
-                <i class="fas fa-stamp"></i>
+                <i class="fa-brands fa-wordpress fa-spin-pulse" style="color: #FFD43B;"></i>
             </div>
             <button class="download-button" id="downloadButton" title="Download Image">
-                <i class="fas fa-download"></i>
+                <i class="fa-solid fa-file-arrow-down" style="color: #63E6BE;"></i>
             </button>
         </div>
     </div>
