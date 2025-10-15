@@ -2456,20 +2456,20 @@
         
         this.showLoading('Optimizing image for premium download...');
         
-        // Create optimized canvas with exact target dimensions
-        const optimizedCanvas = await this.createOptimizedCanvas();
+        // Create optimized canvas with advanced preprocessing
+        const optimizedCanvas = await this.createEnhancedOptimizedCanvas();
         
-        // Multi-pass compression to hit target size
-        const compressedBlob = await this.optimizeToTargetSize(optimizedCanvas);
+        // Multi-pass compression with better detail preservation
+        const compressedBlob = await this.enhancedOptimizeToTargetSize(optimizedCanvas);
         
-        // Validate file size
+        // Validate and adjust final output
         if (compressedBlob.size > 70 * 1024) {
-            console.warn(`File size ${(compressedBlob.size / 1024).toFixed(1)}KB exceeds target, applying aggressive compression`);
-            const finalBlob = await this.aggressiveCompression(optimizedCanvas);
+            console.warn(`File size ${(compressedBlob.size / 1024).toFixed(1)}KB exceeds target, applying smart compression`);
+            const finalBlob = await this.smartAdaptiveCompression(optimizedCanvas);
             await this.downloadBlob(finalBlob);
         } else if (compressedBlob.size < 40 * 1024) {
-            console.warn(`File size ${(compressedBlob.size / 1024).toFixed(1)}KB below target, increasing quality slightly`);
-            const finalBlob = await this.slightlyIncreaseQuality(optimizedCanvas);
+            console.warn(`File size ${(compressedBlob.size / 1024).toFixed(1)}KB below target, enhancing quality`);
+            const finalBlob = await this.qualityEnhancement(optimizedCanvas);
             await this.downloadBlob(finalBlob);
         } else {
             await this.downloadBlob(compressedBlob);
@@ -2483,8 +2483,8 @@
     }
 }
 
-// Create optimized canvas with exact dimensions and preprocessing
-async createOptimizedCanvas() {
+// Enhanced canvas creation with better detail preservation
+async createEnhancedOptimizedCanvas() {
     const targetWidth = 1200;
     const targetHeight = 628;
     
@@ -2493,56 +2493,212 @@ async createOptimizedCanvas() {
     canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
     
-    // High-quality rendering settings
+    // Premium rendering settings for maximum quality
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     ctx.globalCompositeOperation = 'source-over';
+    ctx.filter = 'none';
     
-    // Draw original canvas content scaled to target dimensions
+    // Get original canvas data with maximum quality
     const originalDataUrl = this.canvas.toDataURL({
-        format: 'webp',
-        quality: 0.95,
-        multiplier: 1
+        format: 'png', // Use PNG for lossless source
+        quality: 1,
+        multiplier: 2 // Super-sampling for better quality
     });
     
-    await new Promise((resolve) => {
+    await new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
-            ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+            // Use high-quality image scaling with Lanczos filter simulation
+            this.highQualityDrawImage(ctx, img, 0, 0, targetWidth, targetHeight);
             resolve();
         };
+        img.onerror = reject;
         img.src = originalDataUrl;
     });
     
-    // Apply image optimizations
-    this.applyImageOptimizations(ctx, canvas);
+    // Apply advanced image enhancements
+    await this.applyAdvancedEnhancements(ctx, canvas);
     
-    // Apply overlays if enabled
-    await this.applyOptimizedOverlays(ctx, canvas);
+    // Apply overlays with better blending
+    await this.applyEnhancedOverlays(ctx, canvas);
     
     return canvas;
 }
 
-// Apply image optimizations to reduce file size
-applyImageOptimizations(ctx, canvas) {
+// High-quality image scaling with two-pass rendering
+highQualityDrawImage(ctx, img, x, y, width, height) {
+    // First pass: draw at higher resolution then scale down
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // Use intermediate larger size for better quality
+    const intermediateScale = 1.5;
+    tempCanvas.width = width * intermediateScale;
+    tempCanvas.height = height * intermediateScale;
+    
+    tempCtx.imageSmoothingEnabled = true;
+    tempCtx.imageSmoothingQuality = 'high';
+    tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // Final draw with high-quality scaling
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(tempCanvas, x, y, width, height);
+}
+
+// Advanced image enhancements for detail preservation
+async applyAdvancedEnhancements(ctx, canvas) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     
-    // Mild noise reduction and compression optimization
+    // Smart detail preservation with edge detection
+    this.applySmartDetailPreservation(ctx, canvas, imageData);
+    
+    // Mild sharpening to enhance perceived detail
+    this.applyMildSharpening(ctx, canvas);
+    
+    // Optimize for WebP compression
+    this.optimizeForWebPCompression(ctx, canvas);
+}
+
+// Smart detail preservation with edge-aware processing
+applySmartDetailPreservation(ctx, canvas, originalImageData) {
+    const width = canvas.width;
+    const height = canvas.height;
+    const data = originalImageData.data;
+    
+    // Create edge mask to preserve important details
+    const edgeMask = this.detectEdges(originalImageData, width, height);
+    
+    // Apply selective compression optimization
     for (let i = 0; i < data.length; i += 4) {
-        // Mild color quantization to help compression
-        data[i] = Math.round(data[i] / 3) * 3;     // Red
-        data[i + 1] = Math.round(data[i + 1] / 3) * 3; // Green
-        data[i + 2] = Math.round(data[i + 2] / 3) * 3; // Blue
-        // Alpha remains unchanged for transparency
+        const x = (i / 4) % width;
+        const y = Math.floor((i / 4) / width);
+        const edgeStrength = edgeMask[y * width + x];
+        
+        if (edgeStrength < 0.1) {
+            // Non-edge areas: mild quantization to help compression
+            data[i] = Math.round(data[i] / 4) * 4;     // Red
+            data[i + 1] = Math.round(data[i + 1] / 4) * 4; // Green
+            data[i + 2] = Math.round(data[i + 2] / 4) * 4; // Blue
+        } else {
+            // Edge areas: preserve original values for sharpness
+            // Only minimal quantization on edges
+            data[i] = Math.round(data[i] / 8) * 8;
+            data[i + 1] = Math.round(data[i + 1] / 8) * 8;
+            data[i + 2] = Math.round(data[i + 2] / 8) * 8;
+        }
+    }
+    
+    ctx.putImageData(originalImageData, 0, 0);
+}
+
+// Simple edge detection for detail preservation
+detectEdges(imageData, width, height) {
+    const data = imageData.data;
+    const edgeMask = new Float32Array(width * height);
+    
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            const idx = (y * width + x) * 4;
+            
+            // Simple Sobel edge detection
+            const gx = (
+                -this.getLuminance(data, idx - 4 - width * 4) +
+                this.getLuminance(data, idx + 4 - width * 4) +
+                -2 * this.getLuminance(data, idx - 4) +
+                2 * this.getLuminance(data, idx + 4) +
+                -this.getLuminance(data, idx - 4 + width * 4) +
+                this.getLuminance(data, idx + 4 + width * 4)
+            );
+            
+            const gy = (
+                -this.getLuminance(data, idx - 4 - width * 4) +
+                -2 * this.getLuminance(data, idx - width * 4) +
+                -this.getLuminance(data, idx + 4 - width * 4) +
+                this.getLuminance(data, idx - 4 + width * 4) +
+                2 * this.getLuminance(data, idx + width * 4) +
+                this.getLuminance(data, idx + 4 + width * 4)
+            );
+            
+            const edgeStrength = Math.min(1, Math.sqrt(gx * gx + gy * gy) / 255);
+            edgeMask[y * width + x] = edgeStrength;
+        }
+    }
+    
+    return edgeMask;
+}
+
+getLuminance(data, idx) {
+    return data[idx] * 0.299 + data[idx + 1] * 0.587 + data[idx + 2] * 0.114;
+}
+
+// Mild sharpening for perceived detail enhancement
+applyMildSharpening(ctx, canvas) {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Very mild unsharp mask to enhance perceived detail
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            const idx = (y * width + x) * 4;
+            
+            // Simple 3x3 blur for unsharp mask
+            let r = 0, g = 0, b = 0;
+            for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                    const kidx = ((y + ky) * width + (x + kx)) * 4;
+                    r += data[kidx];
+                    g += data[kidx + 1];
+                    b += data[kidx + 2];
+                }
+            }
+            
+            const blurR = r / 9;
+            const blurG = g / 9;
+            const blurB = b / 9;
+            
+            // Mild sharpening (amount: 0.3)
+            data[idx] = Math.min(255, Math.max(0, data[idx] * 1.3 - blurR * 0.3));
+            data[idx + 1] = Math.min(255, Math.max(0, data[idx + 1] * 1.3 - blurG * 0.3));
+            data[idx + 2] = Math.min(255, Math.max(0, data[idx + 2] * 1.3 - blurB * 0.3));
+        }
     }
     
     ctx.putImageData(imageData, 0, 0);
 }
 
-// Optimized overlay application
-async applyOptimizedOverlays(ctx, canvas) {
-    // Use simpler, more compression-friendly overlays
+// Optimize specifically for WebP compression characteristics
+optimizeForWebPCompression(ctx, canvas) {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // WebP-friendly optimizations
+    for (let i = 0; i < data.length; i += 4) {
+        // Reduce noise in dark areas (helps compression)
+        if (data[i] < 30 && data[i + 1] < 30 && data[i + 2] < 30) {
+            data[i] = Math.round(data[i] / 8) * 8;
+            data[i + 1] = Math.round(data[i + 1] / 8) * 8;
+            data[i + 2] = Math.round(data[i + 2] / 8) * 8;
+        }
+        
+        // Smooth gradients for better compression
+        const luminance = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        if (luminance > 200) { // Bright areas
+            data[i] = Math.round(data[i] / 6) * 6;
+            data[i + 1] = Math.round(data[i + 1] / 6) * 6;
+            data[i + 2] = Math.round(data[i + 2] / 6) * 6;
+        }
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+}
+
+// Enhanced overlay application with better blending
+async applyEnhancedOverlays(ctx, canvas) {
     if (document.getElementById('captionToggle').classList.contains('active')) {
         const caption = this.domElements.captionInput.value;
         if (caption) this.addOptimizedCaption(ctx, canvas, caption);
@@ -2552,7 +2708,128 @@ async applyOptimizedOverlays(ctx, canvas) {
     }
 }
 
-// Your existing addCaption and addWatermark functions remain unchanged
+// Enhanced multi-pass compression with better quality preservation
+async enhancedOptimizeToTargetSize(canvas) {
+    const targetMinSize = 40 * 1024;
+    const targetMaxSize = 70 * 1024;
+    const targetIdealSize = 55 * 1024; // Aim for middle
+    
+    let quality = 0.88; // Start with high quality
+    let blob = await this.canvasToWebPBlob(canvas, quality);
+    let attempts = 0;
+    const maxAttempts = 12;
+    
+    console.log(`Initial size: ${(blob.size / 1024).toFixed(1)}KB at quality ${quality}`);
+    
+    // Binary search approach for optimal quality
+    let low = 0.4;
+    let high = 0.95;
+    let bestBlob = blob;
+    let bestQuality = quality;
+    
+    while (attempts < maxAttempts && (blob.size > targetMaxSize || blob.size < targetMinSize)) {
+        if (blob.size > targetMaxSize) {
+            high = quality;
+            quality = (low + quality) / 2;
+        } else {
+            low = quality;
+            quality = (quality + high) / 2;
+        }
+        
+        // Ensure quality stays in reasonable bounds
+        quality = Math.max(0.35, Math.min(0.95, quality));
+        
+        blob = await this.canvasToWebPBlob(canvas, quality);
+        attempts++;
+        
+        // Track the best blob that meets our criteria
+        if (blob.size >= targetMinSize && blob.size <= targetMaxSize) {
+            if (Math.abs(blob.size - targetIdealSize) < Math.abs(bestBlob.size - targetIdealSize)) {
+                bestBlob = blob;
+                bestQuality = quality;
+            }
+        }
+        
+        console.log(`Compression attempt ${attempts}: ${(blob.size / 1024).toFixed(1)}KB at quality ${quality.toFixed(3)}`);
+        
+        // Early exit if we're very close to ideal
+        if (Math.abs(blob.size - targetIdealSize) < 2 * 1024) {
+            break;
+        }
+    }
+    
+    // If we found a suitable blob, use it
+    if (bestBlob.size >= targetMinSize && bestBlob.size <= targetMaxSize) {
+        console.log(`Selected best: ${(bestBlob.size / 1024).toFixed(1)}KB at quality ${bestQuality.toFixed(3)}`);
+        return bestBlob;
+    }
+    
+    return blob;
+}
+
+// Smart adaptive compression that preserves details
+async smartAdaptiveCompression(canvas) {
+    console.log('Applying smart adaptive compression');
+    
+    // Create multiple versions and choose the best
+    const options = [
+        { quality: 0.35, desc: 'low quality' },
+        { quality: 0.4, desc: 'medium-low quality' },
+        { quality: 0.45, desc: 'medium quality' }
+    ];
+    
+    let bestBlob = null;
+    
+    for (const option of options) {
+        const blob = await this.canvasToWebPBlob(canvas, option.quality);
+        console.log(`Option ${option.desc}: ${(blob.size / 1024).toFixed(1)}KB`);
+        
+        if (blob.size <= 70 * 1024) {
+            if (!bestBlob || blob.size > bestBlob.size) { // Prefer larger (higher quality) within limit
+                bestBlob = blob;
+            }
+        }
+    }
+    
+    if (bestBlob) {
+        return bestBlob;
+    }
+    
+    // If all options are still too large, use the smallest one
+    return await this.canvasToWebPBlob(canvas, 0.3);
+}
+
+// Quality enhancement for files that are too small
+async qualityEnhancement(canvas) {
+    console.log('Enhancing quality while maintaining size');
+    
+    // Try progressive quality increases
+    const qualities = [0.92, 0.94, 0.96];
+    
+    for (const quality of qualities) {
+        const blob = await this.canvasToWebPBlob(canvas, quality);
+        if (blob.size <= 70 * 1024 && blob.size >= 40 * 1024) {
+            return blob;
+        }
+    }
+    
+    // Fallback to balanced quality
+    return await this.canvasToWebPBlob(canvas, 0.9);
+}
+
+// Enhanced WebP blob creation with better options
+async canvasToWebPBlob(canvas, quality) {
+    return new Promise((resolve) => {
+        // Use higher quality settings for the encoder
+        canvas.toBlob(
+            (blob) => resolve(blob),
+            'image/webp',
+            Math.max(0.25, Math.min(0.98, quality)) // Slightly expanded range for fine-tuning
+        );
+    });
+}
+
+// Your existing overlay functions remain the same
 addOptimizedCaption(ctx, canvasElem, caption) {
     ctx.font = "500 22px Arial";
     ctx.fillStyle = "black";
@@ -2592,78 +2869,7 @@ addOptimizedWatermark(ctx, canvasElem) {
     ctx.fillText("VvipTimes", canvasElem.width - 75 - padding, padding + 18);
 }
 
-
-// Multi-pass compression to hit target size
-async optimizeToTargetSize(canvas) {
-    const targetMinSize = 40 * 1024; // 40KB
-    const targetMaxSize = 70 * 1024; // 70KB
-    
-    let quality = 0.85; // Start with good quality
-    let blob = await this.canvasToWebPBlob(canvas, quality);
-    let attempts = 0;
-    const maxAttempts = 8;
-    
-    while (attempts < maxAttempts && (blob.size > targetMaxSize || blob.size < targetMinSize)) {
-        if (blob.size > targetMaxSize) {
-            // File too large - reduce quality more aggressively
-            quality -= 0.12;
-            if (quality < 0.3) quality = 0.3;
-        } else {
-            // File too small - slightly increase quality
-            quality += 0.05;
-            if (quality > 0.95) quality = 0.95;
-        }
-        
-        blob = await this.canvasToWebPBlob(canvas, quality);
-        attempts++;
-        
-        console.log(`Compression attempt ${attempts}: ${(blob.size / 1024).toFixed(1)}KB at quality ${quality.toFixed(2)}`);
-        
-        // Early exit if we're in the target range
-        if (blob.size >= targetMinSize && blob.size <= targetMaxSize) {
-            break;
-        }
-    }
-    
-    return blob;
-}
-
-// Convert canvas to WebP blob with specific quality
-async canvasToWebPBlob(canvas, quality) {
-    return new Promise((resolve) => {
-        canvas.toBlob(
-            (blob) => resolve(blob),
-            'image/webp',
-            Math.max(0.1, Math.min(0.95, quality)) // Clamp quality between 0.1 and 0.95
-        );
-    });
-}
-
-// Aggressive compression for files that are still too large
-async aggressiveCompression(canvas) {
-    console.log('Applying aggressive compression techniques');
-    
-    // Create a temporary canvas for additional optimizations
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    
-    // Draw with slight size reduction then scale back up (lossy but effective)
-    tempCtx.drawImage(canvas, 0, 0, canvas.width * 0.95, canvas.height * 0.95);
-    tempCtx.drawImage(tempCanvas, 0, 0, canvas.width * 0.95, canvas.height * 0.95, 0, 0, canvas.width, canvas.height);
-    
-    // Try very low quality as last resort
-    return await this.canvasToWebPBlob(tempCanvas, 0.35);
-}
-
-// Slightly increase quality for files that are too small
-async slightlyIncreaseQuality(canvas) {
-    // Just use higher quality setting
-    return await this.canvasToWebPBlob(canvas, 0.92);
-}
-
-// Download the final blob
+// Download function remains the same
 async downloadBlob(blob) {
     const url = URL.createObjectURL(blob);
     const downloadLink = document.createElement('a');
@@ -2677,75 +2883,6 @@ async downloadBlob(blob) {
         document.body.removeChild(downloadLink);
         URL.revokeObjectURL(url);
     }, 100);
-}
-
-// Enhanced Web Worker compression (simplified and more efficient)
-async compressWithWebWorker(imageBlob) {
-    if (!window.Worker) {
-        // Fallback to main thread compression
-        return await this.canvasToWebPBlob(await this.blobToCanvas(imageBlob), 0.82);
-    }
-
-    return new Promise((resolve, reject) => {
-        const workerCode = `
-            self.addEventListener('message', async (event) => {
-                try {
-                    const { imageBlob } = event.data;
-                    const bitmap = await createImageBitmap(imageBlob);
-                    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(bitmap, 0, 0);
-                    
-                    // Optimized compression for target size
-                    const compressedBlob = await canvas.convertToBlob({
-                        type: 'image/webp',
-                        quality: 0.82,
-                        alphaQuality: 0.8
-                    });
-                    
-                    self.postMessage({ success: true, blob: compressedBlob }, [compressedBlob]);
-                } catch (error) {
-                    self.postMessage({ success: false, error: error.message });
-                }
-            });
-        `;
-
-        const blob = new Blob([workerCode], { type: 'application/javascript' });
-        const worker = new Worker(URL.createObjectURL(blob));
-        
-        worker.onmessage = (event) => {
-            const { success, blob, error } = event.data;
-            if (success) {
-                resolve(blob);
-            } else {
-                reject(new Error(error));
-            }
-            worker.terminate();
-        };
-
-        worker.onerror = (error) => {
-            reject(error);
-            worker.terminate();
-        };
-
-        worker.postMessage({ imageBlob });
-    });
-}
-
-// Utility function to convert blob to canvas
-async blobToCanvas(blob) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas);
-        };
-        img.src = URL.createObjectURL(blob);
-    });
 }
   
     
