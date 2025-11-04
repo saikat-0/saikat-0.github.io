@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Pulse - Advanced Notification Timer</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --error: #e63946;
+            --radius: 16px;
+            --shadow: 0 10px 30px rgba(0,0,0,0.15);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius);
+            padding: 35px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #f72585, #4cc9f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--error);
+            animation: pulse 2s infinite;
+        }
+
+        .indicator.active {
+            background: var(--success);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .timer {
+            font-size: 4rem;
+            font-weight: 800;
+            text-align: center;
+            margin: 25px 0;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            background: linear-gradient(to right, #fff, #e0e0e0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.05rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(0,0,0,0.25);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            background: #d9047a;
+            transform: translateY(-3px);
+        }
+
+        .settings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        label {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input, select {
+            padding: 14px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+        }
+
+        .notification-preview {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .notification-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.4rem;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .notification-body {
+            opacity: 0.9;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 35px;
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: var(--dark);
+            color: white;
+            padding: 18px 28px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transform: translateY(120px);
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 1000;
+            max-width: 350px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .permission-status {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 15px;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .permission-granted {
+            color: var(--success);
+        }
+
+        .permission-denied {
+            color: var(--error);
+        }
+
+        .sound-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .sound-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sound-option.active {
+            background: rgba(67, 97, 238, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .settings {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .timer {
+                font-size: 3rem;
+            }
+            
+            .container {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Productivity Pulse</h1>
+            <p class="subtitle">Advanced time management with reliable desktop & web push notifications</p>
+        </header>
+        
+        <div class="card">
+            <div class="status">
+                <div class="status-indicator">
+                    <div class="indicator" id="statusIndicator"></div>
+                    <span id="statusText">Notifications Disabled</span>
+                </div>
+                <div id="nextNotification">Next notification in: --:--</div>
+                <div class="permission-status" id="permissionStatus">
+                    <span>Notification Permission: </span>
+                    <span id="permissionText">Checking...</span>
+                </div>
+            </div>
+            
+            <div class="timer" id="timer">10:00</div>
+            
+            <div class="controls">
+                <button class="btn-primary" id="startBtn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 5V19L19 12L8 5Z" fill="currentColor"/>
+                    </svg>
+                    Start Notifications
+                </button>
+                <button class="btn-secondary" id="stopBtn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="6" y="6" width="12" height="12" fill="currentColor"/>
+                    </svg>
+                    Stop Notifications
+                </button>
+                <button class="btn-accent" id="testBtn">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 6V12L16 14M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Test Notification
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Advanced Notification Settings</h2>
+            <div class="settings">
+                <div class="setting-group">
+                    <label for="interval">Notification Interval (minutes)</label>
+                    <input type="number" id="interval" min="1" max="120" value="10">
+                </div>
+                
+                <div class="setting-group">
+                    <label>Notification Sound</label>
+                    <div class="sound-options">
+                        <div class="sound-option active" data-sound="workAlert">
+                            <input type="radio" id="workAlert" name="sound" value="workAlert" checked>
+                            <label for="workAlert">Work Alert (Default)</label>
+                        </div>
+                        <div class="sound-option" data-sound="chime">
+                            <input type="radio" id="chime" name="sound" value="chime">
+                            <label for="chime">Gentle Chime</label>
+                        </div>
+                        <div class="sound-option" data-sound="bell">
+                            <input type="radio" id="bell" name="sound" value="bell">
+                            <label for="bell">Classic Bell</label>
+                        </div>
+                        <div class="sound-option" data-sound="digital">
+                            <input type="radio" id="digital" name="sound" value="digital">
+                            <label for="digital">Digital Beep</label>
+                        </div>
+                        <div class="sound-option" data-sound="none">
+                            <input type="radio" id="none" name="sound" value="none">
+                            <label for="none">No Sound</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setting-group">
+                    <label for="notificationText">Notification Text</label>
+                    <input type="text" id="notificationText" value="post publish time, get to work, NOW">
+                </div>
+                
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="vibrate" checked>
+                        Vibrate on Mobile
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" id="desktopNotifications" checked>
+                        Show Desktop Notifications
+                    </label>
+                    
+                    <label>
+                        <input type="checkbox" id="webPush" checked>
+                        Enable Web Push (if supported)
+                    </label>
+                </div>
+            </div>
+            
+            <div class="notification-preview">
+                <div class="notification-icon">P</div>
+                <div class="notification-content">
+                    <div class="notification-title">Productivity Pulse</div>
+                    <div class="notification-body" id="previewText">post publish time, get to work, NOW</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Productivity Pulse &copy; 2023 | Advanced notification tool for maximum productivity</p>
+    </footer>
+    
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Advanced Sound Manager with Web Audio API
+        class SoundManager {
+            constructor() {
+                this.sounds = new Map();
+                this.isAudioUnlocked = false;
+                this.audioContext = null;
+                
+                // Sound library with URLs and Web Audio alternatives
+                this.soundLibrary = {
+                    workAlert: {
+                        url: 'https://prodigits.co.uk/pcontent/mp3tones/tone/2020/sound-fx/workalert_b29eadba4666792.mp3',
+                        audio: null
+                    },
+                    chime: { url: null, audio: null },
+                    bell: { url: null, audio: null },
+                    digital: { url: null, audio: null }
+                };
+                
+                this.initializeAudioUnlock();
+            }
+
+            // Unlock audio on first user interaction (required by Chrome autoplay policy)
+            initializeAudioUnlock() {
+                const unlock = () => {
+                    if (this.isAudioUnlocked) return;
+                    
+                    try {
+                        if (!this.audioContext) {
+                            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        }
+                        
+                        // Create and play a silent sound to unlock audio
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.1);
+                        
+                        this.isAudioUnlocked = true;
+                        console.log('Audio system unlocked successfully');
+                        
+                        // Remove listeners after successful unlock
+                        document.removeEventListener('click', unlock);
+                        document.removeEventListener('touchstart', unlock);
+                        
+                    } catch (error) {
+                        console.warn('Audio unlock failed:', error);
+                    }
+                };
+
+                // Add event listeners for user gestures
+                document.addEventListener('click', unlock, { once: true });
+                document.addEventListener('touchstart', unlock, { once: true });
+                
+                // Also try to unlock when user interacts with controls
+                document.querySelectorAll('button, input, select').forEach(el => {
+                    el.addEventListener('click', unlock);
+                });
+            }
+
+            // Preload a sound
+            async loadSound(name) {
+                try {
+                    // For the default workAlert sound, use the provided URL
+                    if (name === 'workAlert' && this.soundLibrary.workAlert.url) {
+                        const audio = new Audio();
+                        audio.preload = 'auto';
+                        audio.src = this.soundLibrary.workAlert.url;
+                        
+                        await new Promise((resolve, reject) => {
+                            audio.addEventListener('canplaythrough', resolve);
+                            audio.addEventListener('error', reject);
+                        });
+                        
+                        this.soundLibrary[name].audio = audio;
+                        this.sounds.set(name, audio);
+                        return true;
+                    } else {
+                        // For other sounds, generate with Web Audio API
+                        await this.generateSound(name);
+                        return true;
+                    }
+                } catch (error) {
+                    console.error(`Failed to load sound ${name}:`, error);
+                    // Fallback to Web Audio API if URL loading fails
+                    await this.generateSound(name);
+                    return true;
+                }
+            }
+
+            // Generate sound using Web Audio API
+            async generateSound(name) {
+                if (!this.audioContext) {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                // Store the audio data for later playback
+                this.sounds.set(name, name);
+                return true;
+            }
+
+            // Play a sound
+            async playSound(name) {
+                if (name === 'none') return true;
+                
+                if (!this.isAudioUnlocked) {
+                    console.warn('Audio not unlocked yet. User interaction required.');
+                    return false;
+                }
+                
+                try {
+                    // If it's a preloaded sound (like workAlert)
+                    if (this.sounds.get(name) instanceof HTMLAudioElement) {
+                        const sound = this.sounds.get(name);
+                        sound.currentTime = 0;
+                        await sound.play();
+                        return true;
+                    } else {
+                        // Generate and play with Web Audio API
+                        return await this.playGeneratedSound(name);
+                    }
+                } catch (error) {
+                    console.error(`Error playing sound ${name}:`, error);
+                    // Fallback to Web Audio API
+                    return await this.playGeneratedSound(name);
+                }
+            }
+
+            // Play a generated sound with Web Audio API
+            async playGeneratedSound(name) {
+                if (!this.audioContext) {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+                
+                switch(name) {
+                    case 'chime':
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(523.25, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(659.25, this.audioContext.currentTime + 0.5);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 1);
+                        oscillator.start(this.audioContext.currentTime);
+                        oscillator.stop(this.audioContext.currentTime + 1);
+                        break;
+                        
+                    case 'bell':
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(784, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.5, this.audioContext.currentTime);
+                        oscillator.frequency.exponentialRampToValueAtTime(523.25, this.audioContext.currentTime + 1);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 1.5);
+                        oscillator.start(this.audioContext.currentTime);
+                        oscillator.stop(this.audioContext.currentTime + 1.5);
+                        break;
+                        
+                    case 'digital':
+                        oscillator.type = 'square';
+                        oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+                        oscillator.start(this.audioContext.currentTime);
+                        oscillator.stop(this.audioContext.currentTime + 0.3);
+                        break;
+                }
+                
+                return true;
+            }
+
+            // Initialize all sounds
+            async initializeSounds() {
+                // Preload the default sound
+                await this.loadSound('workAlert');
+                console.log('Sound system initialized');
+            }
+        }
+
+        // Advanced Notification Service
+        class NotificationService {
+            constructor() {
+                this.soundManager = window.soundManager;
+                this.isChrome = !!window.chrome;
+            }
+
+            // Show notification with sound
+            async showNotification(title, message, soundName = 'workAlert') {
+                // Play sound
+                if (soundName !== 'none') {
+                    await this.soundManager.playSound(soundName);
+                }
+
+                // Show desktop notification if permitted and enabled
+                if (document.getElementById('desktopNotifications').checked) {
+                    await this.showDesktopNotification(title, message);
+                }
+
+                // Vibrate if enabled and on mobile
+                if (document.getElementById('vibrate').checked && 'vibrate' in navigator) {
+                    navigator.vibrate([200, 100, 200]);
+                }
+
+                // Also show toast notification
+                showToast(message);
+            }
+
+            // Show desktop notification
+            async showDesktopNotification(title, message) {
+                if (!('Notification' in window)) {
+                    console.log('This browser does not support desktop notifications');
+                    return;
+                }
+
+                // Check if permission is granted
+                if (Notification.permission === 'default') {
+                    const permission = await Notification.requestPermission();
+                    updatePermissionStatus(permission);
+                    if (permission !== 'granted') return;
+                }
+
+                if (Notification.permission === 'granted') {
+                    const icon = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiM0MzYxRUUiLz4KPHBhdGggZD0iTTMyIDE2VjM0TTI0IDI0SDQwIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K';
+                    
+                    const notification = new Notification(title, {
+                        body: message,
+                        icon: icon,
+                        badge: icon,
+                        tag: 'productivity-pulse',
+                        requireInteraction: true,
+                        silent: true // We handle sound separately
+                    });
+
+                    notification.onclick = () => {
+                        window.focus();
+                        notification.close();
+                    };
+
+                    // Auto-close after 10 seconds
+                    setTimeout(() => {
+                        notification.close();
+                    }, 10000);
+                }
+            }
+        }
+
+        // Main Application
+        class ProductivityPulse {
+            constructor() {
+                this.timerInterval = null;
+                this.countdown = 600; // 10 minutes in seconds
+                this.isRunning = false;
+                this.nextNotificationTime = null;
+                this.soundManager = new SoundManager();
+                this.notificationService = new NotificationService();
+                
+                // DOM Elements
+                this.elements = {
+                    startBtn: document.getElementById('startBtn'),
+                    stopBtn: document.getElementById('stopBtn'),
+                    testBtn: document.getElementById('testBtn'),
+                    statusIndicator: document.getElementById('statusIndicator'),
+                    statusText: document.getElementById('statusText'),
+                    timerDisplay: document.getElementById('timer'),
+                    nextNotificationDisplay: document.getElementById('nextNotification'),
+                    intervalInput: document.getElementById('interval'),
+                    notificationTextInput: document.getElementById('notificationText'),
+                    previewText: document.getElementById('previewText'),
+                    permissionText: document.getElementById('permissionText'),
+                    permissionStatus: document.getElementById('permissionStatus'),
+                    toast: document.getElementById('toast')
+                };
+            }
+
+            // Initialize the application
+            async initialize() {
+                this.setupEventListeners();
+                await this.soundManager.initializeSounds();
+                this.loadSettings();
+                this.checkNotificationPermission();
+                this.updateTimerDisplay();
+                
+                // Initialize sound option selections
+                this.setupSoundOptions();
+                
+                console.log('Productivity Pulse initialized');
+            }
+
+            // Set up event listeners
+            setupEventListeners() {
+                this.elements.startBtn.addEventListener('click', () => this.startNotifications());
+                this.elements.stopBtn.addEventListener('click', () => this.stopNotifications());
+                this.elements.testBtn.addEventListener('click', () => this.testNotification());
+                
+                this.elements.intervalInput.addEventListener('change', () => {
+                    this.updateTimerDisplay();
+                    this.saveSettings();
+                    if (this.isRunning) {
+                        this.stopNotifications();
+                        this.startNotifications();
+                    }
+                });
+                
+                this.elements.notificationTextInput.addEventListener('input', () => {
+                    this.updatePreview();
+                    this.saveSettings();
+                });
+                
+                // Add event listeners for settings changes
+                document.getElementById('vibrate').addEventListener('change', () => this.saveSettings());
+                document.getElementById('desktopNotifications').addEventListener('change', () => this.saveSettings());
+                document.getElementById('webPush').addEventListener('change', () => this.saveSettings());
+                
+                // Request notification permission when user interacts
+                this.elements.startBtn.addEventListener('click', () => {
+                    if (Notification.permission === 'default') {
+                        Notification.requestPermission().then(permission => {
+                            updatePermissionStatus(permission);
+                        });
+                    }
+                });
+            }
+
+            // Set up sound option selections
+            setupSoundOptions() {
+                const soundOptions = document.querySelectorAll('.sound-option');
+                soundOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        soundOptions.forEach(opt => opt.classList.remove('active'));
+                        option.classList.add('active');
+                        const radio = option.querySelector('input[type="radio"]');
+                        radio.checked = true;
+                        this.saveSettings();
+                    });
+                });
+            }
+
+            // Start notifications
+            startNotifications() {
+                if (this.isRunning) return;
+                
+                const intervalMinutes = parseInt(this.elements.intervalInput.value);
+                this.countdown = intervalMinutes * 60;
+                
+                this.isRunning = true;
+                this.updateStatus(true);
+                
+                // Calculate next notification time
+                this.nextNotificationTime = new Date();
+                this.nextNotificationTime.setMinutes(this.nextNotificationTime.getMinutes() + intervalMinutes);
+                this.updateNextNotificationDisplay();
+                
+                // Start countdown timer
+                this.timerInterval = setInterval(() => {
+                    this.countdown--;
+                    
+                    // Update timer display
+                    const minutes = Math.floor(this.countdown / 60);
+                    const seconds = this.countdown % 60;
+                    this.elements.timerDisplay.textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    // Send notification when countdown reaches zero
+                    if (this.countdown <= 0) {
+                        this.sendNotification();
+                        this.countdown = intervalMinutes * 60;
+                        
+                        // Update next notification time
+                        this.nextNotificationTime = new Date();
+                        this.nextNotificationTime.setMinutes(this.nextNotificationTime.getMinutes() + intervalMinutes);
+                        this.updateNextNotificationDisplay();
+                    }
+                }, 1000);
+                
+                showToast(`Notifications started! You'll be reminded every ${intervalMinutes} minutes.`);
+            }
+
+            // Stop notifications
+            stopNotifications() {
+                if (!this.isRunning) return;
+                
+                clearInterval(this.timerInterval);
+                this.isRunning = false;
+                this.updateStatus(false);
+                this.elements.timerDisplay.textContent = 
+                    `${this.elements.intervalInput.value.padStart(2, '0')}:00`;
+                this.elements.nextNotificationDisplay.textContent = "Next notification in: --:--";
+                
+                showToast("Notifications stopped");
+            }
+
+            // Send notification
+            async sendNotification() {
+                const now = new Date();
+                const notificationText = this.elements.notificationTextInput.value;
+                const soundName = document.querySelector('input[name="sound"]:checked').value;
+                
+                await this.notificationService.showNotification(
+                    'Productivity Pulse', 
+                    notificationText, 
+                    soundName
+                );
+            }
+
+            // Test notification
+            async testNotification() {
+                await this.sendNotification();
+                showToast("Test notification sent");
+            }
+
+            // Update status display
+            updateStatus(active) {
+                if (active) {
+                    this.elements.statusIndicator.classList.add('active');
+                    this.elements.statusText.textContent = 'Notifications Active';
+                } else {
+                    this.elements.statusIndicator.classList.remove('active');
+                    this.elements.statusText.textContent = 'Notifications Disabled';
+                }
+            }
+
+            // Update timer display
+            updateTimerDisplay() {
+                const minutes = parseInt(this.elements.intervalInput.value);
+                this.elements.timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:00`;
+            }
+
+            // Update next notification display
+            updateNextNotificationDisplay() {
+                if (this.nextNotificationTime) {
+                    const now = new Date();
+                    const diffMs = this.nextNotificationTime - now;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const diffSecs = Math.floor((diffMs % 60000) / 1000);
+                    
+                    this.elements.nextNotificationDisplay.textContent = 
+                        `Next notification in: ${diffMins.toString().padStart(2, '0')}:${diffSecs.toString().padStart(2, '0')}`;
+                }
+            }
+
+            // Update preview text
+            updatePreview() {
+                this.elements.previewText.textContent = this.elements.notificationTextInput.value;
+            }
+
+            // Check notification permission
+            checkNotificationPermission() {
+                if (!("Notification" in window)) {
+                    this.elements.permissionText.textContent = "Not Supported";
+                    this.elements.permissionStatus.classList.add('permission-denied');
+                    return;
+                }
+                
+                updatePermissionStatus(Notification.permission);
+            }
+
+            // Load settings from localStorage
+            loadSettings() {
+                const savedInterval = localStorage.getItem('productivityPulseInterval');
+                const savedText = localStorage.getItem('productivityPulseText');
+                const savedSound = localStorage.getItem('productivityPulseSound');
+                const savedVibrate = localStorage.getItem('productivityPulseVibrate');
+                const savedDesktop = localStorage.getItem('productivityPulseDesktop');
+                const savedWebPush = localStorage.getItem('productivityPulseWebPush');
+                
+                if (savedInterval) this.elements.intervalInput.value = savedInterval;
+                if (savedText) {
+                    this.elements.notificationTextInput.value = savedText;
+                    this.elements.previewText.textContent = savedText;
+                }
+                if (savedSound) {
+                    const radio = document.querySelector(`input[value="${savedSound}"]`);
+                    if (radio) {
+                        radio.checked = true;
+                        radio.parentElement.classList.add('active');
+                        // Remove active from others
+                        document.querySelectorAll('.sound-option').forEach(opt => {
+                            if (opt !== radio.parentElement) {
+                                opt.classList.remove('active');
+                            }
+                        });
+                    }
+                }
+                if (savedVibrate) document.getElementById('vibrate').checked = savedVibrate === 'true';
+                if (savedDesktop) document.getElementById('desktopNotifications').checked = savedDesktop === 'true';
+                if (savedWebPush) document.getElementById('webPush').checked = savedWebPush === 'true';
+                
+                this.updateTimerDisplay();
+            }
+
+            // Save settings to localStorage
+            saveSettings() {
+                localStorage.setItem('productivityPulseInterval', this.elements.intervalInput.value);
+                localStorage.setItem('productivityPulseText', this.elements.notificationTextInput.value);
+                localStorage.setItem('productivityPulseSound', document.querySelector('input[name="sound"]:checked').value);
+                localStorage.setItem('productivityPulseVibrate', document.getElementById('vibrate').checked);
+                localStorage.setItem('productivityPulseDesktop', document.getElementById('desktopNotifications').checked);
+                localStorage.setItem('productivityPulseWebPush', document.getElementById('webPush').checked);
+            }
+        }
+
+        // Global helper functions
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        function updatePermissionStatus(permission) {
+            const permissionText = document.getElementById('permissionText');
+            const permissionStatus = document.getElementById('permissionStatus');
+            
+            permissionText.textContent = permission.charAt(0).toUpperCase() + permission.slice(1);
+            
+            if (permission === 'granted') {
+                permissionStatus.classList.remove('permission-denied');
+                permissionStatus.classList.add('permission-granted');
+            } else {
+                permissionStatus.classList.remove('permission-granted');
+                permissionStatus.classList.add('permission-denied');
+            }
+        }
+
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            window.productivityPulse = new ProductivityPulse();
+            await window.productivityPulse.initialize();
+        });
+    </script>
+</body>
+</html>
